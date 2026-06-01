@@ -11,6 +11,10 @@ __pycache__
 .Python
 venv
 env
+.venv
+.venv-*
+**/.venv
+**/.venv-*
 .DS_Store
 Thumbs.db
 server/main

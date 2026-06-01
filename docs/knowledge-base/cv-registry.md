@@ -1,4 +1,11 @@
-﻿# Разбор: `cv/registry.py`
+﻿# ⚠️ Optional module / Опциональный модуль (не в platform core)
+
+> **EN:** The `cv/` package is **not included** in the platform core. Legacy reference for vision domain packs.  
+> **RU:** Модуль CV вынесен из ядра. `api/app.py` в core **не** содержит `/classify`.
+
+---
+
+# Разбор: `cv/registry.py`
 
 **Исходный файл:** `cv/registry.py`  
 **Язык:** Python  

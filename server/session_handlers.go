@@ -78,3 +78,36 @@ func handleHistory(c *gin.Context) {
 		"messages":   msgs,
 	})
 }
+
+// GET /media/:token — отдаёт загруженное изображение (legacy / domain pack).
+func handleMedia(c *gin.Context) {
+	token := strings.TrimSpace(c.Param("token"))
+	if token == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Некорректный token"})
+		return
+	}
+	tgUser, err := ctxTelegramUser(c)
+	if err != nil {
+		jsonError(c, http.StatusUnauthorized, err)
+		return
+	}
+	if chatStore == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"success": false, "error": "Хранилище недоступно"})
+		return
+	}
+	ok, err := chatStore.UserCanAccessImage(c.Request.Context(), token, tgUser.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Ошибка базы данных"})
+		return
+	}
+	if !ok {
+		c.JSON(http.StatusNotFound, gin.H{"success": false, "error": "Файл не найден"})
+		return
+	}
+	data, err := chatStore.ReadImage(token)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"success": false, "error": "Файл не найден"})
+		return
+	}
+	c.Data(http.StatusOK, "application/octet-stream", data)
+}

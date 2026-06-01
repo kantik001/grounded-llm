@@ -13,7 +13,7 @@ Telegram Web App  →  Go (auth, sessions, LLM orchestration, verify)
                          ↓
                     Chroma + embeddings
                          ↓
-                    data/{domain_id}/*.txt
+                    data/{domain_id}/*.{txt,pdf,docx}
 ```
 
 | Layer | Path | Purpose |

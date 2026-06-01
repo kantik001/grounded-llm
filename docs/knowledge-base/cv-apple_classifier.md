@@ -1,4 +1,11 @@
-﻿# Разбор: `cv/apple_classifier.py`
+﻿# ⚠️ Optional module / Опциональный модуль (не в platform core)
+
+> **EN:** The `cv/` package is **not included** in the Grounded LLM platform core. This doc is a **legacy reference** for vision domain packs.  
+> **RU:** Папки `cv/` в репозитории **нет**. Статья сохранена как справочник для подключения vision отдельно.
+
+---
+
+# Разбор: `cv/apple_classifier.py`
 
 **Исходный файл:** `cv/apple_classifier.py`  
 **Язык:** Python (PyTorch + torchvision)  

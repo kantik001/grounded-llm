@@ -1,85 +1,85 @@
-﻿# База знаний по проекту
+﻿# База знаний по проекту / Project knowledge base
 
-Документация для самостоятельного изучения кода: вы или коллега можете открыть нужный файл и быстро понять, что делает модуль.
+Документация для изучения кода. Язык: **русский** (основной) + **английские** заголовки и термины там, где указано.
 
-**Платформа (ядро vs domain pack):** [../ARCHITECTURE.md](../ARCHITECTURE.md), [../DEPLOY.md](../DEPLOY.md), [../eval/README.md](../eval/README.md).
+**Platform core vs domain pack:** [../ARCHITECTURE.md](../ARCHITECTURE.md), [../DEPLOY.md](../DEPLOY.md).
 
-## Содержание
+---
 
-| Документ | Описание |
-|----------|----------|
-| [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) | Карта репозитория: папки и файлы, за что отвечает каждый |
-| [python-api.md](./python-api.md) | Подробный разбор `api/app.py` (Python Flask, не Go) |
-| [cv-apple_classifier.md](./cv-apple_classifier.md) | PyTorch MobileNetV2: классы болезней, inference, веса `.pth` |
-| [cv-registry.md](./cv-registry.md) | Фабрика и кэш моделей по `crop_id`, `MODEL_PATH`, `cv_enabled` |
-| [cv-train_classifier.md](./cv-train_classifier.md) | Обучение модели, датасет, сохранение `apple_classifier.pth` |
-| [github-ci.yml.md](./github-ci.yml.md) | GitHub Actions CI: зачем, три job, когда запускается (без DevOps-жаргона) |
-| [migrations-overview.md](./migrations-overview.md) | SQL-миграции 001–003: синтаксис, связи таблиц, как накатываются при старте |
+## Содержание / Index
 
-### RAG (`rag/`, без `__init__.py`)
+### Карта и инфраструктура
 
 | Документ | Описание |
 |----------|----------|
-| [rag-crops_config.md](./rag-crops_config.md) | `config/crops.json`, `crop_id`, `rag_enabled` / `cv_enabled` |
-| [rag-vector_store.md](./rag-vector_store.md) | Chroma, chunking, embeddings, reindex, `data/` → `chroma_db/` |
-| [rag-retrieval.md](./rag-retrieval.md) | Поиск, context, few-shot, `POST /rag/context` |
-| [rag-verifier.md](./rag-verifier.md) | Проверка чисел в ответе, дисклеймер (дубль логики на Go) |
+| [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) | Карта репозитория |
+| [docker-overview.md](./docker-overview.md) | Docker Compose, 4 сервиса, volumes |
+| [github-ci.yml.md](./github-ci.yml.md) | GitHub Actions CI |
+| [config-overview.md](./config-overview.md) | `config/*.json` |
+| [data-pipeline.md](./data-pipeline.md) | Документы KB → RAG |
+| [migrations-overview.md](./migrations-overview.md) | SQL-миграции |
 
-**Порядок чтения RAG:** `crops_config` → `vector_store` → `retrieval` → `verifier` → `server/rag_chat.go`
-
-### Утилиты (`scripts/`)
-
-| Документ | Описание |
-|----------|----------|
-| [scripts-overview.md](./scripts-overview.md) | `reindex_rag.py`, `smoke.ps1`, `smoke.sh` — когда запускать, что проверяют |
-
-### Тесты
+### Python RAG (`api/`, `rag/`)
 
 | Документ | Описание |
 |----------|----------|
-| [tests-overview.md](./tests-overview.md) | `tests/` (pytest), что покрыто, запуск, связь с Go-тестами и CI |
+| [python-api.md](./python-api.md) | `api/app.py` — Flask RAG API |
+| [rag-domains_config.md](./rag-domains_config.md) | `domains.json`, `domain_id` |
+| [rag-vector_store.md](./rag-vector_store.md) | Chroma, loaders, reindex |
+| [rag-retrieval.md](./rag-retrieval.md) | `POST /rag/context` |
+| [rag-verifier.md](./rag-verifier.md) | verify чисел, disclaimer |
 
-### Web UI (`webapp/`)
-
-| Документ | Описание |
-|----------|----------|
-| [webapp-overview.md](./webapp-overview.md) | `index.html`, `admin.html`, `nginx.conf` — чат, админка, прокси |
+**Порядок RAG:** domains_config → vector_store → retrieval → verifier → `server/rag_chat.go`
 
 ### Go backend (`server/`)
 
 | Документ | Описание |
 |----------|----------|
-| [server-overview.md](./server-overview.md) | Старт, конфиг, маршруты, разбиение `server/*.go` (LLM, CV, health) |
-| [server-auth-and-limits.md](./server-auth-and-limits.md) | Telegram initData, CORS, rate limit |
-| [server-chat-and-db.md](./server-chat-and-db.md) | `POST /message`, Postgres, фото, сессии |
-| [server-rag_chat.md](./server-rag_chat.md) | RAG + LLM + verify + дисклеймер |
-| [server-admin-and-ux-api.md](./server-admin-and-ux-api.md) | Админка, crops, onboarding, feedback |
+| [server-overview.md](./server-overview.md) | Обзор `server/*.go` |
+| [server-auth-and-limits.md](./server-auth-and-limits.md) | Telegram, CORS, rate limit |
+| [server-chat-and-db.md](./server-chat-and-db.md) | Сессии, Postgres |
+| [server-rag_chat.md](./server-rag_chat.md) | RAG + LLM + verify |
+| [server-admin-and-ux-api.md](./server-admin-and-ux-api.md) | Admin, onboarding, feedback |
 
-**Порядок чтения server:** overview → auth → chat-and-db → rag_chat (после Python RAG) → admin-and-ux
-
-### Инфраструктура, конфиг, данные, качество
+### UI, scripts, quality
 
 | Документ | Описание |
 |----------|----------|
-| [config-overview.md](./config-overview.md) | `config/*.json`: crops, prompts, branding, `photo_templates`, few-shot, onboarding |
-| [docker-overview.md](./docker-overview.md) | docker-compose, 4 сервиса, volumes, порты, `.env` |
-| [data-pipeline.md](./data-pipeline.md) | Загрузка статей `.txt`, reindex, обучение `.pth` |
-| [quality-eval-and-rag-logs.md](./quality-eval-and-rag-logs.md) | Eval-наборы, `run_rag_eval.py`, логи `[RAG]` |
+| [webapp-overview.md](./webapp-overview.md) | `webapp/`, nginx |
+| [scripts-overview.md](./scripts-overview.md) | reindex, smoke, eval |
+| [tests-overview.md](./tests-overview.md) | pytest + Go tests |
+| [quality-eval-and-rag-logs.md](./quality-eval-and-rag-logs.md) | eval, логи `[RAG]` |
 
-## Как пользоваться
+### Опционально / Optional (legacy CV)
 
-1. Не знаете, где искать код → **PROJECT_STRUCTURE.md**.
-2. Разбираете конкретный файл → откройте соответствующий `*.md` в этой папке (по мере наполнения).
-3. План развития продукта → [`../ROADMAP.md`](../ROADMAP.md).
-4. Итоги учебных сессий → `../LEARNING_SESSION_*.md`.
+> Модуль **`cv/`** не входит в platform core. Статьи сохранены как reference для domain pack с vision.
 
-## Добавление новых статей
+| Документ | Описание |
+|----------|----------|
+| [cv-apple_classifier.md](./cv-apple_classifier.md) | PyTorch classifier (legacy) |
+| [cv-registry.md](./cv-registry.md) | Model registry (legacy) |
+| [cv-train_classifier.md](./cv-train_classifier.md) | Training (legacy) |
 
-Именование: `{путь-к-файлу через дефис}.md`, например:
+### Устаревшие ссылки
 
-- `server-rag_chat.md` → `server/rag_chat.go`
-- `python-api.md` → `api/app.py`
-- `cv-registry.md` → `cv/registry.py`
-- `rag-retrieval.md` → `rag/retrieval.py`
+| Старое | Новое |
+|--------|-------|
+| `rag-crops_config.md` | [rag-domains_config.md](./rag-domains_config.md) |
+| `crop_id` | `domain_id` |
+| сервис `classifier` | сервис `python` |
 
-В начале каждой статьи указывайте **исходный файл** в репозитории и **связанные модули**.
+---
+
+## Как пользоваться / How to use
+
+1. Не знаете, где код → **PROJECT_STRUCTURE.md**
+2. Конкретный файл → соответствующий `*.md` в этой папке
+3. Новый domain pack → [../ARCHITECTURE.md](../ARCHITECTURE.md) checklist
+
+---
+
+## Именование новых статей / Naming
+
+`{module}-{file}.md` → исходник в репозитории, напр. `server-rag_chat.md` → `server/rag_chat.go`.
+
+В начале статьи: **исходный файл**, **связанные модули**, краткий EN subtitle при необходимости.

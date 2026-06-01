@@ -1,7 +1,7 @@
-# Развёртывание и клонирование платформы
+# Развёртывание / Deployment
 
-Инструкция для **агробота** и для **нового проекта** на том же каркасе.  
-Архитектура слоёв: [ARCHITECTURE.md](./ARCHITECTURE.md).
+Инструкция для **нового проекта** на каркасе Grounded LLM.  
+Архитектура: [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ---
 
@@ -9,7 +9,7 @@
 
 ```bash
 cp .env.example .env
-# Заполнить LLM_API_KEY, TELEGRAM_BOT_TOKEN (или TELEGRAM_AUTH_DISABLED=true для dev)
+# LLM_API_KEY, TELEGRAM_BOT_TOKEN (или TELEGRAM_AUTH_DISABLED=true для dev)
 
 docker compose up -d --build
 ```
@@ -18,14 +18,16 @@ docker compose up -d --build
 |--------|-----|
 | Web App | http://localhost/ |
 | Go API | http://localhost:8080/health |
-| Python | http://localhost:5000/health |
+| Python RAG | http://localhost:5000/health |
 
-После добавления статей в `data/`:
+После добавления документов в `data/`:
 
 ```bash
 python scripts/reindex_rag.py
-# или POST /admin/reindex с Basic auth
+# или POST /admin/reindex (Basic auth + ADMIN_SECRET для Python)
 ```
+
+Поддерживаемые форматы KB: **`.txt`**, **`.pdf`**, **`.docx`**.
 
 ---
 
@@ -35,11 +37,12 @@ python scripts/reindex_rag.py
 
 | Переменная | Файл |
 |------------|------|
-| `CROPS_CONFIG_PATH` | `crops.json` |
+| `DOMAINS_CONFIG_PATH` | `domains.json` |
 | `PROMPTS_CONFIG_PATH` | `prompts.json` |
-| `PHOTO_TEMPLATES_PATH` | `photo_templates.json` |
 | `ONBOARDING_CONFIG_PATH` | `onboarding.json` |
 | `BRANDING_CONFIG_PATH` | `branding.json` |
+
+Legacy alias: `CROPS_CONFIG_PATH` → тот же `domains.json`.
 
 **Перезагрузка Go без рестарта:**
 
@@ -49,7 +52,7 @@ docker compose kill -s HUP server
 
 Или `CONFIG_RELOAD_INTERVAL_SEC=300` в `.env`.
 
-Python `rag/crops_config.py` перечитывает `crops.json` при изменении mtime.
+Python `rag/domains_config.py` перечитывает `domains.json` при изменении mtime.
 
 ---
 
@@ -57,65 +60,59 @@ Python `rag/crops_config.py` перечитывает `crops.json` при изм
 
 1. Postgres + `.env` с `DATABASE_URL`.
 2. `cd server && go run .`
-3. Python: `cd api` или корень с `FLASK_APP=api.app` / образ classifier.
-4. Web: nginx или `webapp` + `TELEGRAM_AUTH_DISABLED=true`, API на `:8080`.
+3. Python: `python api/app.py` (из корня репозитория).
+4. Web: nginx или `webapp/` + `TELEGRAM_AUTH_DISABLED=true`, API на `:8080`.
 
 ---
 
 ## Eval после изменений KB
 
 ```bash
-# Только retrieval (Python :5000 должен быть доступен)
 pip install requests
-set CLASSIFIER_RAG_URL=http://localhost:5000/rag/context
-python scripts/run_rag_eval.py --suite apple
-python scripts/run_rag_eval.py --suite demo_hr
-
+set PYTHON_RAG_URL=http://localhost:5000/rag/context
+python scripts/run_rag_eval.py --suite default
 make eval-retrieval
 ```
 
 Результаты: `eval/results/YYYYMMDD_HHMMSS.json`.
 
-Гонять после: reindex, смены `prompts.json`, смены `LLM_MODEL`.
+Запускать после: reindex, смены `prompts.json`, смены `LLM_MODEL`.
 
 ---
 
-## Новый заказчик: клон платформы
+## Новый заказчик: domain pack
 
 ### 1. Репозиторий
 
 ```bash
-git clone <url> client-name-assistant
-cd client-name-assistant
+git clone <url> client-assistant
+cd client-assistant
 ```
 
 ### 2. Domain pack
 
 | Действие | Путь |
 |----------|------|
-| Удалить или заменить статьи | `data/` |
-| Новые домены | `config/crops.json` |
+| Документы KB | `data/{domain_id}/` (`.txt`, `.pdf`, `.docx`) |
+| Каталог доменов | `config/domains.json` |
 | Промпты и few-shot | `config/prompts.json`, `few_shot.json` |
 | UI бренд | `config/branding.json`, при необходимости `webapp/` |
-| Выключить CV | `"cv_enabled": false` |
-| Eval-вопросы | `eval/rag_<client>_baseline.jsonl` |
+| Eval-вопросы | `eval/rag_{domain}_baseline.jsonl` |
 
 ### 3. Индексация и проверка
 
 ```bash
 python scripts/reindex_rag.py
-python scripts/run_rag_eval.py --suite <client>
+python scripts/run_rag_eval.py --suite default
 ```
 
-### 4. Секреты и регион
+### 4. Секреты
 
-- `.env`: `LLM_API_KEY`, `DATABASE_URL`, CORS, Telegram или другой канал.
-- Для KSA/GCC: хостинг в регионе (Bahrain/UAE), LLM в том же регионе, PDPL — отдельный договор.
+`.env`: `LLM_API_KEY`, `DATABASE_URL`, `CORS`, Telegram, `ADMIN_PASSWORD`, `ADMIN_SECRET`.
 
 ### 5. Пилот
 
-- Метрики: verify pass rate, доля «нет в материалах», 👍/👎, latency.
-- Не логировать тело LLM (политика 1C в ROADMAP).
+Метрики: verify pass rate, доля «нет в материалах», 👍/👎, latency p95.
 
 ---
 
@@ -128,8 +125,14 @@ make smoke
 
 ---
 
-## Что не копировать в новый проект
+## Что не переносить на новый инстанс
 
-- `chroma_db/` volume (создаётся заново).
+- volume `chroma_data` (пересоздаётся reindex).
 - `postgres_data` / прод-сессии.
 - Секреты `.env` — только шаблон `.env.example`.
+
+---
+
+## Опциональные модули
+
+**Vision / CV** — не входит в ядро. Подключается отдельным domain pack (см. архивные статьи `cv-*.md` в knowledge-base).
