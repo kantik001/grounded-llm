@@ -30,6 +30,33 @@
 
         let apiBaseUrl = sessionStorage.getItem(API_BASE_STORAGE_KEY) || '/api/';
 
+        const EN_BRANDING_DEFAULTS = {
+            app_title: 'Grounded LLM',
+            header_emoji: '🤖',
+            header_subtitle: 'Answers grounded in your knowledge base (RAG).',
+            domain_label: 'Domain',
+            onboarding_title: 'Sample questions',
+            chat_divider: 'Chat with assistant',
+            disclaimer: 'Reference information from the knowledge base.',
+            page_title_suffix: 'Chat',
+            typing_line: 'Assistant is typing…',
+            message_placeholder: 'Message…',
+            send_aria_label: 'Send',
+            domain_select_aria: 'Select domain',
+            empty_chat_hint: 'Ask a question about the selected knowledge domain.',
+            citations_title: 'Sources',
+            document_fallback: 'document',
+            page_prefix: 'p.',
+            domain_coming_soon: ' (soon)',
+            user_image_alt: 'User photo'
+        };
+
+        let uiBranding = Object.assign({}, EN_BRANDING_DEFAULTS);
+
+        function uiText(key) {
+            return uiBranding[key] || EN_BRANDING_DEFAULTS[key] || '';
+        }
+
         function detectLocale() {
             var stored = sessionStorage.getItem(LOCALE_STORAGE_KEY);
             if (stored === 'ru' || stored === 'en') return stored;
@@ -41,7 +68,7 @@
             var nav = (navigator.language || '').toLowerCase();
             if (nav.indexOf('ru') === 0) return 'ru';
             if (nav.indexOf('en') === 0) return 'en';
-            return 'ru';
+            return 'en';
         }
 
         let uiLocale = detectLocale();
@@ -66,23 +93,42 @@
             headerDisclaimer: document.getElementById('headerDisclaimer'),
             onboardingTitle: document.getElementById('onboardingTitle'),
             chatDivider: document.getElementById('chatDivider'),
+            typingLine: document.getElementById('typingLine'),
         };
+
+        function applyBranding(b) {
+            uiBranding = Object.assign({}, EN_BRANDING_DEFAULTS, b || {});
+            if (el.headerTitle && uiBranding.app_title) {
+                el.headerTitle.textContent = (uiBranding.header_emoji ? uiBranding.header_emoji + ' ' : '') + uiBranding.app_title;
+            }
+            if (el.headerSubtitle && uiBranding.header_subtitle) el.headerSubtitle.textContent = uiBranding.header_subtitle;
+            if (el.domainLabel && uiBranding.domain_label) el.domainLabel.textContent = uiBranding.domain_label;
+            if (el.headerDisclaimer && uiBranding.disclaimer) el.headerDisclaimer.textContent = uiBranding.disclaimer;
+            if (el.onboardingTitle && uiBranding.onboarding_title) el.onboardingTitle.textContent = uiBranding.onboarding_title;
+            if (el.chatDivider && uiBranding.chat_divider) el.chatDivider.textContent = uiBranding.chat_divider;
+            if (el.typingLine && uiBranding.typing_line) el.typingLine.textContent = uiBranding.typing_line;
+            if (el.inputText) {
+                if (uiBranding.message_placeholder) el.inputText.placeholder = uiBranding.message_placeholder;
+                if (uiBranding.send_aria_label) el.inputText.setAttribute('aria-label', uiBranding.message_placeholder || uiBranding.send_aria_label);
+            }
+            if (el.sendBtn && uiBranding.send_aria_label) {
+                el.sendBtn.title = uiBranding.send_aria_label;
+                el.sendBtn.setAttribute('aria-label', uiBranding.send_aria_label);
+            }
+            if (el.domainSelect && uiBranding.domain_select_aria) {
+                el.domainSelect.setAttribute('aria-label', uiBranding.domain_select_aria);
+            }
+            if (uiBranding.app_title) {
+                document.title = uiBranding.app_title + ' — ' + (uiBranding.page_title_suffix || 'Chat');
+            }
+        }
 
         async function loadBranding() {
             try {
                 var res = await apiFetch('/branding' + localeQuery(), { method: 'GET' });
                 var data = parseApiResponseJson(await res.text());
                 if (!data.success || !data.branding) return;
-                var b = data.branding;
-                if (el.headerTitle && b.app_title) {
-                    el.headerTitle.textContent = (b.header_emoji ? b.header_emoji + ' ' : '') + b.app_title;
-                }
-                if (el.headerSubtitle && b.header_subtitle) el.headerSubtitle.textContent = b.header_subtitle;
-                if (el.domainLabel && b.domain_label) el.domainLabel.textContent = b.domain_label;
-                if (el.headerDisclaimer && b.disclaimer) el.headerDisclaimer.textContent = b.disclaimer;
-                if (el.onboardingTitle && b.onboarding_title) el.onboardingTitle.textContent = b.onboarding_title;
-                if (el.chatDivider && b.chat_divider) el.chatDivider.textContent = b.chat_divider;
-                if (b.app_title) document.title = b.app_title + ' — чат';
+                applyBranding(data.branding);
             } catch (e) {
                 console.warn('loadBranding', e);
             }
@@ -339,7 +385,7 @@
                     var opt = document.createElement('option');
                     opt.value = c.id;
                     var label = (c.emoji ? c.emoji + ' ' : '') + (c.name || c.name_ru || c.id);
-                    if (!c.rag_enabled) label += ' (скоро)';
+                    if (!c.rag_enabled) label += uiText('domain_coming_soon');
                     opt.textContent = label;
                     el.domainSelect.appendChild(opt);
                 });
@@ -405,7 +451,7 @@
             if (!messages || !messages.length) {
                 var hint = document.createElement('div');
                 hint.className = 'day-divider';
-                hint.textContent = 'Напишите вопрос по базе знаний выбранного домена.';
+                hint.textContent = uiText('empty_chat_hint');
                 el.messagesRoot.appendChild(hint);
                 updateOnboardingVisibility();
                 return;
@@ -419,7 +465,7 @@
                 if (m.image_data_url || m.image_url) {
                     var img = document.createElement('img');
                     img.className = 'attach-preview';
-                    img.alt = 'Фото пользователя';
+                    img.alt = uiText('user_image_alt');
                     if (m.image_data_url) {
                         img.src = m.image_data_url;
                     } else {
@@ -447,15 +493,15 @@
                     cites.className = 'citations';
                     var citesTitle = document.createElement('div');
                     citesTitle.className = 'citations-title';
-                    citesTitle.textContent = 'Источники';
+                    citesTitle.textContent = uiText('citations_title');
                     cites.appendChild(citesTitle);
                     m.citations.forEach(function(c, idx) {
                         var item = document.createElement('div');
                         item.className = 'citation-item';
                         var head = document.createElement('div');
                         head.className = 'citation-head';
-                        head.textContent = '[' + (idx + 1) + '] ' + (c.filename || 'документ') +
-                            (c.page ? ' · стр. ' + c.page : '');
+                        head.textContent = '[' + (idx + 1) + '] ' + (c.filename || uiText('document_fallback')) +
+                            (c.page ? ' · ' + uiText('page_prefix') + ' ' + c.page : '');
                         item.appendChild(head);
                         if (c.excerpt) {
                             var ex = document.createElement('div');

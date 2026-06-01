@@ -71,7 +71,7 @@ func loadConfig() *Config {
 		AdminPassword:          getEnv("ADMIN_PASSWORD", ""),
 		AdminSecret:            getEnv("ADMIN_SECRET", ""),
 		DefaultTenantID:        getEnv("DEFAULT_TENANT_ID", "default"),
-		DefaultLocale:          getEnv("DEFAULT_LOCALE", "ru"),
+		DefaultLocale:          getEnv("DEFAULT_LOCALE", "en"),
 	}
 }
 

@@ -27,7 +27,7 @@ def rag_context():
         question = (data.get("question") or "").strip()
         domain_id = (data.get("domain_id") or "default").strip()
         tenant_id = (data.get("tenant_id") or os.environ.get("DEFAULT_TENANT_ID", "default")).strip()
-        locale = (data.get("locale") or os.environ.get("DEFAULT_LOCALE", "ru")).strip()
+        locale = (data.get("locale") or os.environ.get("DEFAULT_LOCALE", "en")).strip()
         if not question:
             return jsonify({"success": False, "error": "Empty question"}), 400
 

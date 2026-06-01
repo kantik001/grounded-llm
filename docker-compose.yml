@@ -30,6 +30,7 @@ services:
       - DOMAINS_CONFIG_PATH=/config/domains.json
       - FORCE_RAG_REINDEX=${FORCE_RAG_REINDEX:-false}
       - ADMIN_SECRET=${ADMIN_SECRET:-}
+      - DEFAULT_LOCALE=${DEFAULT_LOCALE:-en}
     volumes:
       - chroma_data:/app/chroma_db
       - ./api:/app/api:ro
@@ -66,7 +67,7 @@ services:
       - MIGRATIONS_DIR=/migrations
       - DOMAINS_CONFIG_PATH=/config/domains.json
       - LOCALES_ROOT=/config/locales
-      - DEFAULT_LOCALE=${DEFAULT_LOCALE:-ru}
+      - DEFAULT_LOCALE=${DEFAULT_LOCALE:-en}
       - CONFIG_RELOAD_INTERVAL_SEC=${CONFIG_RELOAD_INTERVAL_SEC:-0}
       - DATA_DIR=/app/data
       - PYTHON_BASE_URL=http://python:5000

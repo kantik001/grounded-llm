@@ -16,7 +16,7 @@ const (
 	fallbackLocale = "en"
 )
 
-var appDefaultLocale = "ru"
+var appDefaultLocale = "en"
 
 var supportedLocales = []string{"ru", "en"}
 
@@ -40,17 +40,28 @@ type platformPrompts struct {
 }
 
 type BrandingConfig struct {
-	AppTitle        string `json:"app_title"`
-	HeaderEmoji     string `json:"header_emoji"`
-	HeaderSubtitle  string `json:"header_subtitle"`
-	DomainLabel     string `json:"domain_label"`
-	OnboardingTitle string `json:"onboarding_title"`
-	ChatDivider     string `json:"chat_divider"`
-	Disclaimer      string `json:"disclaimer"`
+	AppTitle         string `json:"app_title"`
+	HeaderEmoji      string `json:"header_emoji"`
+	HeaderSubtitle   string `json:"header_subtitle"`
+	DomainLabel      string `json:"domain_label"`
+	OnboardingTitle  string `json:"onboarding_title"`
+	ChatDivider      string `json:"chat_divider"`
+	Disclaimer       string `json:"disclaimer"`
+	PageTitleSuffix  string `json:"page_title_suffix"`
+	TypingLine       string `json:"typing_line"`
+	MessagePlaceholder string `json:"message_placeholder"`
+	SendAriaLabel    string `json:"send_aria_label"`
+	DomainSelectAria string `json:"domain_select_aria"`
+	EmptyChatHint    string `json:"empty_chat_hint"`
+	CitationsTitle   string `json:"citations_title"`
+	DocumentFallback string `json:"document_fallback"`
+	PagePrefix       string `json:"page_prefix"`
+	DomainComingSoon string `json:"domain_coming_soon"`
+	UserImageAlt     string `json:"user_image_alt"`
 }
 
 func initLocaleConfig(cfg *Config) {
-	appDefaultLocale = "ru"
+	appDefaultLocale = "en"
 	if cfg != nil && cfg.DefaultLocale != "" {
 		appDefaultLocale = bundleLocale(cfg.DefaultLocale)
 	}
