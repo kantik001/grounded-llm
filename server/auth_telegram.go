@@ -13,7 +13,6 @@ import (
 	"time"
 )
 
-// TelegramUser — данные пользователя из поля user в initData.
 type TelegramUser struct {
 	ID           int64  `json:"id"`
 	FirstName    string `json:"first_name"`
@@ -22,24 +21,23 @@ type TelegramUser struct {
 	LanguageCode string `json:"language_code,omitempty"`
 }
 
-// Проверяет HMAC-подпись и срок действия Telegram Web App initData.
 func validateTelegramInitData(initData, botToken string, maxAge time.Duration) (*TelegramUser, error) {
 	initData = strings.TrimSpace(initData)
 	if initData == "" {
-		return nil, fmt.Errorf("пустой initData")
+		return nil, fmt.Errorf("empty initData")
 	}
 	if botToken == "" {
-		return nil, fmt.Errorf("не задан TELEGRAM_BOT_TOKEN")
+		return nil, fmt.Errorf("TELEGRAM_BOT_TOKEN is not set")
 	}
 
 	vals, err := url.ParseQuery(initData)
 	if err != nil {
-		return nil, fmt.Errorf("некорректный initData: %w", err)
+		return nil, fmt.Errorf("invalid initData: %w", err)
 	}
 
 	receivedHash := vals.Get("hash")
 	if receivedHash == "" {
-		return nil, fmt.Errorf("в initData нет hash")
+		return nil, fmt.Errorf("initData missing hash")
 	}
 	vals.Del("hash")
 
@@ -59,32 +57,32 @@ func validateTelegramInitData(initData, botToken string, maxAge time.Duration) (
 	calculatedHash := hex.EncodeToString(signMAC.Sum(nil))
 
 	if !hmac.Equal([]byte(calculatedHash), []byte(receivedHash)) {
-		return nil, fmt.Errorf("неверная подпись initData")
+		return nil, fmt.Errorf("invalid initData signature")
 	}
 
 	authDateStr := vals.Get("auth_date")
 	if authDateStr == "" {
-		return nil, fmt.Errorf("в initData нет auth_date")
+		return nil, fmt.Errorf("initData missing auth_date")
 	}
 	authUnix, err := strconv.ParseInt(authDateStr, 10, 64)
 	if err != nil {
-		return nil, fmt.Errorf("некорректный auth_date: %w", err)
+		return nil, fmt.Errorf("invalid auth_date: %w", err)
 	}
 	authTime := time.Unix(authUnix, 0)
 	if maxAge > 0 && time.Since(authTime) > maxAge {
-		return nil, fmt.Errorf("initData устарел")
+		return nil, fmt.Errorf("initData expired")
 	}
 
 	userJSON := vals.Get("user")
 	if userJSON == "" {
-		return nil, fmt.Errorf("в initData нет user")
+		return nil, fmt.Errorf("initData missing user")
 	}
 	var user TelegramUser
 	if err := json.Unmarshal([]byte(userJSON), &user); err != nil {
-		return nil, fmt.Errorf("не удалось разобрать user: %w", err)
+		return nil, fmt.Errorf("failed to parse user: %w", err)
 	}
 	if user.ID == 0 {
-		return nil, fmt.Errorf("некорректный user.id")
+		return nil, fmt.Errorf("invalid user.id")
 	}
 
 	return &user, nil

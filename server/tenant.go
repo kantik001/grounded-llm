@@ -54,7 +54,7 @@ func resolveTenantID(c *gin.Context, cfg *Config) (string, error) {
 	}
 	if len(allowedTenants) > 0 {
 		if _, ok := allowedTenants[id]; !ok {
-			return "", fmt.Errorf("неизвестный tenant: %s", raw)
+			return "", fmt.Errorf("unknown tenant: %s", raw)
 		}
 	}
 	c.Set(ctxKeyTenantID, id)

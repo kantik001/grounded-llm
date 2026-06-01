@@ -19,6 +19,7 @@
 
         const STORAGE_KEY = 'grounded_llm_session_id';
         const DOMAIN_STORAGE_KEY = 'grounded_llm_domain_id';
+        const LOCALE_STORAGE_KEY = 'grounded_llm_locale';
         const API_BASE_STORAGE_KEY = 'grounded_llm_api_base';
         const API_BASE_SCHEMA_VERSION = '2';
 
@@ -28,6 +29,22 @@
         }
 
         let apiBaseUrl = sessionStorage.getItem(API_BASE_STORAGE_KEY) || '/api/';
+
+        function detectLocale() {
+            var stored = sessionStorage.getItem(LOCALE_STORAGE_KEY);
+            if (stored === 'ru' || stored === 'en') return stored;
+            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code) {
+                var lc = String(tg.initDataUnsafe.user.language_code).toLowerCase();
+                if (lc.indexOf('ru') === 0) return 'ru';
+                if (lc.indexOf('en') === 0) return 'en';
+            }
+            var nav = (navigator.language || '').toLowerCase();
+            if (nav.indexOf('ru') === 0) return 'ru';
+            if (nav.indexOf('en') === 0) return 'en';
+            return 'ru';
+        }
+
+        let uiLocale = detectLocale();
 
         let sessionId = null;
         let domainId = sessionStorage.getItem(DOMAIN_STORAGE_KEY) || 'default';
@@ -53,7 +70,7 @@
 
         async function loadBranding() {
             try {
-                var res = await apiFetch('/branding', { method: 'GET' });
+                var res = await apiFetch('/branding' + localeQuery(), { method: 'GET' });
                 var data = parseApiResponseJson(await res.text());
                 if (!data.success || !data.branding) return;
                 var b = data.branding;
@@ -93,7 +110,13 @@
             if (initData) {
                 h['X-Telegram-Init-Data'] = initData;
             }
+            h['X-Locale'] = uiLocale;
+            h['Accept-Language'] = uiLocale;
             return h;
+        }
+
+        function localeQuery() {
+            return '?locale=' + encodeURIComponent(uiLocale);
         }
 
         function dedupeApiBases(list) {
@@ -188,7 +211,7 @@
                 }
             }
             if (!lastRes) {
-                throw new Error('Нет соединения с API. Запустите docker compose (webapp + server) или Go на порту 8080.');
+                throw new Error('No API connection. Start docker compose (webapp + server) or Go on port 8080.');
             }
             return lastRes;
         }
@@ -200,17 +223,17 @@
         function parseApiResponseJson(raw) {
             var s = String(raw).replace(/^\uFEFF/, '').trim();
             if (!s) {
-                throw new Error('Пустой ответ сервера');
+                throw new Error('Empty server response');
             }
             if (s.indexOf('404 page not found') === 0 || /^404\s/.test(s)) {
-                throw new Error('Маршрут API не найден (404). Перезапустите контейнеры: docker compose up --build');
+                throw new Error('API route not found (404). Restart containers: docker compose up --build');
             }
             if (s.charAt(0) === '<') {
-                throw new Error('Вместо JSON пришла HTML-страница — проверьте прокси и адрес API.');
+                throw new Error('Expected JSON but received HTML — check proxy and API URL.');
             }
             var i = s.indexOf('{');
             if (i < 0) {
-                throw new Error('В ответе нет JSON: ' + s.slice(0, 200));
+                throw new Error('Response is not JSON: ' + s.slice(0, 200));
             }
             var depth = 0;
             var inStr = false;
@@ -244,12 +267,12 @@
                     }
                 }
             }
-            throw new Error('Неполный JSON в ответе сервера');
+            throw new Error('Incomplete JSON in server response');
         }
 
         async function loadOnboarding(selectedDomain) {
             try {
-                var res = await apiFetch('/onboarding?domain_id=' + encodeURIComponent(selectedDomain || domainId), { method: 'GET' });
+                var res = await apiFetch('/onboarding?domain_id=' + encodeURIComponent(selectedDomain || domainId) + '&locale=' + encodeURIComponent(uiLocale), { method: 'GET' });
                 var data = parseApiResponseJson(await res.text());
                 var questions = (data.success && data.questions) ? data.questions : [];
                 el.onboardingChips.innerHTML = '';
@@ -291,7 +314,7 @@
                 });
                 var data = parseApiResponseJson(await res.text());
                 if (!res.ok || !data.success) {
-                    showToast(data.error || 'Не удалось сохранить оценку');
+                    showToast(data.error || 'Failed to save rating');
                     return;
                 }
                 var btn = el.messagesRoot.querySelector('[data-feedback-for="' + messageId + '"][data-rating="' + rating + '"]');
@@ -302,13 +325,13 @@
                     });
                 }
             } catch (e) {
-                showToast(e.message || 'Ошибка оценки');
+                showToast(e.message || 'Rating error');
             }
         }
 
         async function loadDomainsCatalog() {
             try {
-                var res = await apiFetch('/domains', { method: 'GET' });
+                var res = await apiFetch('/domains' + localeQuery(), { method: 'GET' });
                 var data = parseApiResponseJson(await res.text());
                 if (!data.success || !data.domains) return;
                 el.domainSelect.innerHTML = '';
@@ -339,7 +362,7 @@
             });
             var data = parseApiResponseJson(await res.text());
             if (!res.ok || !data.session_id) {
-                throw new Error(data.error || 'Не удалось создать сессию');
+                throw new Error(data.error || 'Failed to create session');
             }
             sessionId = data.session_id;
             if (data.domain_id) domainId = data.domain_id;
@@ -352,7 +375,7 @@
             var next = el.domainSelect.value;
             if (next === domainId && sessionId) return;
             createSessionWithDomain(next).catch(function(e) {
-                showToast(e.message || 'Ошибка смены домена');
+                showToast(e.message || 'Domain switch error');
                 el.domainSelect.value = domainId;
             });
         });
@@ -500,7 +523,7 @@
             });
             var data = parseApiResponseJson(await res.text());
             if (!res.ok || !data.session_id) {
-                throw new Error(data.error || 'Не удалось создать сессию');
+                throw new Error(data.error || 'Failed to create session');
             }
             sessionId = data.session_id;
             if (data.domain_id) {
@@ -590,12 +613,12 @@
             if (sending) return;
             var text = (el.inputText.value || '').trim();
             if (!text) {
-                showToast('Введите текст сообщения');
+                showToast('Enter a message');
                 return;
             }
             if (!sessionId) {
                 try { await ensureSession(); } catch (e) {
-                    showToast(e.message || 'Ошибка сессии');
+                    showToast(e.message || 'Session error');
                     return;
                 }
             }
@@ -631,7 +654,7 @@
                     renderMessages(data.messages);
                 }
                 if (!res.ok) {
-                    showToast(data.error || ('Ошибка ' + res.status));
+                    showToast(data.error || ('Error ' + res.status));
                 } else if (data.error) {
                     showToast(data.error);
                 }
@@ -639,7 +662,7 @@
                 autoResize();
             } catch (e) {
                 console.error(e);
-                showToast(e.message || 'Ошибка сети');
+                showToast(e.message || 'Network error');
             } finally {
                 setSending(false);
             }
@@ -668,5 +691,5 @@
             return loadOnboarding(domainId);
         }).catch(function(e) {
             console.error(e);
-            showToast(e.message || 'Не удалось подключиться');
+            showToast(e.message || 'Connection failed');
         });

@@ -23,7 +23,7 @@ def test_normalize_domain_id_default():
 
 
 def test_normalize_domain_id_unknown():
-    with pytest.raises(ValueError, match="Неизвестный"):
+    with pytest.raises(ValueError, match="Unknown domain"):
         normalize_domain_id("banana_xyz")
 
 

@@ -27,7 +27,7 @@ type ChatStore struct {
 // Подключается к Postgres и создаёт ChatStore с каталогом загрузок.
 func newChatStore(ctx context.Context, databaseURL, uploadDir string) (*ChatStore, error) {
 	if strings.TrimSpace(databaseURL) == "" {
-		return nil, fmt.Errorf("DATABASE_URL не задан")
+		return nil, fmt.Errorf("DATABASE_URL is not set")
 	}
 	if err := os.MkdirAll(uploadDir, 0o755); err != nil {
 		return nil, fmt.Errorf("upload dir: %w", err)

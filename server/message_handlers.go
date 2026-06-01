@@ -25,7 +25,7 @@ func handleMessage(c *gin.Context) {
 
 	if strings.HasPrefix(ct, "multipart/form-data") {
 		if err := c.Request.ParseMultipartForm(int64(maxUploadImageBytes + 512*1024)); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Некорректный multipart"})
+			c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Invalid multipart request"})
 			return
 		}
 		sessionID = strings.TrimSpace(c.PostForm("session_id"))
@@ -39,7 +39,7 @@ func handleMessage(c *gin.Context) {
 	} else {
 		var req jsonMessageRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Ожидается JSON: session_id, text"})
+			c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Expected JSON: session_id, text"})
 			return
 		}
 		sessionID = strings.TrimSpace(req.SessionID)
@@ -51,14 +51,14 @@ func handleMessage(c *gin.Context) {
 	}
 
 	if text == "" && len(imageData) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Нужен текст"})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Text is required"})
 		return
 	}
 
 	if len(imageData) > 0 {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"error":   "Загрузка изображений в этом ядре отключена. Подключите vision-модуль в domain pack.",
+			"error":   "Image upload is disabled in platform core. Attach a vision domain pack.",
 		})
 		return
 	}
@@ -85,7 +85,7 @@ func handleMessage(c *gin.Context) {
 	sid, sessionDomain, err := chatStore.GetOrCreateSession(ctx, sessionID, tgUser, tenantID, requestDomainID)
 	if err != nil {
 		log.Printf("GetOrCreateSession: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Ошибка сессии"})
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Session error"})
 		return
 	}
 
@@ -95,14 +95,14 @@ func handleMessage(c *gin.Context) {
 		sseMessageHandler(c, sid, sessionDomain, tenantID, tgUser.ID, text)
 		return
 	}
-	handleTextMessage(c, sid, sessionDomain, tenantID, tgUser.ID, text)
+	handleTextMessage(c, sid, sessionDomain, tenantID, ctxLocale(c), tgUser.ID, text)
 }
 
 func respondWithMessages(c *gin.Context, sid, domainID, tenantID string, telegramID int64, extra gin.H, status int) {
 	msgs, err := chatStore.ListMessages(c.Request.Context(), sid, telegramID)
 	if err != nil {
 		log.Printf("ListMessages after reply: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Ошибка базы данных"})
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Database error"})
 		return
 	}
 	body := gin.H{
@@ -118,19 +118,19 @@ func respondWithMessages(c *gin.Context, sid, domainID, tenantID string, telegra
 	c.JSON(status, body)
 }
 
-func handleTextMessage(c *gin.Context, sid, domainID, tenantID string, telegramID int64, text string) {
+func handleTextMessage(c *gin.Context, sid, domainID, tenantID, locale string, telegramID int64, text string) {
 	ctx := c.Request.Context()
 	prior, err := chatStore.HistoryForLLM(ctx, sid, telegramID, 0)
 	if err != nil {
 		log.Printf("HistoryForLLM: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Ошибка истории"})
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "History error"})
 		return
 	}
-	ragResult := answerWithRAG(text, tenantID, domainID, prior, sid)
+	ragResult := answerWithRAG(text, tenantID, domainID, locale, prior, sid)
 
 	if _, err := chatStore.AppendMessage(ctx, sid, ChatMessage{Role: "user", Content: text, Kind: "text"}); err != nil {
 		log.Printf("AppendMessage user: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Ошибка сохранения"})
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Save error"})
 		return
 	}
 
@@ -141,7 +141,7 @@ func handleTextMessage(c *gin.Context, sid, domainID, tenantID string, telegramI
 		return
 	}
 	if !ragResult.OK {
-		_, _ = chatStore.AppendMessage(ctx, sid, ChatMessage{Role: "assistant", Content: "Ошибка: " + ragResult.ErrMsg, Kind: "assistant"})
+		_, _ = chatStore.AppendMessage(ctx, sid, ChatMessage{Role: "assistant", Content: "Error: " + ragResult.ErrMsg, Kind: "assistant"})
 		status := http.StatusInternalServerError
 		if strings.Contains(ragResult.ErrMsg, "LLM_API_KEY") {
 			status = http.StatusServiceUnavailable
@@ -154,7 +154,7 @@ func handleTextMessage(c *gin.Context, sid, domainID, tenantID string, telegramI
 		Role: "assistant", Content: ragResult.Answer, Kind: "assistant", Citations: ragResult.Citations,
 	}); err != nil {
 		log.Printf("AppendMessage assistant: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Ошибка сохранения"})
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Save error"})
 		return
 	}
 	logRequest(c, "rag_answer", map[string]any{"domain_id": domainID, "soft_fail": false})

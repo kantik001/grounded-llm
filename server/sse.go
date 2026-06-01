@@ -21,11 +21,12 @@ func sseMessageHandler(c *gin.Context, sid, domainID, tenantID string, telegramI
 	ctx := c.Request.Context()
 	prior, err := chatStore.HistoryForLLM(ctx, sid, telegramID, 0)
 	if err != nil {
-		writeSSE(c, "error", `{"error":"Ошибка истории"}`)
+		writeSSE(c, "error", `{"error":"History error"}`)
 		return
 	}
 
-	prepared, err := prepareRAGMessages(text, domainID, tenantID, prior, sid)
+	locale := ctxLocale(c)
+	prepared, err := prepareRAGMessages(text, domainID, tenantID, locale, prior, sid)
 	if err != nil {
 		writeSSE(c, "error", mustJSON(gin.H{"error": err.Error()}))
 		return
@@ -36,7 +37,7 @@ func sseMessageHandler(c *gin.Context, sid, domainID, tenantID string, telegramI
 	}
 
 	if _, err := chatStore.AppendMessage(ctx, sid, ChatMessage{Role: "user", Content: text, Kind: "text"}); err != nil {
-		writeSSE(c, "error", `{"error":"Ошибка сохранения"}`)
+		writeSSE(c, "error", `{"error":"Save error"}`)
 		return
 	}
 
@@ -53,13 +54,13 @@ func sseMessageHandler(c *gin.Context, sid, domainID, tenantID string, telegramI
 	if _, err := chatStore.AppendMessage(ctx, sid, ChatMessage{
 		Role: "assistant", Content: result.Answer, Kind: "assistant", Citations: result.Citations,
 	}); err != nil {
-		writeSSE(c, "error", `{"error":"Ошибка сохранения ответа"}`)
+		writeSSE(c, "error", `{"error":"Failed to save assistant reply"}`)
 		return
 	}
 
 	msgs, err := chatStore.ListMessages(ctx, sid, telegramID)
 	if err != nil {
-		writeSSE(c, "error", `{"error":"Ошибка базы данных"}`)
+		writeSSE(c, "error", `{"error":"Database error"}`)
 		return
 	}
 	writeSSE(c, "done", mustJSON(gin.H{

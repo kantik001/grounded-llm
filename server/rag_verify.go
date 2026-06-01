@@ -8,22 +8,26 @@ import (
 	"strings"
 )
 
-// ragAnswerDisclaimer — общий дисклеймер в конце ответа (без названий статей).
-// Синхронизировать с rag/verifier.py (RAG_ANSWER_DISCLAIMER) и tests/test_verifier.py.
-const ragAnswerDisclaimer = "Справочная информация из базы знаний. Не заменяет официальную консультацию ответственного специалиста."
-
 var (
 	reNumberWord = regexp.MustCompile(`\b\d+(?:\.\d+)?\b`)
 	reMultiSpace = regexp.MustCompile(`\s+`)
 	reThink      = regexp.MustCompile(`(?i)</?think>`)
 	reAnswerTag  = regexp.MustCompile(`(?i)</?answer>`)
 	reSystemTag  = regexp.MustCompile(`(?i)</?system>`)
-	reAbot       = regexp.MustCompile(`(?i)\bаботчик\b`)
-	reIntro      = regexp.MustCompile(`(?i)^(Хорошо|Давайте посмотрим|Итак|Я думаю|мне нужно ответить|Из контекста видно|Теперь я понимаю|Из таблицы видно)[,:.]?\s*`)
-	reSourceLine = regexp.MustCompile(`(?im)^\s*Источник:.*\n?`)
+	reAbot       = regexp.MustCompile(`(?i)\babot\b`)
+	reIntroEN    = regexp.MustCompile(`(?i)^(Okay|Alright|So|I think|I need to answer|From the context|Now I understand|From the table)[,:.]?\s*`)
+	reIntroRU    = regexp.MustCompile(`(?i)^(Хорошо|Давайте посмотрим|Итак|Я думаю|мне нужно ответить|Из контекста видно|Теперь я понимаю|Из таблицы видно)[,:.]?\s*`)
+	reSourceLine = regexp.MustCompile(`(?im)^\s*(Источник|Source):.*\n?`)
 )
 
-// Извлекает числа из текста для верификации ответа RAG.
+func disclaimerForLocale(locale string) string {
+	d := strings.TrimSpace(brandingForLocale(locale).Disclaimer)
+	if d != "" {
+		return d
+	}
+	return "Reference information from the knowledge base. Not a substitute for official expert advice."
+}
+
 func extractNumbersFromText(s string) []float64 {
 	s = strings.ReplaceAll(s, ",", ".")
 	var out []float64
@@ -36,61 +40,58 @@ func extractNumbersFromText(s string) []float64 {
 	return out
 }
 
-// Убирает служебные теги и вводные фразы из ответа LLM.
 func cleanRAGAnswer(text string) string {
 	if text == "" {
-		return "Ответ не сформирован корректно."
+		return "The answer could not be formatted correctly."
 	}
 	text = reThink.ReplaceAllString(text, "")
 	text = reAnswerTag.ReplaceAllString(text, "")
 	text = reSystemTag.ReplaceAllString(text, "")
 	text = reAbot.ReplaceAllString(text, "")
-	text = reIntro.ReplaceAllString(text, "")
+	text = reIntroEN.ReplaceAllString(text, "")
+	text = reIntroRU.ReplaceAllString(text, "")
 	text = strings.TrimSpace(reMultiSpace.ReplaceAllString(text, " "))
 	if text == "" {
-		return "Ответ не сформирован корректно."
+		return "The answer could not be formatted correctly."
 	}
 	return text
 }
 
-// Удаляет строки «Источник:» из ответа перед показом пользователю.
 func stripSourceAttribution(answer string) string {
 	s := reSourceLine.ReplaceAllString(answer, "")
 	return strings.TrimSpace(reMultiSpace.ReplaceAllString(s, " "))
 }
 
-// Добавляет дисклеймер в конец ответа RAG.
-func appendRAGDisclaimer(answer string) string {
+func appendRAGDisclaimer(answer, locale string) string {
+	disclaimer := disclaimerForLocale(locale)
 	body := stripSourceAttribution(answer)
 	if body == "" {
-		return ragAnswerDisclaimer
+		return disclaimer
 	}
-	if strings.Contains(body, ragAnswerDisclaimer) || strings.Contains(body, "Не заменяет официальную консультацию") {
+	if strings.Contains(body, disclaimer) {
 		return body
 	}
-	return body + "\n\n" + ragAnswerDisclaimer
+	return body + "\n\n" + disclaimer
 }
 
-// Текст ответа без дисклеймера и источников — для проверки чисел.
-func answerBodyForVerification(answer string) string {
+func answerBodyForVerification(answer, locale string) string {
 	s := stripSourceAttribution(answer)
-	s = strings.ReplaceAll(s, ragAnswerDisclaimer, "")
+	s = strings.ReplaceAll(s, disclaimerForLocale(locale), "")
 	return strings.TrimSpace(s)
 }
 
-// Проверяет, что все числа в ответе есть во фрагментах статей.
-func verifyRAGAnswer(answer string, fragments []RAGFragment) (bool, string) {
+func verifyRAGAnswer(answer string, fragments []RAGFragment, locale string) (bool, string) {
 	if answer == "" {
-		return false, "Ответ отсутствует"
+		return false, "Empty answer"
 	}
 	var ctx strings.Builder
 	for _, f := range fragments {
 		ctx.WriteString(f.Content)
 		ctx.WriteByte('\n')
 	}
-	numsAns := extractNumbersFromText(answerBodyForVerification(answer))
+	numsAns := extractNumbersFromText(answerBodyForVerification(answer, locale))
 	if len(numsAns) == 0 {
-		return true, "Верификация пройдена"
+		return true, "Verification passed"
 	}
 	numsCtx := extractNumbersFromText(ctx.String())
 	var missing []float64
@@ -107,7 +108,7 @@ func verifyRAGAnswer(answer string, fragments []RAGFragment) (bool, string) {
 		}
 	}
 	if len(missing) > 0 {
-		return false, fmt.Sprintf("Число(а) %v не найдены в источниках.", missing)
+		return false, fmt.Sprintf("Number(s) %v not found in sources.", missing)
 	}
-	return true, "Верификация пройдена"
+	return true, "Verification passed"
 }

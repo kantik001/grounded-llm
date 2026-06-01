@@ -57,7 +57,7 @@ def normalize_domain_id(domain_id: Optional[str]) -> str:
     did = (domain_id or "").strip().lower() or default_domain_id()
     domains = load_domains_config().get("domains", {})
     if did not in domains:
-        raise ValueError(f"Неизвестный домен: {domain_id}")
+        raise ValueError(f"Unknown domain: {domain_id}")
     return did
 
 

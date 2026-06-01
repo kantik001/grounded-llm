@@ -25,10 +25,10 @@ def is_supported_filename(filename: str) -> bool:
 
 def _validate_documents(docs: List[Document], filename: str) -> None:
     if not docs:
-        raise ValueError(f"Файл пустой или не удалось извлечь текст: {filename}")
+        raise ValueError(f"File is empty or text could not be extracted: {filename}")
     non_empty = [d for d in docs if (d.page_content or "").strip()]
     if not non_empty:
-        raise ValueError(f"Нет текстового содержимого: {filename}")
+        raise ValueError(f"No text content: {filename}")
 
 
 def load_file(domain_id: str, file_path: str, tenant_id: str = "default") -> List[Document]:

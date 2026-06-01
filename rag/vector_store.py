@@ -61,17 +61,17 @@ def load_all_documents():
 
 
 def create_vector_store():
-    print("Создаю векторную базу...")
+    print("Creating vector store...")
     documents = load_all_documents()
     if not documents:
-        print("Нет документов для индексации.")
+        print("No documents to index.")
         return None
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     docs = text_splitter.split_documents(documents)
-    print(f"Фрагментов: {len(docs)}")
+    print(f"Chunks: {len(docs)}")
     embeddings = HuggingFaceEmbeddings(model_name="intfloat/multilingual-e5-small")
     store = Chroma.from_documents(docs, embeddings, persist_directory=PERSIST_DIR)
-    print(f"База сохранена в {PERSIST_DIR}")
+    print(f"Vector store saved to {PERSIST_DIR}")
     return store
 
 
@@ -90,7 +90,7 @@ def load_vector_store(force_reindex: bool = False):
     if force and os.path.isdir(PERSIST_DIR):
         import shutil
 
-        print("FORCE_RAG_REINDEX: удаляю старую chroma_db")
+        print("FORCE_RAG_REINDEX: removing old chroma_db")
         shutil.rmtree(PERSIST_DIR, ignore_errors=True)
 
     if os.path.exists(PERSIST_DIR) and os.listdir(PERSIST_DIR):

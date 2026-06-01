@@ -59,7 +59,7 @@ func rateLimitMiddleware(rl *rateLimiter) gin.HandlerFunc {
 		if !rl.allow(key) {
 			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
 				"success": false,
-				"error":   "Слишком много запросов. Подождите минуту и попробуйте снова.",
+				"error":   "Too many requests. Wait a minute and try again.",
 			})
 			return
 		}

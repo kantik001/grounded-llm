@@ -34,15 +34,7 @@ func main() {
 	if err := loadDomainCatalog(); err != nil {
 		log.Fatalf("Domains config: %v", err)
 	}
-	if err := loadPromptCatalog(); err != nil {
-		log.Fatalf("Prompts config: %v", err)
-	}
-	if err := loadOnboardingConfig(); err != nil {
-		log.Fatalf("Onboarding config: %v", err)
-	}
-	if err := loadBrandingConfig(); err != nil {
-		log.Fatalf("Branding config: %v", err)
-	}
+	initLocaleConfig(config)
 
 	chatStore, err = newChatStore(context.Background(), config.DatabaseURL, config.UploadDir)
 	if err != nil {
@@ -58,6 +50,7 @@ func main() {
 	router.Use(requestIDMiddleware())
 	router.Use(metricsMiddleware())
 	router.Use(corsMiddleware(config.CORSAllowedOrigins))
+	router.Use(localeMiddleware(config))
 	router.Use(func(c *gin.Context) {
 		if strings.Contains(c.Request.URL.Path, "/media/") {
 			c.Next()

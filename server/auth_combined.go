@@ -17,7 +17,7 @@ func combinedAuthMiddleware(cfg *Config) gin.HandlerFunc {
 			if !ok {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 					"success": false,
-					"error":   "Недействительный API key",
+					"error":   "Invalid API key",
 				})
 				return
 			}

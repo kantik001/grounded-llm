@@ -1,0 +1,9 @@
+{
+  "app_title": "Grounded LLM",
+  "header_emoji": "🤖",
+  "header_subtitle": "Answers grounded in your knowledge base (RAG).",
+  "domain_label": "Domain",
+  "onboarding_title": "Sample questions",
+  "chat_divider": "Chat with assistant",
+  "disclaimer": "Reference information from the knowledge base. Not a substitute for official expert advice."
+}

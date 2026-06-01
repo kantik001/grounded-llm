@@ -30,12 +30,12 @@ func handleNewSession(c *gin.Context) {
 	ctx := c.Request.Context()
 	userID, err := chatStore.UpsertUser(ctx, tgUser)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Ошибка пользователя"})
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "User error"})
 		return
 	}
 	sid, err := chatStore.CreateSession(ctx, userID, ctxTenantID(c), domainID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Ошибка создания сессии"})
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Failed to create session"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -49,7 +49,7 @@ func handleNewSession(c *gin.Context) {
 func handleHistory(c *gin.Context) {
 	id := strings.TrimSpace(c.Query("session_id"))
 	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Нужен session_id"})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "session_id is required"})
 		return
 	}
 	tgUser, err := ctxTelegramUser(c)
@@ -59,7 +59,7 @@ func handleHistory(c *gin.Context) {
 	}
 	msgs, err := chatStore.ListMessages(c.Request.Context(), id, tgUser.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Ошибка базы данных"})
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Database error"})
 		return
 	}
 	domainID, _ := chatStore.SessionDomainID(c.Request.Context(), id, tgUser.ID)
@@ -75,7 +75,7 @@ func handleHistory(c *gin.Context) {
 func handleMedia(c *gin.Context) {
 	token := strings.TrimSpace(c.Param("token"))
 	if token == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Некорректный token"})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Invalid token"})
 		return
 	}
 	tgUser, err := ctxTelegramUser(c)
@@ -84,21 +84,21 @@ func handleMedia(c *gin.Context) {
 		return
 	}
 	if chatStore == nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"success": false, "error": "Хранилище недоступно"})
+		c.JSON(http.StatusServiceUnavailable, gin.H{"success": false, "error": "Storage unavailable"})
 		return
 	}
 	ok, err := chatStore.UserCanAccessImage(c.Request.Context(), token, tgUser.ID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Ошибка базы данных"})
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Database error"})
 		return
 	}
 	if !ok {
-		c.JSON(http.StatusNotFound, gin.H{"success": false, "error": "Файл не найден"})
+		c.JSON(http.StatusNotFound, gin.H{"success": false, "error": "File not found"})
 		return
 	}
 	data, err := chatStore.ReadImage(token)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"success": false, "error": "Файл не найден"})
+		c.JSON(http.StatusNotFound, gin.H{"success": false, "error": "File not found"})
 		return
 	}
 	c.Data(http.StatusOK, "application/octet-stream", data)

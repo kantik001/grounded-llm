@@ -40,9 +40,9 @@ func (m ChatMessage) toLLMMessage() (Message, bool) {
 		return Message{Role: "assistant", Content: m.Content}, true
 	case "user":
 		if m.ImageURL != "" || m.ImageDataURL != "" || m.ImageToken != "" {
-			s := "Пользователь отправил изображение."
+			s := "The user sent an image."
 			if t := trimUserCaption(m.Content); t != "" {
-				s += " Подпись: " + t
+				s += " Caption: " + t
 			}
 			return Message{Role: "user", Content: s}, true
 		}

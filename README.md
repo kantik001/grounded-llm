@@ -19,7 +19,7 @@ Telegram Web App  →  Go (auth, sessions, LLM orchestration, verify)
 | Layer | Path | Purpose |
 |-------|------|---------|
 | **Core** | `server/`, `api/`, `rag/`, `migrations/`, `webapp/` | Orchestration, retrieval, reference UI |
-| **Domain pack** | `config/`, `data/{domain}/` | Prompts, branding, knowledge documents |
+| **Domain pack** | `config/`, `config/locales/{ru,en}/`, `data/{tenant}/{domain}/` | Prompts, branding, knowledge documents |
 
 ## Quick start
 
@@ -41,7 +41,7 @@ python scripts/reindex_rag.py
 
 - `GET /domains` — domain catalog
 - `POST /session`, `GET /history`, `POST /message` — chat (`domain_id` in JSON)
-- `GET /branding`, `GET /onboarding?domain_id=`
+- `GET /branding`, `GET /onboarding?domain_id=` — locale via `X-Locale`, `?locale=`, or `Accept-Language` (`ru` / `en`)
 - Admin: `POST /admin/upload`, `POST /admin/reindex`
 
 Integrators (Phase 2): `X-API-Key` + `X-Tenant-ID`, streaming `POST /message?stream=1`, OpenAPI at `/api/v1/openapi.json`, metrics at `/metrics`.
@@ -50,7 +50,7 @@ Integrators (Phase 2): `X-API-Key` + `X-Tenant-ID`, streaming `POST /message?str
 
 1. Add entry to `config/domains.json`
 2. Add `.txt`, `.pdf`, or `.docx` files under `data/{domain_id}/`
-3. Update `config/prompts.json`, `few_shot.json`, `onboarding.json`, `branding.json`
+3. Update `config/locales/ru/` and `config/locales/en/` (prompts, few_shot, onboarding, branding)
 4. Run `python scripts/reindex_rag.py`
 
 ## Development
@@ -62,7 +62,7 @@ make test
 make eval-retrieval
 ```
 
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/DEPLOY.md`](docs/DEPLOY.md), and [`docs/ROADMAP.md`](docs/ROADMAP.md).
+Documentation: [`docs/README.md`](docs/README.md) — [English](docs/en/) and [Русский](docs/ru/).
 
 ## Publish to GitHub
 
