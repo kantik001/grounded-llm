@@ -26,10 +26,11 @@ def rag_context():
         data = request.get_json(silent=True) or {}
         question = (data.get("question") or "").strip()
         domain_id = (data.get("domain_id") or "default").strip()
+        tenant_id = (data.get("tenant_id") or os.environ.get("DEFAULT_TENANT_ID", "default")).strip()
         if not question:
             return jsonify({"success": False, "error": "Пустой вопрос"}), 400
 
-        payload = retrieve_rag_context(question, domain_id=domain_id)
+        payload = retrieve_rag_context(question, domain_id=domain_id, tenant_id=tenant_id)
         resp = jsonify(payload)
         resp.headers.set("Content-Type", "application/json; charset=utf-8")
         return resp, 200
@@ -58,12 +59,13 @@ def admin_index_stats():
     if not _admin_authorized():
         return jsonify({"success": False, "error": "forbidden"}), 403
     domain_id = (request.args.get("domain_id") or "default").strip()
+    tenant_id = (request.args.get("tenant_id") or os.environ.get("DEFAULT_TENANT_ID", "default")).strip()
     try:
         normalize_domain_id(domain_id)
     except ValueError as e:
         return jsonify({"success": False, "error": str(e)}), 400
-    files = vs.index_stats_for_domain(domain_id)
-    return jsonify({"success": True, "domain_id": domain_id, "files": files}), 200
+    files = vs.index_stats_for_domain(domain_id, tenant_id=tenant_id)
+    return jsonify({"success": True, "domain_id": domain_id, "tenant_id": tenant_id, "files": files}), 200
 
 
 @app.route("/admin/reindex", methods=["POST"])

@@ -62,6 +62,7 @@ func registerAdminRouteGroup(g *gin.RouterGroup, auth gin.HandlerFunc) {
 	g.GET("/articles", handleAdminListArticles)
 	g.DELETE("/articles", handleAdminDeleteArticle)
 	g.POST("/upload", handleAdminUpload)
+	g.GET("/feedback", handleAdminFeedbackSummary)
 	g.POST("/reindex", handleAdminReindex)
 }
 
@@ -88,7 +89,7 @@ func handleAdminListArticles(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
 		return
 	}
-	dir := filepath.Join(config.DataDir, domainID)
+	dir := kbDataDir(adminTenantID(c), domainID)
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -98,7 +99,7 @@ func handleAdminListArticles(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
 		return
 	}
-	chunkCounts, _ := fetchPythonIndexStats(domainID)
+	chunkCounts, _ := fetchPythonIndexStats(adminTenantID(c), domainID)
 	var articles []adminArticleInfo
 	for _, e := range entries {
 		if e.IsDir() || !isKnowledgeFile(e.Name()) {
@@ -131,7 +132,7 @@ func handleAdminDeleteArticle(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Некорректное имя файла"})
 		return
 	}
-	path := filepath.Join(config.DataDir, domainID, name)
+	path := filepath.Join(kbDataDir(adminTenantID(c), domainID), name)
 	if err := os.Remove(path); err != nil {
 		if os.IsNotExist(err) {
 			c.JSON(http.StatusNotFound, gin.H{"success": false, "error": "Файл не найден"})
@@ -164,7 +165,7 @@ func handleAdminUpload(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Макс. размер файла 10 МБ"})
 		return
 	}
-	dir := filepath.Join(config.DataDir, domainID)
+	dir := kbDataDir(adminTenantID(c), domainID)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
 		return
@@ -240,11 +241,12 @@ type pythonIndexStatsResponse struct {
 	} `json:"files"`
 }
 
-func fetchPythonIndexStats(domainID string) (map[string]int, error) {
+func fetchPythonIndexStats(tenantID, domainID string) (map[string]int, error) {
 	if config.AdminSecret == "" {
 		return nil, fmt.Errorf("ADMIN_SECRET не задан")
 	}
-	url := strings.TrimRight(config.PythonBaseURL, "/") + "/admin/index-stats?domain_id=" + domainID
+	url := strings.TrimRight(config.PythonBaseURL, "/") +
+		"/admin/index-stats?domain_id=" + domainID + "&tenant_id=" + tenantID
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err

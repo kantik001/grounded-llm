@@ -43,7 +43,7 @@ def _excerpt(text: str, max_len: int = 280) -> str:
 
 
 def retrieve_rag_context(
-    user_question: str, domain_id: str = "default"
+    user_question: str, domain_id: str = "default", tenant_id: str = "default"
 ) -> Dict[str, Any]:
     q = (user_question or "").strip()
     empty: Dict[str, Any] = {
@@ -75,7 +75,7 @@ def retrieve_rag_context(
         return empty
 
     k = _rag_k_for_domain(domain)
-    fragments = search(q, domain_id=domain_id, k=k)
+    fragments = search(q, domain_id=domain_id, tenant_id=tenant_id, k=k)
     if not fragments:
         name = domain.get("name") or domain.get("name_ru") or domain_id
         empty["error"] = f"Не нашёл информации в документах домена «{name}»."

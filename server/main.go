@@ -12,6 +12,8 @@ import (
 
 func main() {
 	config = loadConfig()
+	loadAPIKeys(config)
+	initTenantConfig(config)
 	logStartup(config)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
@@ -53,11 +55,23 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 
 	router := gin.Default()
+	router.Use(requestIDMiddleware())
+	router.Use(metricsMiddleware())
 	router.Use(corsMiddleware(config.CORSAllowedOrigins))
 	router.Use(func(c *gin.Context) {
-		if !strings.Contains(c.Request.URL.Path, "/media/") {
-			c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+		if strings.Contains(c.Request.URL.Path, "/media/") {
+			c.Next()
+			return
 		}
+		if c.Query("stream") == "1" || c.Query("stream") == "true" {
+			c.Next()
+			return
+		}
+		if strings.Contains(c.GetHeader("Accept"), "text/event-stream") {
+			c.Next()
+			return
+		}
+		c.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
 		c.Next()
 	})
 

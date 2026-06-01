@@ -12,6 +12,7 @@ type jsonMessageRequest struct {
 	SessionID string `json:"session_id"`
 	Text      string `json:"text"`
 	DomainID  string `json:"domain_id"`
+	TenantID  string `json:"tenant_id"`
 }
 
 func handleMessage(c *gin.Context) {
@@ -44,6 +45,9 @@ func handleMessage(c *gin.Context) {
 		sessionID = strings.TrimSpace(req.SessionID)
 		text = strings.TrimSpace(req.Text)
 		domainIDRaw = strings.TrimSpace(req.DomainID)
+		if tid := strings.TrimSpace(req.TenantID); tid != "" {
+			c.Set(ctxKeyTenantID, normalizeTenantID(tid))
+		}
 	}
 
 	if text == "" && len(imageData) == 0 {
@@ -59,9 +63,15 @@ func handleMessage(c *gin.Context) {
 		return
 	}
 
-	tgUser, err := ctxTelegramUser(c)
+	tgUser, err := ctxActorUser(c)
 	if err != nil {
 		jsonError(c, http.StatusUnauthorized, err)
+		return
+	}
+
+	tenantID, err := resolveTenantID(c, config)
+	if err != nil {
+		jsonError(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -72,32 +82,43 @@ func handleMessage(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	sid, sessionDomain, err := chatStore.GetOrCreateSession(ctx, sessionID, tgUser, requestDomainID)
+	sid, sessionDomain, err := chatStore.GetOrCreateSession(ctx, sessionID, tgUser, tenantID, requestDomainID)
 	if err != nil {
 		log.Printf("GetOrCreateSession: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Ошибка сессии"})
 		return
 	}
 
-	logAnalytics(c, "message_sent", map[string]any{"kind": "text", "domain_id": sessionDomain, "session_id": sid})
-	handleTextMessage(c, sid, sessionDomain, tgUser.ID, text)
+	logRequest(c, "message_sent", map[string]any{"domain_id": sessionDomain, "session_id": sid})
+
+	if wantsStream(c) {
+		sseMessageHandler(c, sid, sessionDomain, tenantID, tgUser.ID, text)
+		return
+	}
+	handleTextMessage(c, sid, sessionDomain, tenantID, tgUser.ID, text)
 }
 
-func respondWithMessages(c *gin.Context, sid, domainID string, telegramID int64, extra gin.H, status int) {
+func respondWithMessages(c *gin.Context, sid, domainID, tenantID string, telegramID int64, extra gin.H, status int) {
 	msgs, err := chatStore.ListMessages(c.Request.Context(), sid, telegramID)
 	if err != nil {
 		log.Printf("ListMessages after reply: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Ошибка базы данных"})
 		return
 	}
-	body := gin.H{"success": true, "session_id": sid, "domain_id": domainID, "messages": msgs}
+	body := gin.H{
+		"success":    true,
+		"session_id": sid,
+		"domain_id":  domainID,
+		"tenant_id":  tenantID,
+		"messages":   msgs,
+	}
 	for k, v := range extra {
 		body[k] = v
 	}
 	c.JSON(status, body)
 }
 
-func handleTextMessage(c *gin.Context, sid, domainID string, telegramID int64, text string) {
+func handleTextMessage(c *gin.Context, sid, domainID, tenantID string, telegramID int64, text string) {
 	ctx := c.Request.Context()
 	prior, err := chatStore.HistoryForLLM(ctx, sid, telegramID, 0)
 	if err != nil {
@@ -105,7 +126,7 @@ func handleTextMessage(c *gin.Context, sid, domainID string, telegramID int64, t
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Ошибка истории"})
 		return
 	}
-	ragResult := answerWithRAG(text, domainID, prior, sid)
+	ragResult := answerWithRAG(text, tenantID, domainID, prior, sid)
 
 	if _, err := chatStore.AppendMessage(ctx, sid, ChatMessage{Role: "user", Content: text, Kind: "text"}); err != nil {
 		log.Printf("AppendMessage user: %v", err)
@@ -115,8 +136,8 @@ func handleTextMessage(c *gin.Context, sid, domainID string, telegramID int64, t
 
 	if ragResult.SoftFail {
 		_, _ = chatStore.AppendMessage(ctx, sid, ChatMessage{Role: "assistant", Content: ragResult.ErrMsg, Kind: "assistant"})
-		logAnalytics(c, "rag_answer", map[string]any{"domain_id": domainID, "soft_fail": true})
-		respondWithMessages(c, sid, domainID, telegramID, gin.H{"error": ragResult.ErrMsg}, http.StatusOK)
+		logRequest(c, "rag_answer", map[string]any{"domain_id": domainID, "soft_fail": true})
+		respondWithMessages(c, sid, domainID, tenantID, telegramID, gin.H{"error": ragResult.ErrMsg}, http.StatusOK)
 		return
 	}
 	if !ragResult.OK {
@@ -125,7 +146,7 @@ func handleTextMessage(c *gin.Context, sid, domainID string, telegramID int64, t
 		if strings.Contains(ragResult.ErrMsg, "LLM_API_KEY") {
 			status = http.StatusServiceUnavailable
 		}
-		respondWithMessages(c, sid, domainID, telegramID, gin.H{"success": false, "error": ragResult.ErrMsg}, status)
+		respondWithMessages(c, sid, domainID, tenantID, telegramID, gin.H{"success": false, "error": ragResult.ErrMsg}, status)
 		return
 	}
 
@@ -136,6 +157,6 @@ func handleTextMessage(c *gin.Context, sid, domainID string, telegramID int64, t
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Ошибка сохранения"})
 		return
 	}
-	logAnalytics(c, "rag_answer", map[string]any{"domain_id": domainID, "soft_fail": false})
-	respondWithMessages(c, sid, domainID, telegramID, nil, http.StatusOK)
+	logRequest(c, "rag_answer", map[string]any{"domain_id": domainID, "soft_fail": false})
+	respondWithMessages(c, sid, domainID, tenantID, telegramID, nil, http.StatusOK)
 }

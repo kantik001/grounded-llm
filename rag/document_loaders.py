@@ -31,7 +31,7 @@ def _validate_documents(docs: List[Document], filename: str) -> None:
         raise ValueError(f"Нет текстового содержимого: {filename}")
 
 
-def load_file(domain_id: str, file_path: str) -> List[Document]:
+def load_file(domain_id: str, file_path: str, tenant_id: str = "default") -> List[Document]:
     """Load a single knowledge-base file and attach domain metadata."""
     filename = os.path.basename(file_path)
     ext = os.path.splitext(filename)[1].lower()
@@ -48,6 +48,7 @@ def load_file(domain_id: str, file_path: str) -> List[Document]:
             doc.metadata = {}
         doc.metadata["filename"] = filename
         doc.metadata["domain_id"] = domain_id
+        doc.metadata["tenant_id"] = tenant_id
         doc.metadata["source_file"] = filename
         doc.metadata["file_type"] = ext.lstrip(".")
         if "page" in doc.metadata:

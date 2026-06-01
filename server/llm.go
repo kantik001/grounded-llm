@@ -36,6 +36,7 @@ func callLLMCompletion(messages []Message) (string, error) {
 	if config.LLMAPIKey == "" {
 		return "", fmt.Errorf("LLM API key not configured")
 	}
+	metricLLMRequests.Add(1)
 	llmReq := &LLMRequest{
 		Model:    config.LLMModel,
 		Messages: messages,
