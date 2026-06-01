@@ -33,6 +33,7 @@ type Config struct {
 }
 
 var config *Config
+var chatStore *ChatStore
 
 // Загружает .env и собирает Config из переменных окружения.
 func loadConfig() *Config {
