@@ -9,14 +9,14 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
-// RAGFragment — фрагмент документа из Python.
+// RAGFragment — фрагмент документа из Python (content — полный текст для verify).
 type RAGFragment struct {
 	Filename string `json:"filename"`
 	Content  string `json:"content"`
+	Page     int    `json:"page,omitempty"`
+	Excerpt  string `json:"excerpt,omitempty"`
 }
 
 // pythonRAGContextResponse — ответ POST /rag/context.
@@ -80,23 +80,22 @@ func buildRAGUserPrompt(question, context, fewShot, taskIntro, constraints strin
 	return fmt.Sprintf(ragUserPromptTpl, taskIntro, context, fewShot, constraints, question)
 }
 
-type ChatRequest struct {
-	Question string `json:"question"`
-	DomainID string `json:"domain_id"`
-}
-
-func answerWithRAG(q, domainID string, history []Message, sessionID string) (answer string, success bool, errMsg string, ragSoftFail bool) {
+func answerWithRAG(q, domainID string, history []Message, sessionID string) RAGAnswerResult {
+	var fail RAGAnswerResult
 	q = strings.TrimSpace(strings.ReplaceAll(strings.ReplaceAll(q, "\r", " "), "\n", " "))
 	if q == "" {
-		return "", false, "Пустой вопрос", false
+		fail.ErrMsg = "Пустой вопрос"
+		return fail
 	}
 
 	domainID, err := normalizeDomainID(domainID)
 	if err != nil {
-		return "", false, publicAPIError(err), false
+		fail.ErrMsg = publicAPIError(err)
+		return fail
 	}
 	if err := requireRAGEnabled(domainID); err != nil {
-		return "", false, publicAPIError(err), false
+		fail.ErrMsg = publicAPIError(err)
+		return fail
 	}
 
 	ragOut, err := fetchRAGContext(q, domainID)
@@ -106,14 +105,18 @@ func answerWithRAG(q, domainID string, history []Message, sessionID string) (ans
 		if ragOut != nil && ragOut.Error != "" {
 			msg = ragOut.Error
 		}
-		return "", false, msg, false
+		fail.ErrMsg = msg
+		return fail
 	}
 	if !ragOut.Success {
 		logRAGOutcome(domainID, q, len(ragOut.Fragments), false, ragOut.Error, sessionID, true)
-		return "", false, ragOut.Error, true
+		fail.ErrMsg = ragOut.Error
+		fail.SoftFail = true
+		return fail
 	}
 	if config.LLMAPIKey == "" {
-		return "", false, "Для текстового чата задайте LLM_API_KEY (OpenRouter / OpenAI-совместимый API).", false
+		fail.ErrMsg = "Для текстового чата задайте LLM_API_KEY (OpenRouter / OpenAI-совместимый API)."
+		return fail
 	}
 
 	prompts := promptsForDomain(domainID)
@@ -126,50 +129,21 @@ func answerWithRAG(q, domainID string, history []Message, sessionID string) (ans
 	raw, err := callLLMCompletion(msgs)
 	if err != nil {
 		log.Printf("LLM chat error: %v", err)
-		return "", false, publicAPIError(err), false
+		fail.ErrMsg = publicAPIError(err)
+		return fail
 	}
-	answer = cleanRAGAnswer(raw)
+	answer := cleanRAGAnswer(raw)
 	answer = appendRAGDisclaimer(answer)
 	passed, reason := verifyRAGAnswer(answer, ragOut.Fragments)
 	logRAGOutcome(domainID, q, len(ragOut.Fragments), passed, reason, sessionID, !passed)
+	citations := publicCitations(ragOut.Fragments)
 	if !passed {
-		return fmt.Sprintf("⚠️ Система не смогла подтвердить ответ источниками. %s\n\n%s", reason, verifyFailHint()), true, "", false
-	}
-	return answer, true, "", false
-}
-
-func handleChat(c *gin.Context) {
-	var req ChatRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "Некорректный JSON (нужно поле question)",
-		})
-		return
-	}
-	q := strings.TrimSpace(strings.ReplaceAll(strings.ReplaceAll(req.Question, "\r", " "), "\n", " "))
-	if q == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Пустой вопрос"})
-		return
-	}
-	domainID := strings.TrimSpace(req.DomainID)
-
-	answer, ok, errMsg, ragSoft := answerWithRAG(q, domainID, nil, "")
-	if ragSoft {
-		c.JSON(http.StatusOK, gin.H{"success": false, "error": errMsg})
-		return
-	}
-	if errMsg != "" && !ok {
-		if strings.Contains(errMsg, "LLM_API_KEY") {
-			c.JSON(http.StatusServiceUnavailable, gin.H{"success": false, "error": errMsg})
-			return
+		return RAGAnswerResult{
+			Answer:    fmt.Sprintf("⚠️ Система не смогла подтвердить ответ источниками. %s\n\n%s", reason, verifyFailHint()),
+			Citations: citations,
+			OK:        true,
+			SoftFail:  false,
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": errMsg})
-		return
 	}
-	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": errMsg})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"success": true, "answer": answer})
+	return RAGAnswerResult{Answer: answer, Citations: citations, OK: true}
 }

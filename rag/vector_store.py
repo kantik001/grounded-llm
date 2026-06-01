@@ -86,3 +86,25 @@ def search(query: str, domain_id: str, k: int = 8):
         k=k,
         filter={"domain_id": domain_id},
     )
+
+
+def index_stats_for_domain(domain_id: str) -> list[dict]:
+    """Chunk counts per source file for a domain (admin index status)."""
+    domain_id = normalize_domain_id(domain_id)
+    store = load_vector_store()
+    if store is None:
+        return []
+    try:
+        data = store._collection.get(  # noqa: SLF001 — Chroma admin introspection
+            where={"domain_id": domain_id},
+            include=["metadatas"],
+        )
+    except Exception:
+        return []
+    counts: dict[str, int] = {}
+    for meta in data.get("metadatas") or []:
+        if not meta:
+            continue
+        fn = meta.get("filename") or meta.get("source_file") or "unknown"
+        counts[fn] = counts.get(fn, 0) + 1
+    return [{"filename": name, "chunks": n} for name, n in sorted(counts.items())]

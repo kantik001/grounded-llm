@@ -105,7 +105,7 @@ func handleTextMessage(c *gin.Context, sid, domainID string, telegramID int64, t
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Ошибка истории"})
 		return
 	}
-	answer, ok, errMsg, ragSoft := answerWithRAG(text, domainID, prior, sid)
+	ragResult := answerWithRAG(text, domainID, prior, sid)
 
 	if _, err := chatStore.AppendMessage(ctx, sid, ChatMessage{Role: "user", Content: text, Kind: "text"}); err != nil {
 		log.Printf("AppendMessage user: %v", err)
@@ -113,23 +113,25 @@ func handleTextMessage(c *gin.Context, sid, domainID string, telegramID int64, t
 		return
 	}
 
-	if ragSoft {
-		_, _ = chatStore.AppendMessage(ctx, sid, ChatMessage{Role: "assistant", Content: errMsg, Kind: "assistant"})
+	if ragResult.SoftFail {
+		_, _ = chatStore.AppendMessage(ctx, sid, ChatMessage{Role: "assistant", Content: ragResult.ErrMsg, Kind: "assistant"})
 		logAnalytics(c, "rag_answer", map[string]any{"domain_id": domainID, "soft_fail": true})
-		respondWithMessages(c, sid, domainID, telegramID, gin.H{"error": errMsg}, http.StatusOK)
+		respondWithMessages(c, sid, domainID, telegramID, gin.H{"error": ragResult.ErrMsg}, http.StatusOK)
 		return
 	}
-	if !ok {
-		_, _ = chatStore.AppendMessage(ctx, sid, ChatMessage{Role: "assistant", Content: "Ошибка: " + errMsg, Kind: "assistant"})
+	if !ragResult.OK {
+		_, _ = chatStore.AppendMessage(ctx, sid, ChatMessage{Role: "assistant", Content: "Ошибка: " + ragResult.ErrMsg, Kind: "assistant"})
 		status := http.StatusInternalServerError
-		if strings.Contains(errMsg, "LLM_API_KEY") {
+		if strings.Contains(ragResult.ErrMsg, "LLM_API_KEY") {
 			status = http.StatusServiceUnavailable
 		}
-		respondWithMessages(c, sid, domainID, telegramID, gin.H{"success": false, "error": errMsg}, status)
+		respondWithMessages(c, sid, domainID, telegramID, gin.H{"success": false, "error": ragResult.ErrMsg}, status)
 		return
 	}
 
-	if _, err := chatStore.AppendMessage(ctx, sid, ChatMessage{Role: "assistant", Content: answer, Kind: "assistant"}); err != nil {
+	if _, err := chatStore.AppendMessage(ctx, sid, ChatMessage{
+		Role: "assistant", Content: ragResult.Answer, Kind: "assistant", Citations: ragResult.Citations,
+	}); err != nil {
 		log.Printf("AppendMessage assistant: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Ошибка сохранения"})
 		return

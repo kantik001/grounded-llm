@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Прогон eval-набора RAG: POST /rag/context и проверка метрик.
-Режим по умолчанию — retrieval (без LLM). Опционально --full через Go /chat (нужен LLM_API_KEY).
+Режим по умолчанию — retrieval (без LLM). End-to-end чат — через POST /message (Web App / API).
 """
 
 from __future__ import annotations

@@ -1,5 +1,12 @@
 {"domain_id": "default", "question": "Сколько дней оплачиваемого отпуска положено сотруднику?", "expect_contains": ["28"], "expect_context": true, "category": "policy"}
-{"domain_id": "default", "question": "Как оформить больничный лист?", "expect_contains": ["больничн", "3"], "expect_context": true, "category": "policy"}
-{"domain_id": "default", "question": "Можно ли работать удалённо два дня в неделю?", "expect_contains": ["удалён", "вторник", "четверг"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "За сколько дней нужно запланировать отпуск в HR Portal?", "expect_contains": ["14"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "Сколько дней отпуска можно перенести на следующий год?", "expect_contains": ["14"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "Как оформить больничный лист?", "expect_contains": ["3"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "До которого часа нужно уведомить руководителя о болезни?", "expect_contains": ["10:00"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "Можно ли работать удалённо два дня в неделю?", "expect_contains": ["2", "удалён"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "В какие дни рекомендуется быть в офисе?", "expect_contains": ["вторник", "четверг"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "В какие часы сотрудник должен быть доступен в мессенджере?", "expect_contains": ["09:00", "18:00"], "expect_context": true, "category": "policy"}
 {"domain_id": "default", "question": "Куда писать при конфликте с руководителем?", "expect_contains": ["hr@", "конфликт"], "expect_context": true, "category": "policy"}
-{"domain_id": "default", "question": "Какой срок испытательный для директора по маркетингу на Марсе?", "expect_out_of_scope": true, "expect_contains": [], "category": "edge"}
+{"domain_id": "default", "question": "За сколько рабочих дней HR проводит беседу при конфликте?", "expect_contains": ["5"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "Какой оклад у CEO на Луне в 2099 году?", "expect_out_of_scope": true, "expect_contains": [], "category": "edge"}
+{"domain_id": "default", "question": "Сколько дней отпуска у сотрудника на Марсе?", "expect_out_of_scope": true, "expect_contains": [], "category": "edge"}

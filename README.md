@@ -60,7 +60,7 @@ make test
 make eval-retrieval
 ```
 
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/DEPLOY.md`](docs/DEPLOY.md).
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/DEPLOY.md`](docs/DEPLOY.md), and [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Publish to GitHub
 

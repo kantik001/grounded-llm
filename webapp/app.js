@@ -382,7 +382,7 @@
             if (!messages || !messages.length) {
                 var hint = document.createElement('div');
                 hint.className = 'day-divider';
-                hint.textContent = 'Напишите вопрос или прикрепите фото яблони или листа.';
+                hint.textContent = 'Напишите вопрос по базе знаний выбранного домена.';
                 el.messagesRoot.appendChild(hint);
                 updateOnboardingVisibility();
                 return;
@@ -417,6 +417,32 @@
                     var pct = m.class_confidence > 0 ? Math.round(Number(m.class_confidence) * 100) : null;
                     meta.textContent = (m.class_prediction || '').replace(/_/g, ' ') + (pct != null ? ' · ' + pct + '%' : '');
                     bubble.appendChild(meta);
+                }
+
+                if (m.role === 'assistant' && m.citations && m.citations.length) {
+                    var cites = document.createElement('div');
+                    cites.className = 'citations';
+                    var citesTitle = document.createElement('div');
+                    citesTitle.className = 'citations-title';
+                    citesTitle.textContent = 'Источники';
+                    cites.appendChild(citesTitle);
+                    m.citations.forEach(function(c, idx) {
+                        var item = document.createElement('div');
+                        item.className = 'citation-item';
+                        var head = document.createElement('div');
+                        head.className = 'citation-head';
+                        head.textContent = '[' + (idx + 1) + '] ' + (c.filename || 'документ') +
+                            (c.page ? ' · стр. ' + c.page : '');
+                        item.appendChild(head);
+                        if (c.excerpt) {
+                            var ex = document.createElement('div');
+                            ex.className = 'citation-excerpt';
+                            ex.textContent = c.excerpt;
+                            item.appendChild(ex);
+                        }
+                        cites.appendChild(item);
+                    });
+                    bubble.appendChild(cites);
                 }
 
                 if (m.role === 'assistant' && m.id) {

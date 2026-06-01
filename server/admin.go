@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -59,6 +60,7 @@ func registerAdminRouteGroup(g *gin.RouterGroup, auth gin.HandlerFunc) {
 	g.Use(auth)
 	g.GET("/status", handleAdminStatus)
 	g.GET("/articles", handleAdminListArticles)
+	g.DELETE("/articles", handleAdminDeleteArticle)
 	g.POST("/upload", handleAdminUpload)
 	g.POST("/reindex", handleAdminReindex)
 }
@@ -72,7 +74,14 @@ func handleAdminStatus(c *gin.Context) {
 	})
 }
 
-// GET /admin/articles: список документов (.txt, .pdf, .docx) для domain_id.
+type adminArticleInfo struct {
+	Filename  string `json:"filename"`
+	SizeBytes int64  `json:"size_bytes"`
+	Modified  string `json:"modified"`
+	Chunks    int    `json:"chunks"`
+}
+
+// GET /admin/articles: список документов с размером, датой и числом chunks в индексе.
 func handleAdminListArticles(c *gin.Context) {
 	domainID, err := normalizeDomainID(domainIDFromQuery(c))
 	if err != nil {
@@ -83,19 +92,56 @@ func handleAdminListArticles(c *gin.Context) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		if os.IsNotExist(err) {
-			c.JSON(http.StatusOK, gin.H{"success": true, "domain_id": domainID, "files": []string{}})
+			c.JSON(http.StatusOK, gin.H{"success": true, "domain_id": domainID, "articles": []adminArticleInfo{}})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
 		return
 	}
-	var files []string
+	chunkCounts, _ := fetchPythonIndexStats(domainID)
+	var articles []adminArticleInfo
 	for _, e := range entries {
-		if !e.IsDir() && isKnowledgeFile(e.Name()) {
-			files = append(files, e.Name())
+		if e.IsDir() || !isKnowledgeFile(e.Name()) {
+			continue
 		}
+		info, err := e.Info()
+		if err != nil {
+			continue
+		}
+		a := adminArticleInfo{
+			Filename:  e.Name(),
+			SizeBytes: info.Size(),
+			Modified:  info.ModTime().UTC().Format(time.RFC3339),
+			Chunks:    chunkCounts[e.Name()],
+		}
+		articles = append(articles, a)
 	}
-	c.JSON(http.StatusOK, gin.H{"success": true, "domain_id": domainID, "files": files})
+	c.JSON(http.StatusOK, gin.H{"success": true, "domain_id": domainID, "articles": articles})
+}
+
+// DELETE /admin/articles?domain_id=&filename=
+func handleAdminDeleteArticle(c *gin.Context) {
+	domainID, err := normalizeDomainID(domainIDFromQuery(c))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
+		return
+	}
+	name := filepath.Base(strings.TrimSpace(c.Query("filename")))
+	if !safeFilename.MatchString(name) {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Некорректное имя файла"})
+		return
+	}
+	path := filepath.Join(config.DataDir, domainID, name)
+	if err := os.Remove(path); err != nil {
+		if os.IsNotExist(err) {
+			c.JSON(http.StatusNotFound, gin.H{"success": false, "error": "Файл не найден"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
+		return
+	}
+	log.Printf("Admin delete: %s", path)
+	c.JSON(http.StatusOK, gin.H{"success": true, "domain_id": domainID, "filename": name, "reindex_recommended": true})
 }
 
 func handleAdminUpload(c *gin.Context) {
@@ -140,6 +186,14 @@ func handleAdminUpload(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
 		return
 	}
+	if strings.EqualFold(filepath.Ext(name), ".txt") {
+		body, err := os.ReadFile(dst)
+		if err != nil || len(strings.TrimSpace(string(body))) == 0 {
+			_ = os.Remove(dst)
+			c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "TXT-файл пустой"})
+			return
+		}
+	}
 	log.Printf("Admin upload: %s -> %s", name, dst)
 	c.JSON(http.StatusOK, gin.H{"success": true, "domain_id": domainID, "filename": name, "path": dst})
 }
@@ -176,4 +230,43 @@ func triggerRAGReindex() error {
 		return fmt.Errorf("python reindex HTTP %d: %s", resp.StatusCode, string(body))
 	}
 	return nil
+}
+
+type pythonIndexStatsResponse struct {
+	Success bool `json:"success"`
+	Files   []struct {
+		Filename string `json:"filename"`
+		Chunks   int    `json:"chunks"`
+	} `json:"files"`
+}
+
+func fetchPythonIndexStats(domainID string) (map[string]int, error) {
+	if config.AdminSecret == "" {
+		return nil, fmt.Errorf("ADMIN_SECRET не задан")
+	}
+	url := strings.TrimRight(config.PythonBaseURL, "/") + "/admin/index-stats?domain_id=" + domainID
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("X-Admin-Secret", config.AdminSecret)
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("index-stats HTTP %d", resp.StatusCode)
+	}
+	var out pythonIndexStatsResponse
+	if err := json.Unmarshal(body, &out); err != nil {
+		return nil, err
+	}
+	counts := make(map[string]int)
+	for _, f := range out.Files {
+		counts[f.Filename] = f.Chunks
+	}
+	return counts, nil
 }

@@ -194,14 +194,34 @@
             try {
                 var data = await adminFetch('/articles?domain_id=' + encodeURIComponent(domainId), { method: 'GET' });
                 list.innerHTML = '';
-                var files = data.files || [];
-                if (!files.length) {
+                var articles = data.articles || data.files || [];
+                if (!articles.length) {
                     list.innerHTML = '<li>(нет файлов)</li>';
                     return;
                 }
-                files.forEach(function(f) {
+                articles.forEach(function(a) {
+                    var name = typeof a === 'string' ? a : a.filename;
                     var li = document.createElement('li');
-                    li.textContent = f;
+                    if (typeof a === 'string') {
+                        li.textContent = a;
+                    } else {
+                        var chunks = a.chunks != null ? a.chunks : '—';
+                        var kb = a.size_bytes ? (Math.round(a.size_bytes / 1024) + ' КБ') : '';
+                        li.textContent = name + (kb ? ' · ' + kb : '') + ' · chunks: ' + chunks;
+                        var del = document.createElement('button');
+                        del.type = 'button';
+                        del.textContent = 'Удалить';
+                        del.style.marginLeft = '8px';
+                        del.style.fontSize = '12px';
+                        del.addEventListener('click', function() {
+                            if (!confirm('Удалить ' + name + '? После удаления запустите переиндексацию.')) return;
+                            adminFetch('/articles?domain_id=' + encodeURIComponent(domainId) +
+                                '&filename=' + encodeURIComponent(name), { method: 'DELETE' })
+                                .then(function() { return refreshFiles(); })
+                                .catch(function(e) { setStatus(document.getElementById('actionStatus'), e.message, false); });
+                        });
+                        li.appendChild(del);
+                    }
                     list.appendChild(li);
                 });
             } catch (e) {

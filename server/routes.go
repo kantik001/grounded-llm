@@ -16,8 +16,6 @@ func registerPublicRoutes(router *gin.Engine) {
 }
 
 func mountProtectedAPI(r gin.IRoutes, auth, lim gin.HandlerFunc) {
-	deprecated := deprecatedAPIMiddleware()
-	r.POST("/chat", auth, lim, deprecated, handleChat)
 	r.POST("/session", auth, lim, handleNewSession)
 	r.GET("/history", auth, lim, handleHistory)
 	r.POST("/message", auth, lim, handleMessage)
@@ -30,12 +28,4 @@ func registerProtectedRoutes(router *gin.Engine, cfg *Config, rl *rateLimiter) {
 	lim := rateLimitMiddleware(rl)
 	mountProtectedAPI(router.Group(""), auth, lim)
 	mountProtectedAPI(router.Group("/api"), auth, lim)
-}
-
-func deprecatedAPIMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Header("Deprecation", "true")
-		c.Header("Link", "</message>; rel=\"successor-version\"")
-		c.Next()
-	}
 }

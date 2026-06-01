@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -62,8 +63,35 @@ func runMigrations(ctx context.Context, pool *pgxpool.Pool, sqlPath string) erro
 	return nil
 }
 
-// Применяет все .sql из каталога миграций по порядку имени.
+func ensureSchemaMigrationsTable(ctx context.Context, pool *pgxpool.Pool) error {
+	_, err := pool.Exec(ctx, `
+		CREATE TABLE IF NOT EXISTS schema_migrations (
+			filename   TEXT PRIMARY KEY,
+			applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)`)
+	return err
+}
+
+func migrationApplied(ctx context.Context, pool *pgxpool.Pool, filename string) (bool, error) {
+	var n int
+	err := pool.QueryRow(ctx,
+		`SELECT COUNT(*) FROM schema_migrations WHERE filename = $1`, filename,
+	).Scan(&n)
+	return n > 0, err
+}
+
+func markMigrationApplied(ctx context.Context, pool *pgxpool.Pool, filename string) error {
+	_, err := pool.Exec(ctx,
+		`INSERT INTO schema_migrations (filename) VALUES ($1) ON CONFLICT DO NOTHING`, filename,
+	)
+	return err
+}
+
+// Применяет все .sql из каталога миграций по порядку имени (с учётом schema_migrations).
 func runAllMigrations(ctx context.Context, pool *pgxpool.Pool, dir string) error {
+	if err := ensureSchemaMigrationsTable(ctx, pool); err != nil {
+		return fmt.Errorf("schema_migrations table: %w", err)
+	}
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return fmt.Errorf("read migrations dir %s: %w", dir, err)
@@ -83,10 +111,22 @@ func runAllMigrations(ctx context.Context, pool *pgxpool.Pool, dir string) error
 		return fmt.Errorf("no .sql migrations in %s", dir)
 	}
 	for _, f := range files {
+		base := filepath.Base(f)
+		applied, err := migrationApplied(ctx, pool, base)
+		if err != nil {
+			return fmt.Errorf("check migration %s: %w", base, err)
+		}
+		if applied {
+			log.Printf("Skip migration (already applied): %s", base)
+			continue
+		}
 		if err := runMigrations(ctx, pool, f); err != nil {
 			return fmt.Errorf("%s: %w", f, err)
 		}
-		log.Printf("Applied migration: %s", filepath.Base(f))
+		if err := markMigrationApplied(ctx, pool, base); err != nil {
+			return fmt.Errorf("record migration %s: %w", base, err)
+		}
+		log.Printf("Applied migration: %s", base)
 	}
 	return nil
 }
@@ -222,7 +262,7 @@ func (st *ChatStore) ListMessages(ctx context.Context, sessionID string, telegra
 	}
 	rows, err := st.pool.Query(ctx, `
 		SELECT m.id, m.role, m.content, m.kind, m.image_token, m.class_prediction, m.class_confidence,
-		       mf.rating
+		       m.citations, mf.rating
 		FROM messages m
 		LEFT JOIN users u ON u.telegram_id = $2
 		LEFT JOIN message_feedback mf ON mf.message_id = m.id AND mf.user_id = u.id
@@ -240,9 +280,13 @@ func (st *ChatStore) ListMessages(ctx context.Context, sessionID string, telegra
 		var imageToken *string
 		var classPred *string
 		var classConf *float64
+		var citationsJSON []byte
 		var fbRating *int16
-		if err := rows.Scan(&m.ID, &m.Role, &m.Content, &m.Kind, &imageToken, &classPred, &classConf, &fbRating); err != nil {
+		if err := rows.Scan(&m.ID, &m.Role, &m.Content, &m.Kind, &imageToken, &classPred, &classConf, &citationsJSON, &fbRating); err != nil {
 			return nil, err
+		}
+		if len(citationsJSON) > 0 {
+			_ = json.Unmarshal(citationsJSON, &m.Citations)
 		}
 		if imageToken != nil && *imageToken != "" {
 			m.ImageURL = mediaURL(*imageToken)
@@ -269,15 +313,26 @@ func mediaURL(token string) string {
 
 var errSessionNotFound = fmt.Errorf("session not found")
 
+func citationsJSONValue(c []RAGFragment) ([]byte, error) {
+	if len(c) == 0 {
+		return nil, nil
+	}
+	return json.Marshal(c)
+}
+
 // AppendMessage сохраняет сообщение и обрезает историю до maxSessionMessages.
 func (st *ChatStore) AppendMessage(ctx context.Context, sessionID string, m ChatMessage) (int64, error) {
+	citJSON, err := citationsJSONValue(m.Citations)
+	if err != nil {
+		return 0, fmt.Errorf("citations json: %w", err)
+	}
 	var id int64
-	err := st.pool.QueryRow(ctx, `
-		INSERT INTO messages (session_id, role, content, kind, image_token, class_prediction, class_confidence)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+	err = st.pool.QueryRow(ctx, `
+		INSERT INTO messages (session_id, role, content, kind, image_token, class_prediction, class_confidence, citations)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id`,
 		sessionID, m.Role, m.Content, m.Kind,
-		nullToken(m.ImageToken), nullIfEmpty(m.ClassPrediction), nullConfidence(m.ClassConfidence),
+		nullToken(m.ImageToken), nullIfEmpty(m.ClassPrediction), nullConfidence(m.ClassConfidence), citJSON,
 	).Scan(&id)
 	if err != nil {
 		return 0, err

@@ -15,7 +15,7 @@ JSON:
 { "session_id": "...", "text": "...", "domain_id": "default" }
 ```
 
-**Только текст** — RAG через `answerWithRAG`.  
+**Только текст** — RAG через `answerWithRAG`; у ответа ассистента в UI — `citations[]` (фрагменты KB).  
 **Multipart с image** — отклоняется с сообщением «vision module not in core» (подключите domain pack).
 
 ---

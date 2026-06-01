@@ -77,7 +77,7 @@ Handlers читают через `ctxTelegramUser(c)` в `chat_session.go`.
 
 Все ниже идут с **`auth` + `lim`** (rate limit):
 
-- `/classify`, `/chat`, `/session`, `/history`, `/message`, `/feedback`, `/media/:token`
+- `/session`, `/history`, `/message`, `/feedback`, `/media/:token`
 - Дубли на `/api/...`
 
 **Не защищены:** `/health`, `/domains`, `/onboarding`, админка (другая auth).

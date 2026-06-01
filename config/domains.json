@@ -5,7 +5,8 @@
     "default": {
       "name": "Knowledge base",
       "emoji": "📚",
-      "rag_enabled": true
+      "rag_enabled": true,
+      "rag_k": 8
     }
   }
 }
