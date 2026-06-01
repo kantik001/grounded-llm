@@ -9,9 +9,12 @@ func TestSafeFilename(t *testing.T) {
 	}{
 		{"article1.txt", true},
 		{"my-article_v2.txt", true},
+		{"policy_vacation.pdf", true},
+		{"handbook.docx", true},
 		{"../etc/passwd", false},
 		{"article.txt.exe", false},
 		{"кириллица.txt", false},
+		{"report.doc", false},
 	}
 	for _, tc := range cases {
 		got := safeFilename.MatchString(tc.name)

@@ -14,7 +14,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var safeFilename = regexp.MustCompile(`^[a-zA-Z0-9._-]+\.txt$`)
+var safeFilename = regexp.MustCompile(`^[a-zA-Z0-9._-]+\.(txt|pdf|docx)$`)
+
+const maxKnowledgeFileBytes = 10 * 1024 * 1024
+
+var knowledgeFileExtensions = map[string]bool{
+	".txt":  true,
+	".pdf":  true,
+	".docx": true,
+}
+
+func isKnowledgeFile(name string) bool {
+	return knowledgeFileExtensions[strings.ToLower(filepath.Ext(name))]
+}
 
 // Basic Auth для маршрутов /admin (ADMIN_USER / ADMIN_PASSWORD).
 func adminBasicAuth(cfg *Config) gin.HandlerFunc {
@@ -63,7 +75,7 @@ func handleAdminStatus(c *gin.Context) {
 	})
 }
 
-// GET /admin/articles: список .txt документов для domain_id.
+// GET /admin/articles: список документов (.txt, .pdf, .docx) для domain_id.
 func handleAdminListArticles(c *gin.Context) {
 	domainID, err := normalizeDomainID(adminDomainQuery(c))
 	if err != nil {
@@ -82,7 +94,7 @@ func handleAdminListArticles(c *gin.Context) {
 	}
 	var files []string
 	for _, e := range entries {
-		if !e.IsDir() && strings.HasSuffix(strings.ToLower(e.Name()), ".txt") {
+		if !e.IsDir() && isKnowledgeFile(e.Name()) {
 			files = append(files, e.Name())
 		}
 	}
@@ -103,7 +115,7 @@ func adminDomainForm(c *gin.Context) string {
 	return strings.TrimSpace(c.PostForm("crop_id"))
 }
 
-// POST /admin/upload: загрузка .txt в data/{domain_id}/.
+// POST /admin/upload: загрузка .txt/.pdf/.docx в data/{domain_id}/.
 func handleAdminUpload(c *gin.Context) {
 	domainID, err := normalizeDomainID(adminDomainForm(c))
 	if err != nil {
@@ -112,16 +124,16 @@ func handleAdminUpload(c *gin.Context) {
 	}
 	fh, err := c.FormFile("file")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Нужен файл .txt"})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Нужен файл .txt, .pdf или .docx"})
 		return
 	}
 	name := filepath.Base(fh.Filename)
 	if !safeFilename.MatchString(name) {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Имя файла: латиница, цифры, .txt"})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Имя файла: латиница, цифры, расширение .txt/.pdf/.docx"})
 		return
 	}
-	if fh.Size > 2*1024*1024 {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Макс. размер файла 2 МБ"})
+	if fh.Size > maxKnowledgeFileBytes {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Макс. размер файла 10 МБ"})
 		return
 	}
 	dir := filepath.Join(config.DataDir, domainID)
@@ -142,7 +154,7 @@ func handleAdminUpload(c *gin.Context) {
 		return
 	}
 	defer out.Close()
-	if _, err := io.Copy(out, io.LimitReader(src, 2*1024*1024+1)); err != nil {
+	if _, err := io.Copy(out, io.LimitReader(src, maxKnowledgeFileBytes+1)); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
 		return
 	}

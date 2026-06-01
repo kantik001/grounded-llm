@@ -56,7 +56,7 @@
 <body>
     <div class="wrap">
         <h1>🌿 Админка статей</h1>
-        <p class="hint">Загрузка .txt в <code>data/{crop_id}/</code> и переиндексация Chroma. Логин из <code>ADMIN_USER</code> / <code>ADMIN_PASSWORD</code>.</p>
+        <p class="hint">Загрузка .txt / .pdf / .docx в <code>data/{domain_id}/</code> и переиндексация Chroma. Логин из <code>ADMIN_USER</code> / <code>ADMIN_PASSWORD</code>.</p>
 
         <div class="card" id="loginCard">
             <label for="adminUser">Логин</label>
@@ -82,8 +82,8 @@
 
             <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
 
-            <label for="uploadFile">Загрузить .txt (латиница, до 2 МБ)</label>
-            <input type="file" id="uploadFile" accept=".txt,text/plain">
+            <label for="uploadFile">Загрузить документ (.txt, .pdf, .docx — латиница, до 10 МБ)</label>
+            <input type="file" id="uploadFile" accept=".txt,.pdf,.docx,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
             <button type="button" id="uploadBtn">Загрузить</button>
 
             <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
@@ -186,7 +186,7 @@
             var fileInput = document.getElementById('uploadFile');
             var f = fileInput.files && fileInput.files[0];
             if (!f) {
-                setStatus(document.getElementById('actionStatus'), 'Выберите файл .txt', false);
+                setStatus(document.getElementById('actionStatus'), 'Выберите файл (.txt, .pdf или .docx)', false);
                 return;
             }
             var fd = new FormData();
