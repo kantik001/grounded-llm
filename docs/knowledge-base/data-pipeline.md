@@ -74,7 +74,7 @@ python scripts/run_rag_eval.py --suite default
 
 ## CV / Vision (опционально)
 
-Распознавание фото **не входит** в platform core. Для vision — отдельный domain pack (см. `cv-*.md` в knowledge-base).
+Распознавание фото **не входит** в platform core. Для vision подключается отдельный domain pack (свой репозиторий или сервис).
 
 ---
 

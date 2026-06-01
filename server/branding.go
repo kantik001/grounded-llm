@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
-	"path/filepath"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,19 +32,7 @@ func loadBrandingConfig() error {
 }
 
 func brandingConfigPath() string {
-	if p := os.Getenv("BRANDING_CONFIG_PATH"); p != "" {
-		return p
-	}
-	for _, candidate := range []string{
-		"/config/branding.json",
-		filepath.Join("..", "config", "branding.json"),
-		filepath.Join("config", "branding.json"),
-	} {
-		if _, err := os.Stat(candidate); err == nil {
-			return candidate
-		}
-	}
-	return filepath.Join("config", "branding.json")
+	return resolveConfigPath("BRANDING_CONFIG_PATH", defaultConfigCandidates("branding.json")...)
 }
 
 // GET /branding — публичные тексты UI для Web App.

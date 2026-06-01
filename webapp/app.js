@@ -306,7 +306,7 @@
             }
         }
 
-        async function loadCropsCatalog() {
+        async function loadDomainsCatalog() {
             try {
                 var res = await apiFetch('/domains', { method: 'GET' });
                 var data = parseApiResponseJson(await res.text());
@@ -323,7 +323,7 @@
                 domainId = sessionStorage.getItem(DOMAIN_STORAGE_KEY) || data.default_domain || 'default';
                 el.domainSelect.value = domainId;
             } catch (e) {
-                console.error('loadCropsCatalog', e);
+                console.error('loadDomainsCatalog', e);
             }
         }
 
@@ -559,7 +559,7 @@
         el.inputText.addEventListener('input', autoResize);
 
         loadBranding().then(function() {
-            return loadCropsCatalog();
+            return loadDomainsCatalog();
         }).then(function() {
             return ensureSession();
         }).then(function() {

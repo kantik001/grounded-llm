@@ -153,10 +153,7 @@ func handleChat(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Пустой вопрос"})
 		return
 	}
-	domainID := req.DomainID
-	if domainID == "" {
-		domainID = req.CropID
-	}
+	domainID := coalesceDomainID(req.DomainID, req.CropID)
 
 	answer, ok, errMsg, ragSoft := answerWithRAG(q, domainID, nil, "")
 	if ragSoft {

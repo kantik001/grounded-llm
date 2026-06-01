@@ -16,19 +16,11 @@ func handleNewSession(c *gin.Context) {
 	var req newSessionRequest
 	_ = c.ShouldBindJSON(&req)
 
-	domainID := strings.TrimSpace(req.DomainID)
-	if domainID == "" {
-		domainID = strings.TrimSpace(req.CropID)
-	}
-	if domainID == "" {
-		domainID = defaultDomainID()
-	} else {
-		var err error
-		domainID, err = normalizeDomainID(domainID)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
-			return
-		}
+	domainID := coalesceDomainID(req.DomainID, req.CropID)
+	domainID, err := normalizeDomainID(domainID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
+		return
 	}
 
 	tgUser, err := ctxTelegramUser(c)

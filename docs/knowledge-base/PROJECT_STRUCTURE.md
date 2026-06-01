@@ -1,35 +1,41 @@
 ﻿# Структура проекта Grounded LLM / Repository map
 
-Карта репозитория по текущему состоянию. Подробные разборы: [README.md](./README.md).
+Карта репозитория. Подробные разборы: [README.md](./README.md).
 
 ---
 
-## Корень / Root
+## Корень
 
-| Файл | Назначение |
+| Путь | Назначение |
 |------|------------|
-| `README.md` | Обзор, quick start, API |
-| `PROJECT_STRUCTURE.md` | Краткая карта (корень) |
-| `docker-compose.yml` | 4 сервиса: postgres, python, server, webapp |
-| `Dockerfile.server`, `Dockerfile.python`, `Dockerfile.webapp` | образы |
-| `Makefile` | up, test, smoke, reindex |
-| `.env.example` | шаблон секретов |
+| `server/` | Go: auth, sessions, RAG+LLM, admin, verify |
+| `api/` | Python Flask: RAG retrieval |
+| `rag/` | Chroma, retrieval, domains, document loaders |
+| `config/` | Domain pack defaults |
+| `data/{domain_id}/` | KB: `.txt`, `.pdf`, `.docx` |
+| `webapp/` | Reference Telegram Web App UI |
+| `migrations/` | PostgreSQL schema |
+| `eval/`, `scripts/` | Quality & ops |
+| `docs/` | Architecture, deploy, knowledge-base |
 
 ---
 
 ## `server/` — Go backend
 
-Оркестрация: auth, sessions, RAG+LLM, verify, admin. → [server-overview.md](./server-overview.md)
+Один бинарник `package main`, модуль **`grounded_llm_server`**.
 
-Тесты: `server/*_test.go`
+Ключевые файлы:
 
----
+| Файл | Роль |
+|------|------|
+| `main.go`, `routes.go` | старт, маршруты |
+| `domains.go`, `domain_resolve.go` | каталог доменов, legacy `crop_id` |
+| `config_paths.go` | поиск JSON в `/config` |
+| `rag_chat.go`, `rag_verify.go` | RAG + LLM + verify |
+| `postgres_store.go` | Postgres, сессии, сообщения |
+| `admin.go` | upload KB, reindex |
 
-## `api/` — Python Flask
-
-`app.py`: `/rag/context`, `/health`, `/admin/reindex`, `/domains`. → [python-api.md](./python-api.md)
-
-Зависимости: `api/requirements.txt`
+→ [server-overview.md](./server-overview.md)
 
 ---
 
@@ -39,84 +45,30 @@
 |--------|------|
 | `domains_config.py` | `config/domains.json` |
 | `document_loaders.py` | `.txt`, `.pdf`, `.docx` |
-| `vector_store.py` | Chroma, indexing |
+| `vector_store.py` | Chroma indexing |
 | `retrieval.py` | context для Go |
-| `verifier.py` | verify чисел (Python mirror) |
+| `verifier.py` | verify чисел (mirror Go) |
 
 ---
 
-## `config/` — domain pack (частично core defaults)
+## `config/` — domain pack
 
-| Файл | Назначение |
-|------|------------|
-| `domains.json` | каталог доменов, `rag_enabled` |
-| `prompts.json` | system prompts, constraints |
-| `few_shot.json` | примеры для RAG |
-| `onboarding.json` | стартовые вопросы |
-| `branding.json` | UI брендинг |
+`domains.json`, `prompts.json`, `few_shot.json`, `onboarding.json`, `branding.json`
 
 → [config-overview.md](./config-overview.md)
 
 ---
 
-## `data/{domain_id}/` — knowledge base
-
-Документы: `.txt`, `.pdf`, `.docx`. Демо: `data/default/` (HR policies).
-
----
-
-## `webapp/` — reference UI
-
-`index.html`, `admin.html`, `app.js`, `nginx.conf`. → [webapp-overview.md](./webapp-overview.md)
-
----
-
-## `migrations/` — PostgreSQL
-
-`001`…`004` — users, sessions, messages, feedback, analytics, `domain_id`. → [migrations-overview.md](./migrations-overview.md)
-
----
-
-## `tests/` — pytest
-
-`test_verifier.py`, `test_domains_config.py`, `test_document_loaders.py`. → [tests-overview.md](./tests-overview.md)
-
----
-
-## `scripts/`
-
-`reindex_rag.py`, `run_rag_eval.py`, `smoke.ps1`, `smoke.sh`. → [scripts-overview.md](./scripts-overview.md)
-
----
-
-## `eval/`
-
-Baseline JSONL для регрессии retrieval. → [../eval/README.md](../eval/README.md)
-
----
-
-## `docs/`
+## Документация
 
 | Путь | Содержание |
 |------|------------|
-| `docs/ARCHITECTURE.md` | слои core / domain pack |
+| `docs/ARCHITECTURE.md` | core vs domain pack |
 | `docs/DEPLOY.md` | развёртывание |
-| `docs/knowledge-base/` | разбор модулей (эта папка) |
+| `docs/knowledge-base/` | разбор модулей |
 
 ---
 
-## Нет в ядре / Not in core
+## Вне ядра
 
-- `cv/` — vision module (optional domain pack)
-- `photo_templates.json`, `cv_class_labels.json` — legacy agro configs
-
----
-
-## Legacy naming
-
-| Было | Стало |
-|------|-------|
-| `doctor_gardens_ai` | `grounded-llm` |
-| `crop_id` | `domain_id` |
-| `classifier` (compose) | `python` |
-| `crops.json` | `domains.json` |
+Computer Vision, agro-конфиги и отраслевые domain packs — **отдельные репозитории/пакеты**, не часть platform core.

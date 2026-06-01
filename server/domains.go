@@ -80,24 +80,18 @@ func loadDomainCatalog() error {
 }
 
 func domainsConfigPath() string {
-	if p := os.Getenv("DOMAINS_CONFIG_PATH"); p != "" {
+	if p := strings.TrimSpace(os.Getenv("DOMAINS_CONFIG_PATH")); p != "" {
 		return p
 	}
-	if p := os.Getenv("CROPS_CONFIG_PATH"); p != "" {
+	if p := strings.TrimSpace(os.Getenv("CROPS_CONFIG_PATH")); p != "" {
 		return p
 	}
-	for _, candidate := range []string{
-		"/config/domains.json",
-		filepath.Join("..", "config", "domains.json"),
-		filepath.Join("config", "domains.json"),
-		"/config/crops.json",
+	return resolveConfigPath("", append(
+		defaultConfigCandidates("domains.json"),
+		filepath.Join("/config", "crops.json"),
+		filepath.Join("..", "config", "crops.json"),
 		filepath.Join("config", "crops.json"),
-	} {
-		if _, err := os.Stat(candidate); err == nil {
-			return candidate
-		}
-	}
-	return filepath.Join("config", "domains.json")
+	)...)
 }
 
 func normalizeDomainID(raw string) (string, error) {
@@ -158,19 +152,7 @@ func loadPromptCatalog() error {
 }
 
 func promptsConfigPath() string {
-	if p := os.Getenv("PROMPTS_CONFIG_PATH"); p != "" {
-		return p
-	}
-	for _, candidate := range []string{
-		"/config/prompts.json",
-		filepath.Join("..", "config", "prompts.json"),
-		filepath.Join("config", "prompts.json"),
-	} {
-		if _, err := os.Stat(candidate); err == nil {
-			return candidate
-		}
-	}
-	return filepath.Join("config", "prompts.json")
+	return resolveConfigPath("PROMPTS_CONFIG_PATH", defaultConfigCandidates("prompts.json")...)
 }
 
 func promptsForDomain(domainID string) domainPrompts {

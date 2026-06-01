@@ -1,4 +1,4 @@
-module apple_gardener_server
+module grounded_llm_server
 
 go 1.23
 
