@@ -1,0 +1,97 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Grounded LLM API",
+    "version": "1.0.0",
+    "description": "Grounded RAG chat API. Auth: Telegram initData (Web App) or X-API-Key header."
+  },
+  "servers": [{ "url": "/api/v1" }],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": { "type": "apiKey", "in": "header", "name": "X-API-Key" },
+      "TelegramAuth": { "type": "apiKey", "in": "header", "name": "X-Telegram-Init-Data" }
+    },
+    "parameters": {
+      "TenantId": {
+        "name": "X-Tenant-ID",
+        "in": "header",
+        "schema": { "type": "string", "default": "default" }
+      }
+    }
+  },
+  "security": [{ "ApiKeyAuth": [] }, { "TelegramAuth": [] }],
+  "paths": {
+    "/session": {
+      "post": {
+        "summary": "Create chat session",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": { "domain_id": { "type": "string" } }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "session_id" } }
+      }
+    },
+    "/message": {
+      "post": {
+        "summary": "Send message (JSON or SSE with ?stream=1)",
+        "parameters": [
+          { "name": "stream", "in": "query", "schema": { "type": "boolean" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["text"],
+                "properties": {
+                  "session_id": { "type": "string" },
+                  "domain_id": { "type": "string" },
+                  "tenant_id": { "type": "string" },
+                  "text": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "messages[] or text/event-stream" }
+        }
+      }
+    },
+    "/history": {
+      "get": {
+        "summary": "Chat history",
+        "parameters": [
+          { "name": "session_id", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "messages" } }
+      }
+    },
+    "/feedback": {
+      "post": {
+        "summary": "Rate assistant message",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "session_id": { "type": "string" },
+                  "message_id": { "type": "integer" },
+                  "rating": { "type": "integer", "enum": [1, -1] }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    }
+  }
+}

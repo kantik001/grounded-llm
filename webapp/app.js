@@ -520,6 +520,72 @@
             el.typingLine.classList.toggle('active', on);
         }
 
+        async function sendMessageStream(text) {
+            var url = '/message?stream=1';
+            var res = await apiFetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json; charset=utf-8', 'Accept': 'text/event-stream' },
+                body: JSON.stringify({ session_id: sessionId, domain_id: domainId, text: text })
+            });
+            if (!res.ok || !res.body) {
+                throw new Error('Stream unavailable');
+            }
+            var reader = res.body.getReader();
+            var decoder = new TextDecoder();
+            var buffer = '';
+            var draftRow = null;
+            var draftBody = null;
+
+            function ensureDraftBubble() {
+                if (draftRow) return;
+                draftRow = document.createElement('div');
+                draftRow.className = 'row assistant';
+                var bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                draftBody = document.createElement('div');
+                draftBody.className = 'body';
+                bubble.appendChild(draftBody);
+                draftRow.appendChild(bubble);
+                el.messagesRoot.appendChild(draftRow);
+                scrollToBottom();
+            }
+
+            while (true) {
+                var chunk = await reader.read();
+                if (chunk.done) break;
+                buffer += decoder.decode(chunk.value, { stream: true });
+                var parts = buffer.split('\n\n');
+                buffer = parts.pop() || '';
+                parts.forEach(function(block) {
+                    var event = 'message';
+                    var data = '';
+                    block.split('\n').forEach(function(line) {
+                        if (line.indexOf('event: ') === 0) event = line.slice(7).trim();
+                        if (line.indexOf('data: ') === 0) data = line.slice(6);
+                    });
+                    if (!data) return;
+                    if (event === 'token') {
+                        try {
+                            var tok = JSON.parse(data);
+                            ensureDraftBubble();
+                            draftBody.textContent += tok.text || '';
+                            scrollToBottom();
+                        } catch (e) { /* ignore */ }
+                    } else if (event === 'done') {
+                        var payload = JSON.parse(data);
+                        if (payload.session_id) {
+                            sessionId = payload.session_id;
+                            sessionStorage.setItem(STORAGE_KEY, sessionId);
+                        }
+                        if (payload.messages) renderMessages(payload.messages);
+                    } else if (event === 'error') {
+                        var err = JSON.parse(data);
+                        throw new Error(err.error || 'Stream error');
+                    }
+                });
+            }
+        }
+
         async function sendMessage() {
             if (sending) return;
             var text = (el.inputText.value || '').trim();
@@ -536,6 +602,16 @@
 
             setSending(true);
             try {
+                if (window.ReadableStream && typeof TextDecoder !== 'undefined') {
+                    try {
+                        await sendMessageStream(text);
+                        el.inputText.value = '';
+                        autoResize();
+                        return;
+                    } catch (streamErr) {
+                        console.warn('stream fallback', streamErr);
+                    }
+                }
                 var res = await apiFetch('/message', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json; charset=utf-8' },

@@ -30,6 +30,7 @@ type Config struct {
 	AdminUser              string
 	AdminPassword          string
 	AdminSecret            string
+	DefaultTenantID        string
 }
 
 var config *Config
@@ -68,6 +69,7 @@ func loadConfig() *Config {
 		AdminUser:              getEnv("ADMIN_USER", "admin"),
 		AdminPassword:          getEnv("ADMIN_PASSWORD", ""),
 		AdminSecret:            getEnv("ADMIN_SECRET", ""),
+		DefaultTenantID:        getEnv("DEFAULT_TENANT_ID", "default"),
 	}
 }
 
@@ -96,6 +98,10 @@ func logStartup(cfg *Config) {
 	} else {
 		log.Printf("Telegram auth: WARNING — TELEGRAM_BOT_TOKEN not set, protected routes will reject clients")
 	}
+	if len(apiKeyRegistry) > 0 {
+		log.Printf("API keys: %d configured", len(apiKeyRegistry))
+	}
+	log.Printf("Default tenant: %s", cfg.DefaultTenantID)
 	log.Printf("CORS origins: %v", cfg.CORSAllowedOrigins)
 	log.Printf("Rate limit: %d req/min per user", cfg.RateLimitPerMinute)
 	log.Printf("Database URL: configured")

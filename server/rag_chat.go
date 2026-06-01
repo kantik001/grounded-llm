@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -29,8 +27,12 @@ type pythonRAGContextResponse struct {
 	Fragments []RAGFragment `json:"fragments,omitempty"`
 }
 
-func fetchRAGContext(question, domainID string) (*pythonRAGContextResponse, error) {
-	body := map[string]string{"question": question, "domain_id": domainID}
+func fetchRAGContext(question, tenantID, domainID string) (*pythonRAGContextResponse, error) {
+	body := map[string]string{
+		"question":  question,
+		"domain_id": domainID,
+		"tenant_id": tenantID,
+	}
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
 		return nil, fmt.Errorf("marshal RAG request: %w", err)
@@ -78,72 +80,4 @@ const ragUserPromptTpl = `<system>%s</system>
 
 func buildRAGUserPrompt(question, context, fewShot, taskIntro, constraints string) string {
 	return fmt.Sprintf(ragUserPromptTpl, taskIntro, context, fewShot, constraints, question)
-}
-
-func answerWithRAG(q, domainID string, history []Message, sessionID string) RAGAnswerResult {
-	var fail RAGAnswerResult
-	q = strings.TrimSpace(strings.ReplaceAll(strings.ReplaceAll(q, "\r", " "), "\n", " "))
-	if q == "" {
-		fail.ErrMsg = "Пустой вопрос"
-		return fail
-	}
-
-	domainID, err := normalizeDomainID(domainID)
-	if err != nil {
-		fail.ErrMsg = publicAPIError(err)
-		return fail
-	}
-	if err := requireRAGEnabled(domainID); err != nil {
-		fail.ErrMsg = publicAPIError(err)
-		return fail
-	}
-
-	ragOut, err := fetchRAGContext(q, domainID)
-	if err != nil {
-		log.Printf("RAG fetch error: %v", err)
-		msg := publicAPIError(err)
-		if ragOut != nil && ragOut.Error != "" {
-			msg = ragOut.Error
-		}
-		fail.ErrMsg = msg
-		return fail
-	}
-	if !ragOut.Success {
-		logRAGOutcome(domainID, q, len(ragOut.Fragments), false, ragOut.Error, sessionID, true)
-		fail.ErrMsg = ragOut.Error
-		fail.SoftFail = true
-		return fail
-	}
-	if config.LLMAPIKey == "" {
-		fail.ErrMsg = "Для текстового чата задайте LLM_API_KEY (OpenRouter / OpenAI-совместимый API)."
-		return fail
-	}
-
-	prompts := promptsForDomain(domainID)
-	userPrompt := buildRAGUserPrompt(q, ragOut.Context, ragOut.FewShot, prompts.RAGTaskIntro, ragConstraintsText())
-	var msgs []Message
-	msgs = append(msgs, Message{Role: "system", Content: prompts.RAGSystem})
-	msgs = append(msgs, history...)
-	msgs = append(msgs, Message{Role: "user", Content: userPrompt})
-
-	raw, err := callLLMCompletion(msgs)
-	if err != nil {
-		log.Printf("LLM chat error: %v", err)
-		fail.ErrMsg = publicAPIError(err)
-		return fail
-	}
-	answer := cleanRAGAnswer(raw)
-	answer = appendRAGDisclaimer(answer)
-	passed, reason := verifyRAGAnswer(answer, ragOut.Fragments)
-	logRAGOutcome(domainID, q, len(ragOut.Fragments), passed, reason, sessionID, !passed)
-	citations := publicCitations(ragOut.Fragments)
-	if !passed {
-		return RAGAnswerResult{
-			Answer:    fmt.Sprintf("⚠️ Система не смогла подтвердить ответ источниками. %s\n\n%s", reason, verifyFailHint()),
-			Citations: citations,
-			OK:        true,
-			SoftFail:  false,
-		}
-	}
-	return RAGAnswerResult{Answer: answer, Citations: citations, OK: true}
 }

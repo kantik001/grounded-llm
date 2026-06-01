@@ -44,6 +44,8 @@ python scripts/reindex_rag.py
 - `GET /branding`, `GET /onboarding?domain_id=`
 - Admin: `POST /admin/upload`, `POST /admin/reindex`
 
+Integrators (Phase 2): `X-API-Key` + `X-Tenant-ID`, streaming `POST /message?stream=1`, OpenAPI at `/api/v1/openapi.json`, metrics at `/metrics`.
+
 ## New domain
 
 1. Add entry to `config/domains.json`

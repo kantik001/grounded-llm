@@ -190,12 +190,12 @@ func nullIfEmpty(s string) *string {
 	return &s
 }
 
-// CreateSession создаёт новую сессию для пользователя (id в таблице users) и культуры.
-func (st *ChatStore) CreateSession(ctx context.Context, userID int64, domainID string) (string, error) {
+// CreateSession создаёт новую сессию для пользователя.
+func (st *ChatStore) CreateSession(ctx context.Context, userID int64, tenantID, domainID string) (string, error) {
 	sid := newSessionID()
 	_, err := st.pool.Exec(ctx,
-		`INSERT INTO chat_sessions (id, user_id, domain_id) VALUES ($1, $2, $3)`,
-		sid, userID, domainID,
+		`INSERT INTO chat_sessions (id, user_id, domain_id, tenant_id) VALUES ($1, $2, $3, $4)`,
+		sid, userID, domainID, tenantID,
 	)
 	return sid, err
 }
@@ -227,8 +227,8 @@ func (st *ChatStore) sessionOwned(ctx context.Context, sessionID string, telegra
 	return ok, err
 }
 
-// GetOrCreateSession возвращает существующую сессию или создаёт новую с domain_id.
-func (st *ChatStore) GetOrCreateSession(ctx context.Context, sessionID string, u *TelegramUser, domainID string) (string, string, error) {
+// GetOrCreateSession возвращает существующую сессию или создаёт новую.
+func (st *ChatStore) GetOrCreateSession(ctx context.Context, sessionID string, u *TelegramUser, tenantID, domainID string) (string, string, error) {
 	userID, err := st.UpsertUser(ctx, u)
 	if err != nil {
 		return "", "", err
@@ -247,7 +247,7 @@ func (st *ChatStore) GetOrCreateSession(ctx context.Context, sessionID string, u
 			return sessionID, domain, nil
 		}
 	}
-	sid, err := st.CreateSession(ctx, userID, domainID)
+	sid, err := st.CreateSession(ctx, userID, tenantID, domainID)
 	return sid, domainID, err
 }
 
@@ -417,6 +417,33 @@ func (st *ChatStore) ReadImage(token string) ([]byte, error) {
 		return nil, fmt.Errorf("invalid token")
 	}
 	return os.ReadFile(filepath.Join(st.uploadDir, token+".bin"))
+}
+
+type FeedbackSummaryRow struct {
+	Rating int   `json:"rating"`
+	Count  int64 `json:"count"`
+}
+
+// FeedbackSummary — агрегат оценок сообщений.
+func (st *ChatStore) FeedbackSummary(ctx context.Context) ([]FeedbackSummaryRow, error) {
+	rows, err := st.pool.Query(ctx, `
+		SELECT rating, COUNT(*)::bigint
+		FROM message_feedback
+		GROUP BY rating
+		ORDER BY rating DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []FeedbackSummaryRow
+	for rows.Next() {
+		var r FeedbackSummaryRow
+		if err := rows.Scan(&r.Rating, &r.Count); err != nil {
+			return nil, err
+		}
+		out = append(out, r)
+	}
+	return out, rows.Err()
 }
 
 // Ждёт готовности Postgres при старте (docker compose).

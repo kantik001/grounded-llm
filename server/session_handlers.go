@@ -33,7 +33,7 @@ func handleNewSession(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Ошибка пользователя"})
 		return
 	}
-	sid, err := chatStore.CreateSession(ctx, userID, domainID)
+	sid, err := chatStore.CreateSession(ctx, userID, ctxTenantID(c), domainID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Ошибка создания сессии"})
 		return
@@ -42,6 +42,7 @@ func handleNewSession(c *gin.Context) {
 		"success":    true,
 		"session_id": sid,
 		"domain_id":  domainID,
+		"tenant_id":  ctxTenantID(c),
 	})
 }
 
