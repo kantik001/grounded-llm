@@ -1,0 +1,36 @@
+# Этап сборки
+FROM golang:1.23-alpine AS builder
+
+WORKDIR /build
+
+# Установка зависимостей для сборки
+RUN apk add --no-cache git
+
+# Копирование go модулей
+COPY server/go.mod server/go.sum ./
+RUN go mod download
+
+# Копирование исходного кода
+COPY server/ .
+
+# Подтянуть go.sum (новые зависимости, напр. pgx)
+RUN go mod tidy
+
+# Сборка бинарного файла
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+
+# Финальный образ
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates curl
+
+WORKDIR /root/
+
+# Копирование бинарного файла из этапа сборки
+COPY --from=builder /build/main .
+COPY migrations /migrations
+COPY config /config
+
+EXPOSE 8080
+
+CMD ["./main"]

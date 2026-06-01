@@ -1,0 +1,14 @@
+FROM nginx:alpine
+
+# Копирование конфигурации nginx
+COPY webapp/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Копирование файлов веб-приложения
+COPY webapp/index.html /usr/share/nginx/html/
+COPY webapp/app.css /usr/share/nginx/html/
+COPY webapp/app.js /usr/share/nginx/html/
+COPY webapp/admin.html /usr/share/nginx/html/
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

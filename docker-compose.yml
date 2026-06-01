@@ -1,0 +1,120 @@
+name: grounded_llm
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: grounded_llm_postgres
+    environment:
+      POSTGRES_USER: grounded
+      POSTGRES_PASSWORD: grounded
+      POSTGRES_DB: grounded
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U grounded -d grounded"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  python:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    container_name: grounded_llm_python
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    environment:
+      - PYTHON_SERVICE_PORT=5000
+      - DOMAINS_CONFIG_PATH=/config/domains.json
+      - FORCE_RAG_REINDEX=${FORCE_RAG_REINDEX:-false}
+      - ADMIN_SECRET=${ADMIN_SECRET:-}
+    volumes:
+      - chroma_data:/app/chroma_db
+      - ./api:/app/api:ro
+      - ./rag:/app/rag:ro
+      - ./data:/app/data:ro
+      - ./config:/config:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health')"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 180s
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    container_name: grounded_llm_server
+    ports:
+      - "8080:8080"
+    environment:
+      - PYTHON_RAG_URL=http://python:5000/rag/context
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_BASE_URL=${LLM_BASE_URL:-https://openrouter.ai/api}
+      - LLM_MODEL=${LLM_MODEL:-openrouter/free}
+      - SERVER_PORT=8080
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_AUTH_DISABLED=${TELEGRAM_AUTH_DISABLED:-false}
+      - TELEGRAM_INIT_DATA_MAX_AGE_SEC=${TELEGRAM_INIT_DATA_MAX_AGE_SEC:-86400}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost,http://127.0.0.1}
+      - RATE_LIMIT_REQUESTS_PER_MINUTE=${RATE_LIMIT_REQUESTS_PER_MINUTE:-30}
+      - DATABASE_URL=postgres://grounded:grounded@postgres:5432/grounded?sslmode=disable
+      - UPLOAD_DIR=/data/uploads
+      - MIGRATIONS_DIR=/migrations
+      - DOMAINS_CONFIG_PATH=/config/domains.json
+      - PROMPTS_CONFIG_PATH=/config/prompts.json
+      - ONBOARDING_CONFIG_PATH=/config/onboarding.json
+      - BRANDING_CONFIG_PATH=/config/branding.json
+      - CONFIG_RELOAD_INTERVAL_SEC=${CONFIG_RELOAD_INTERVAL_SEC:-0}
+      - DATA_DIR=/app/data
+      - PYTHON_BASE_URL=http://python:5000
+      - ADMIN_USER=${ADMIN_USER:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - ADMIN_SECRET=${ADMIN_SECRET:-}
+    volumes:
+      - uploads_data:/data/uploads
+      - ./data:/app/data
+      - ./config:/config:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      python:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile.webapp
+    container_name: grounded_llm_webapp
+    ports:
+      - "80:80"
+    volumes:
+      - ./webapp/index.html:/usr/share/nginx/html/index.html:ro
+      - ./webapp/app.css:/usr/share/nginx/html/app.css:ro
+      - ./webapp/app.js:/usr/share/nginx/html/app.js:ro
+      - ./webapp/admin.html:/usr/share/nginx/html/admin.html:ro
+      - ./webapp/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      server:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  chroma_data:
+  postgres_data:
+  uploads_data:

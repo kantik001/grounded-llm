@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Grounded LLM — чат</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+    <header class="chat-header">
+        <h1 id="headerTitle">🤖 Grounded LLM</h1>
+        <p id="headerSubtitle">Ответы на основе вашей базы знаний (RAG).</p>
+        <label class="crop-row">
+            <span id="domainLabel">Домен</span>
+            <select id="domainSelect" aria-label="Выбор домена"></select>
+        </label>
+        <p class="disclaimer" id="headerDisclaimer">Справочная информация из базы знаний.</p>
+    </header>
+
+    <div class="onboarding" id="onboardingRoot" hidden>
+        <div class="onboarding-title" id="onboardingTitle">Примеры вопросов</div>
+        <div class="onboarding-chips" id="onboardingChips"></div>
+    </div>
+
+    <div class="chat-scroll" id="chatScroll" aria-live="polite">
+        <div class="day-divider" id="chatDivider">Диалог с ассистентом</div>
+        <div id="messagesRoot"></div>
+    </div>
+
+    <div class="typing" id="typingLine">Ассистент печатает…</div>
+
+    <div class="composer-wrap">
+        <div class="composer">
+            <textarea id="inputText" rows="1" maxlength="4000" placeholder="Сообщение…" aria-label="Текст сообщения"></textarea>
+            <button type="button" class="send-btn" id="sendBtn" title="Отправить" aria-label="Отправить">➤</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast" role="status"></div>
+    <script src="app.js" defer></script>
+</body>
+</html>

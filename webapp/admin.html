@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админка — статьи RAG</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f4f6f8;
+            color: #1a1a1a;
+            line-height: 1.5;
+            padding: 24px 16px 48px;
+        }
+        .wrap { max-width: 640px; margin: 0 auto; }
+        h1 { font-size: 22px; margin-bottom: 8px; }
+        .hint { color: #555; font-size: 14px; margin-bottom: 20px; }
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 16px 18px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.08);
+        }
+        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+        input[type=text], input[type=password], select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
+            margin-bottom: 12px;
+        }
+        input[type=file] { margin-bottom: 12px; }
+        button {
+            background: #2aabee;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        button.secondary { background: #6c757d; }
+        button:disabled { opacity: .55; cursor: not-allowed; }
+        .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        ul { margin-top: 10px; padding-left: 20px; }
+        li { margin-bottom: 4px; font-size: 14px; }
+        .status { font-size: 14px; margin-top: 10px; min-height: 20px; }
+        .status.ok { color: #198754; }
+        .status.err { color: #c0392b; }
+        .login-note { font-size: 12px; color: #777; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <h1>🌿 Админка статей</h1>
+        <p class="hint">Загрузка .txt в <code>data/{crop_id}/</code> и переиндексация Chroma. Логин из <code>ADMIN_USER</code> / <code>ADMIN_PASSWORD</code>.</p>
+
+        <div class="card" id="loginCard">
+            <label for="adminUser">Логин</label>
+            <input type="text" id="adminUser" autocomplete="username">
+            <label for="adminPass">Пароль</label>
+            <input type="password" id="adminPass" autocomplete="current-password">
+            <button type="button" id="saveLoginBtn">Сохранить и проверить</button>
+            <p class="login-note">Учётные данные хранятся только в sessionStorage этой вкладки.</p>
+            <div class="status" id="loginStatus"></div>
+        </div>
+
+        <div class="card" id="toolsCard" hidden>
+            <label for="cropSelect">Культура</label>
+            <select id="cropSelect">
+                <option value="apple">apple</option>
+                <option value="pear">pear</option>
+                <option value="plum">plum</option>
+            </select>
+
+            <label>Файлы в data/{crop}</label>
+            <ul id="fileList"><li>—</li></ul>
+            <button type="button" class="secondary" id="refreshBtn">Обновить список</button>
+
+            <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
+
+            <label for="uploadFile">Загрузить .txt (латиница, до 2 МБ)</label>
+            <input type="file" id="uploadFile" accept=".txt,text/plain">
+            <button type="button" id="uploadBtn">Загрузить</button>
+
+            <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
+
+            <p class="hint" style="margin-bottom:10px">После загрузки новых статей запустите переиндексацию RAG (может занять несколько минут).</p>
+            <button type="button" id="reindexBtn">Переиндексировать RAG</button>
+            <div class="status" id="actionStatus"></div>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'garden_admin_basic';
+
+        function getCreds() {
+            try {
+                var raw = sessionStorage.getItem(STORAGE_KEY);
+                if (!raw) return null;
+                return JSON.parse(raw);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function authHeader() {
+            var c = getCreds();
+            if (!c || !c.user) return null;
+            return 'Basic ' + btoa(unescape(encodeURIComponent(c.user + ':' + (c.pass || ''))));
+        }
+
+        function setStatus(el, text, ok) {
+            el.textContent = text || '';
+            el.className = 'status' + (text ? (ok ? ' ok' : ' err') : '');
+        }
+
+        async function adminFetch(path, init) {
+            var h = authHeader();
+            if (!h) throw new Error('Сначала введите логин и пароль');
+            var opts = init ? Object.assign({}, init) : {};
+            opts.headers = Object.assign({}, opts.headers || {}, { 'Authorization': h });
+            var res = await fetch('/api/admin' + path, opts);
+            var txt = await res.text();
+            var data;
+            try { data = JSON.parse(txt); } catch (e) { throw new Error(txt.slice(0, 200)); }
+            if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+            return data;
+        }
+
+        async function checkLogin() {
+            var data = await adminFetch('/status', { method: 'GET' });
+            document.getElementById('toolsCard').hidden = false;
+            setStatus(document.getElementById('loginStatus'), 'Подключено. data_dir: ' + (data.data_dir || '—'), true);
+            await refreshFiles();
+        }
+
+        async function refreshFiles() {
+            var crop = document.getElementById('cropSelect').value;
+            var list = document.getElementById('fileList');
+            list.innerHTML = '<li>Загрузка…</li>';
+            try {
+                var data = await adminFetch('/articles?crop_id=' + encodeURIComponent(crop), { method: 'GET' });
+                list.innerHTML = '';
+                var files = data.files || [];
+                if (!files.length) {
+                    list.innerHTML = '<li>(нет файлов)</li>';
+                    return;
+                }
+                files.forEach(function(f) {
+                    var li = document.createElement('li');
+                    li.textContent = f;
+                    list.appendChild(li);
+                });
+            } catch (e) {
+                list.innerHTML = '<li>Ошибка: ' + e.message + '</li>';
+            }
+        }
+
+        document.getElementById('saveLoginBtn').addEventListener('click', function() {
+            var user = document.getElementById('adminUser').value.trim();
+            var pass = document.getElementById('adminPass').value;
+            if (!user || !pass) {
+                setStatus(document.getElementById('loginStatus'), 'Введите логин и пароль', false);
+                return;
+            }
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ user: user, pass: pass }));
+            setStatus(document.getElementById('loginStatus'), 'Проверка…', true);
+            checkLogin().catch(function(e) {
+                setStatus(document.getElementById('loginStatus'), e.message, false);
+            });
+        });
+
+        document.getElementById('refreshBtn').addEventListener('click', function() {
+            refreshFiles().catch(function(e) {
+                setStatus(document.getElementById('actionStatus'), e.message, false);
+            });
+        });
+
+        document.getElementById('cropSelect').addEventListener('change', refreshFiles);
+
+        document.getElementById('uploadBtn').addEventListener('click', async function() {
+            var fileInput = document.getElementById('uploadFile');
+            var f = fileInput.files && fileInput.files[0];
+            if (!f) {
+                setStatus(document.getElementById('actionStatus'), 'Выберите файл .txt', false);
+                return;
+            }
+            var fd = new FormData();
+            fd.append('crop_id', document.getElementById('cropSelect').value);
+            fd.append('file', f);
+            var btn = document.getElementById('uploadBtn');
+            btn.disabled = true;
+            try {
+                var data = await adminFetch('/upload', { method: 'POST', body: fd });
+                setStatus(document.getElementById('actionStatus'), 'Загружено: ' + data.filename, true);
+                fileInput.value = '';
+                await refreshFiles();
+            } catch (e) {
+                setStatus(document.getElementById('actionStatus'), e.message, false);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('reindexBtn').addEventListener('click', async function() {
+            var btn = document.getElementById('reindexBtn');
+            btn.disabled = true;
+            setStatus(document.getElementById('actionStatus'), 'Переиндексация… подождите', true);
+            try {
+                var data = await adminFetch('/reindex', { method: 'POST' });
+                setStatus(document.getElementById('actionStatus'), data.message || 'Готово', true);
+            } catch (e) {
+                setStatus(document.getElementById('actionStatus'), e.message, false);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        (function init() {
+            var c = getCreds();
+            if (c) {
+                document.getElementById('adminUser').value = c.user || '';
+                document.getElementById('adminPass').value = c.pass || '';
+                checkLogin().catch(function() {});
+            }
+        })();
+    </script>
+</body>
+</html>

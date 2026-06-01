@@ -1,0 +1,11 @@
+{
+  "_comment": "Knowledge domains (workspaces). Override path via DOMAINS_CONFIG_PATH.",
+  "default_domain": "default",
+  "domains": {
+    "default": {
+      "name": "Knowledge base",
+      "emoji": "📚",
+      "rag_enabled": true
+    }
+  }
+}
