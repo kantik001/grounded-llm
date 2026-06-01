@@ -95,13 +95,9 @@ UI: `app_title`, `header_subtitle`, `disclaimer`, `onboarding_title`, …
 
 ---
 
-## Не в минимальном ядре / Optional legacy configs
+## Не в минимальном ядре
 
-| Файл | Статус |
-|------|--------|
-| `photo_templates.json` | agro / CV domain pack |
-| `cv_class_labels.json` | CV domain pack |
-| `article_titles.json` | опционально (не в текущем vector_store) |
+Отраслевые расширения (vision, отраслевые шаблоны) — **domain pack**, не файлы platform core.
 
 ---
 

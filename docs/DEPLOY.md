@@ -135,4 +135,4 @@ make smoke
 
 ## Опциональные модули
 
-**Vision / CV** — не входит в ядро. Подключается отдельным domain pack (см. архивные статьи `cv-*.md` в knowledge-base).
+**Vision / CV** — отдельный domain pack, не входит в platform core.

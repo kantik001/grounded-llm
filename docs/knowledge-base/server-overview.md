@@ -24,7 +24,9 @@
 | `rag_chat.go` | RAG pipeline, `POST /chat` (deprecated) |
 | `rag_verify.go` | verify чисел, disclaimer |
 | `rag_log.go` | логи `[RAG]` |
-| `domains.go` | `domains.json` |
+| `domains.go` | каталог `domains.json`, legacy `crops.json` |
+| `domain_resolve.go` | `coalesceDomainID`, query/form helpers |
+| `config_paths.go` | поиск конфигов по env и стандартным путям |
 | `domain_guards.go` | `rag_enabled` |
 | `message_handlers.go` | `POST /message` (текст; фото — только через domain pack) |
 | `session_handlers.go` | `/session`, `/history` |
@@ -35,7 +37,7 @@
 | `onboarding.go`, `branding.go` | UX API |
 | `routes.go`, `health.go`, `config_reload.go` | маршруты, health, hot reload |
 
-**CV / classify** (`classifier_client.go`, `photo_templates.go` и т.д.) **удалены из ядра**.
+**Vision/CV** — вне ядра; подключается domain pack при необходимости.
 
 ---
 

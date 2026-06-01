@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,27 +20,11 @@ func loadOnboardingConfig() error {
 }
 
 func onboardingConfigPath() string {
-	if p := os.Getenv("ONBOARDING_CONFIG_PATH"); p != "" {
-		return p
-	}
-	for _, candidate := range []string{
-		"/config/onboarding.json",
-		filepath.Join("..", "config", "onboarding.json"),
-		filepath.Join("config", "onboarding.json"),
-	} {
-		if _, err := os.Stat(candidate); err == nil {
-			return candidate
-		}
-	}
-	return filepath.Join("config", "onboarding.json")
+	return resolveConfigPath("ONBOARDING_CONFIG_PATH", defaultConfigCandidates("onboarding.json")...)
 }
 
 func handleOnboarding(c *gin.Context) {
-	raw := strings.TrimSpace(c.Query("domain_id"))
-	if raw == "" {
-		raw = strings.TrimSpace(c.Query("crop_id"))
-	}
-	domainID, err := normalizeDomainID(raw)
+	domainID, err := normalizeDomainID(domainIDFromQuery(c))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
 		return

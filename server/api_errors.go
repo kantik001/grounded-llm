@@ -17,16 +17,14 @@ func publicAPIError(err error) string {
 		return "Ошибка сервера"
 	}
 
-	// Уже по-русски из normalizeDomainID и domain guards.
-	if strings.Contains(s, "культура") ||
-		strings.Contains(s, "изображение") ||
+	// Сообщения уже на русском из normalizeDomainID и domain guards.
+	if strings.Contains(s, "домен") ||
 		strings.Contains(s, "файл") ||
 		strings.Contains(s, "сессия") ||
 		strings.Contains(s, "помощник") ||
-		strings.Contains(s, "распознавание") ||
 		strings.Contains(s, "Пустой вопрос") ||
 		strings.Contains(s, "LLM_API_KEY") ||
-		strings.Contains(s, "классификации") {
+		strings.Contains(s, "изображен") {
 		return s
 	}
 
@@ -36,7 +34,7 @@ func publicAPIError(err error) string {
 		strings.Contains(lower, "timeout"),
 		strings.Contains(lower, "no such host"),
 		strings.Contains(lower, "rag request failed"),
-		strings.Contains(lower, "classifier"):
+		strings.Contains(lower, "python reindex"):
 		return "Сервис анализа временно недоступен. Попробуйте позже."
 	case strings.Contains(lower, "unauthorized"),
 		strings.Contains(lower, "telegram"):

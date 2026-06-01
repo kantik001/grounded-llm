@@ -40,14 +40,8 @@ func (m ChatMessage) toLLMMessage() (Message, bool) {
 	case "user":
 		if m.ImageURL != "" || m.ImageDataURL != "" || m.ImageToken != "" {
 			s := "Пользователь отправил изображение."
-			if m.ClassPrediction != "" {
-				s += " Результат классификации модели: " + m.ClassPrediction + "."
-				if m.ClassConfidence > 0 && m.ClassConfidence <= 1 {
-					s += fmt.Sprintf(" Уверенность модели: %.0f%%.", m.ClassConfidence*100)
-				}
-			}
 			if t := trimUserCaption(m.Content); t != "" {
-				s += " Подпись к фото: " + t
+				s += " Подпись: " + t
 			}
 			return Message{Role: "user", Content: s}, true
 		}

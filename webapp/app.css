@@ -56,7 +56,7 @@
             margin-top: 6px;
         }
 
-        .crop-row {
+        .domain-row {
             display: flex;
             align-items: center;
             gap: 8px;
@@ -64,7 +64,7 @@
             font-size: 12px;
         }
 
-        .crop-row select {
+        .domain-row select {
             flex: 1;
             max-width: 220px;
             padding: 6px 8px;

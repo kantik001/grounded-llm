@@ -48,25 +48,22 @@ func adminBasicAuth(cfg *Config) gin.HandlerFunc {
 	}
 }
 
-// Регистрирует админские маршруты: статьи, upload, reindex RAG.
+// Регистрирует админские маршруты: upload, reindex RAG.
 func registerAdminRoutes(router *gin.Engine, cfg *Config) {
 	auth := adminBasicAuth(cfg)
-	g := router.Group("/admin")
+	registerAdminRouteGroup(router.Group("/admin"), auth)
+	registerAdminRouteGroup(router.Group("/api/admin"), auth)
+}
+
+func registerAdminRouteGroup(g *gin.RouterGroup, auth gin.HandlerFunc) {
 	g.Use(auth)
 	g.GET("/status", handleAdminStatus)
 	g.GET("/articles", handleAdminListArticles)
 	g.POST("/upload", handleAdminUpload)
 	g.POST("/reindex", handleAdminReindex)
-
-	api := router.Group("/api/admin")
-	api.Use(auth)
-	api.GET("/status", handleAdminStatus)
-	api.GET("/articles", handleAdminListArticles)
-	api.POST("/upload", handleAdminUpload)
-	api.POST("/reindex", handleAdminReindex)
 }
 
-// GET /admin/status: краткая информация о data_dir и числе культур.
+// GET /admin/status: data_dir и число доменов.
 func handleAdminStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success":  true,
@@ -77,7 +74,7 @@ func handleAdminStatus(c *gin.Context) {
 
 // GET /admin/articles: список документов (.txt, .pdf, .docx) для domain_id.
 func handleAdminListArticles(c *gin.Context) {
-	domainID, err := normalizeDomainID(adminDomainQuery(c))
+	domainID, err := normalizeDomainID(domainIDFromQuery(c))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
 		return
@@ -101,23 +98,8 @@ func handleAdminListArticles(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": true, "domain_id": domainID, "files": files})
 }
 
-func adminDomainQuery(c *gin.Context) string {
-	if v := strings.TrimSpace(c.Query("domain_id")); v != "" {
-		return v
-	}
-	return strings.TrimSpace(c.Query("crop_id"))
-}
-
-func adminDomainForm(c *gin.Context) string {
-	if v := strings.TrimSpace(c.PostForm("domain_id")); v != "" {
-		return v
-	}
-	return strings.TrimSpace(c.PostForm("crop_id"))
-}
-
-// POST /admin/upload: загрузка .txt/.pdf/.docx в data/{domain_id}/.
 func handleAdminUpload(c *gin.Context) {
-	domainID, err := normalizeDomainID(adminDomainForm(c))
+	domainID, err := normalizeDomainID(domainIDFromForm(c))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
 		return
