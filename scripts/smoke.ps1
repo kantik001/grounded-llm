@@ -24,7 +24,7 @@ function Test-Endpoint {
         Write-Host "[FAIL] $Name HTTP $($r.StatusCode)"
         $script:failed++
     } catch {
-        Write-Host "[FAIL] $Name — $($_.Exception.Message)"
+        Write-Host "[FAIL] $Name - $($_.Exception.Message)"
         $script:failed++
     }
     return $null
