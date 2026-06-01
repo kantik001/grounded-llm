@@ -15,7 +15,6 @@
 |----------|------------|
 | `POST /rag/context` | Retrieval: фрагменты статей для вопроса (без LLM) |
 | `GET /domains` | Каталог доменов из `config/domains.json` |
-| `GET /crops` | Legacy alias для `/domains` |
 | `GET /health` | Healthcheck |
 | `POST /admin/reindex` | Пересборка Chroma (`X-Admin-Secret`) |
 
@@ -32,8 +31,6 @@ Go вызывает: `PYTHON_RAG_URL` → `http://python:5000/rag/context`.
 ```json
 { "question": "...", "domain_id": "default" }
 ```
-
-Legacy: поле `crop_id` вместо `domain_id`.
 
 Ответ: `success`, `context`, `few_shot`, `fragments[]`, `category`, `error`.
 
@@ -57,8 +54,6 @@ Legacy: поле `crop_id` вместо `domain_id`.
 | `DOMAINS_CONFIG_PATH` | путь к `domains.json` |
 | `ADMIN_SECRET` | защита reindex |
 | `FORCE_RAG_REINDEX` | полная пересборка при старте |
-
-Legacy env: `CLASSIFIER_PORT`, `CLASSIFIER_RAG_URL`, `CROPS_CONFIG_PATH`.
 
 ---
 

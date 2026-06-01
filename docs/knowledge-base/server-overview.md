@@ -24,8 +24,8 @@
 | `rag_chat.go` | RAG pipeline, `POST /chat` (deprecated) |
 | `rag_verify.go` | verify чисел, disclaimer |
 | `rag_log.go` | логи `[RAG]` |
-| `domains.go` | каталог `domains.json`, legacy `crops.json` |
-| `domain_resolve.go` | `coalesceDomainID`, query/form helpers |
+| `domains.go` | каталог `domains.json` |
+| `domain_resolve.go` | `domain_id` из query/form |
 | `config_paths.go` | поиск конфигов по env и стандартным путям |
 | `domain_guards.go` | `rag_enabled` |
 | `message_handlers.go` | `POST /message` (текст; фото — только через domain pack) |
@@ -84,11 +84,9 @@ flowchart TB
 
 ---
 
-## Legacy API
+## Deprecated API
 
-- JSON поле `crop_id` → то же, что `domain_id`
-- `GET /crops` → alias `GET /domains`
-- `POST /chat` → deprecated, use `POST /message`
+- `POST /chat` → use `POST /message`
 
 ---
 

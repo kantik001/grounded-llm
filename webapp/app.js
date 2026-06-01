@@ -61,7 +61,7 @@
                     el.headerTitle.textContent = (b.header_emoji ? b.header_emoji + ' ' : '') + b.app_title;
                 }
                 if (el.headerSubtitle && b.header_subtitle) el.headerSubtitle.textContent = b.header_subtitle;
-                if (el.domainLabel && (b.domain_label || b.crop_label)) el.domainLabel.textContent = b.domain_label || b.crop_label;
+                if (el.domainLabel && b.domain_label) el.domainLabel.textContent = b.domain_label;
                 if (el.headerDisclaimer && b.disclaimer) el.headerDisclaimer.textContent = b.disclaimer;
                 if (el.onboardingTitle && b.onboarding_title) el.onboardingTitle.textContent = b.onboarding_title;
                 if (el.chatDivider && b.chat_divider) el.chatDivider.textContent = b.chat_divider;

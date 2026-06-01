@@ -53,15 +53,6 @@
 
 ---
 
-## Legacy API (совместимость)
-
-| Старое | Актуальное |
-|--------|------------|
-| `crop_id` | `domain_id` |
-| `GET /crops` | `GET /domains` |
-| `CROPS_CONFIG_PATH` | `DOMAINS_CONFIG_PATH` |
-| сервис `classifier` | сервис `python` |
-
 Vision/CV — **не входит в ядро**; подключается отдельным domain pack при необходимости.
 
 ---

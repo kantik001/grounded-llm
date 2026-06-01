@@ -34,12 +34,12 @@ Write-Host "Smoke test: $BaseUrl"
 Write-Host "(ожидается TELEGRAM_AUTH_DISABLED=true для /api/session)"
 
 Test-Endpoint "health" GET "/health" | Out-Null
-Test-Endpoint "crops" GET "/api/crops" | Out-Null
-$sessionBody = '{"crop_id":"apple"}'
+Test-Endpoint "domains" GET "/api/domains" | Out-Null
+$sessionBody = '{"domain_id":"default"}'
 $sessionJson = Test-Endpoint "session" POST "/api/session" $sessionBody
 if ($sessionJson -match '"session_id"\s*:\s*"([^"]+)"') {
     $sid = $Matches[1]
-    Test-Endpoint "onboarding" GET "/api/onboarding?crop_id=apple" | Out-Null
+    Test-Endpoint "onboarding" GET "/api/onboarding?domain_id=default" | Out-Null
     Write-Host "[INFO] session_id=$sid"
 } else {
     Write-Host "[WARN] session: проверьте TELEGRAM_AUTH_DISABLED или initData"

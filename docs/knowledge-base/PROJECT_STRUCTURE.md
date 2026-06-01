@@ -29,7 +29,7 @@
 | Файл | Роль |
 |------|------|
 | `main.go`, `routes.go` | старт, маршруты |
-| `domains.go`, `domain_resolve.go` | каталог доменов, legacy `crop_id` |
+| `domains.go`, `domain_resolve.go` | каталог доменов, `domain_id` в API |
 | `config_paths.go` | поиск JSON в `/config` |
 | `rag_chat.go`, `rag_verify.go` | RAG + LLM + verify |
 | `postgres_store.go` | Postgres, сессии, сообщения |

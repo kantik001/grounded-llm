@@ -90,7 +90,7 @@ def run_suite(
     passed = 0
     for i, case in enumerate(cases):
         q = case["question"]
-        domain_id = case.get("domain_id") or case.get("crop_id", "default")
+        domain_id = case.get("domain_id", "default")
         ctx = fetch_context(rag_url, q, domain_id, timeout)
         check = check_retrieval(case, ctx)
         if check["passed"]:
@@ -125,7 +125,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--rag-url",
-        default=os.environ.get("PYTHON_RAG_URL", os.environ.get("CLASSIFIER_RAG_URL", "http://localhost:5000/rag/context")),
+        default=os.environ.get("PYTHON_RAG_URL", "http://localhost:5000/rag/context"),
     )
     parser.add_argument("--timeout", type=int, default=120)
     args = parser.parse_args()

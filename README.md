@@ -44,8 +44,6 @@ python scripts/reindex_rag.py
 - `GET /branding`, `GET /onboarding?domain_id=`
 - Admin: `POST /admin/upload`, `POST /admin/reindex`
 
-Legacy aliases: `GET /crops`, JSON field `crop_id`.
-
 ## New domain
 
 1. Add entry to `config/domains.json`

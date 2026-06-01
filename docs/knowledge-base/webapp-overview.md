@@ -61,13 +61,6 @@ API напрямую: `http://localhost:8080` или через `http://localhos
 
 ---
 
-## Legacy
-
-- `crop_id` в JSON/form — alias `domain_id`
-- старые storage keys `apple_gardener_*` → заменены на `grounded_llm_*`
-
----
-
 ## Связанные docs
 
 | Тема | Файл |

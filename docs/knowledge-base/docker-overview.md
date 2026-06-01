@@ -94,7 +94,7 @@ Makefile: `make up`, `make logs`, `make smoke`, `make test`.
 - Порт **5000**, entrypoint: `python api/app.py`
 - Env: `DOMAINS_CONFIG_PATH`, `ADMIN_SECRET`, `FORCE_RAG_REINDEX`, `PYTHON_SERVICE_PORT`
 - Healthcheck: `start_period: 180s` (первый RAG / embeddings может быть долгим)
-- Endpoints: `/health`, `/rag/context`, `/domains`, `/crops` (legacy), `/admin/reindex`
+- Endpoints: `/health`, `/rag/context`, `/domains`, `/admin/reindex`
 
 Первый запрос RAG может скачивать embedding-модель `intfloat/multilingual-e5-small`.
 
@@ -143,8 +143,6 @@ TELEGRAM_AUTH_DISABLED=true
 | `Dockerfile.server` | `golang:1.23-alpine` → `alpine:3.21` | multi-stage, `curl` для healthcheck |
 | `Dockerfile.python` | `python:3.11-slim` | RAG deps из `api/requirements.txt` |
 | `Dockerfile.webapp` | `nginx:alpine` | статика + `nginx.conf` |
-
-Legacy: раньше сервис назывался `classifier`, образ — `Dockerfile.classifier`. Сейчас — **`python`** / **`Dockerfile.python`**.
 
 ---
 

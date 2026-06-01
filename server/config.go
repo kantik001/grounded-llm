@@ -50,7 +50,7 @@ func loadConfig() *Config {
 	}
 
 	return &Config{
-		PythonRAGURL: getEnv("PYTHON_RAG_URL", getEnv("CLASSIFIER_RAG_URL", "http://python:5000/rag/context")),
+		PythonRAGURL: getEnv("PYTHON_RAG_URL", "http://python:5000/rag/context"),
 		LLMAPIKey:        getEnv("LLM_API_KEY", ""),
 		LLMBaseURL:       getEnv("LLM_BASE_URL", "https://openrouter.ai/api"),
 		LLMModel:         getEnv("LLM_MODEL", "openrouter/free"),

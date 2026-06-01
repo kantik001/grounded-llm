@@ -9,14 +9,13 @@ import (
 
 type newSessionRequest struct {
 	DomainID string `json:"domain_id"`
-	CropID   string `json:"crop_id"` // legacy
 }
 
 func handleNewSession(c *gin.Context) {
 	var req newSessionRequest
 	_ = c.ShouldBindJSON(&req)
 
-	domainID := coalesceDomainID(req.DomainID, req.CropID)
+	domainID := strings.TrimSpace(req.DomainID)
 	domainID, err := normalizeDomainID(domainID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
