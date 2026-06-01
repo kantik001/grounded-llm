@@ -47,11 +47,28 @@ def health_check():
     return jsonify({"status": "healthy", "service": "grounded-llm-python"}), 200
 
 
-@app.route("/admin/reindex", methods=["POST"])
-def admin_reindex():
+def _admin_authorized() -> bool:
     expected = os.environ.get("ADMIN_SECRET", "")
     secret = request.headers.get("X-Admin-Secret", "")
-    if not expected or secret != expected:
+    return bool(expected) and secret == expected
+
+
+@app.route("/admin/index-stats", methods=["GET"])
+def admin_index_stats():
+    if not _admin_authorized():
+        return jsonify({"success": False, "error": "forbidden"}), 403
+    domain_id = (request.args.get("domain_id") or "default").strip()
+    try:
+        normalize_domain_id(domain_id)
+    except ValueError as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+    files = vs.index_stats_for_domain(domain_id)
+    return jsonify({"success": True, "domain_id": domain_id, "files": files}), 200
+
+
+@app.route("/admin/reindex", methods=["POST"])
+def admin_reindex():
+    if not _admin_authorized():
         return jsonify({"success": False, "error": "forbidden"}), 403
     try:
         vs.reset_vector_store()

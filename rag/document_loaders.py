@@ -23,6 +23,14 @@ def is_supported_filename(filename: str) -> bool:
     return os.path.splitext(filename)[1].lower() in SUPPORTED_EXTENSIONS
 
 
+def _validate_documents(docs: List[Document], filename: str) -> None:
+    if not docs:
+        raise ValueError(f"Файл пустой или не удалось извлечь текст: {filename}")
+    non_empty = [d for d in docs if (d.page_content or "").strip()]
+    if not non_empty:
+        raise ValueError(f"Нет текстового содержимого: {filename}")
+
+
 def load_file(domain_id: str, file_path: str) -> List[Document]:
     """Load a single knowledge-base file and attach domain metadata."""
     filename = os.path.basename(file_path)
@@ -34,6 +42,7 @@ def load_file(domain_id: str, file_path: str) -> List[Document]:
     print(f"Loading [{domain_id}] {filename}")
     loader = loader_factory(file_path)
     docs = loader.load()
+    _validate_documents(docs, filename)
     for doc in docs:
         if doc.metadata is None:
             doc.metadata = {}
@@ -41,4 +50,9 @@ def load_file(domain_id: str, file_path: str) -> List[Document]:
         doc.metadata["domain_id"] = domain_id
         doc.metadata["source_file"] = filename
         doc.metadata["file_type"] = ext.lstrip(".")
+        if "page" in doc.metadata:
+            try:
+                doc.metadata["page"] = int(doc.metadata["page"])
+            except (TypeError, ValueError):
+                pass
     return docs

@@ -17,8 +17,9 @@ type ChatMessage struct {
 	ImageToken      string  `json:"-"`
 	ClassPrediction string  `json:"class_prediction,omitempty"`
 	ClassConfidence float64 `json:"class_confidence,omitempty"`
-	Kind            string  `json:"kind,omitempty"`
-	FeedbackRating  *int    `json:"feedback_rating,omitempty"` // 1 или -1, если пользователь оценил
+	Kind            string        `json:"kind,omitempty"`
+	Citations       []RAGFragment `json:"citations,omitempty"`
+	FeedbackRating  *int          `json:"feedback_rating,omitempty"` // 1 или -1, если пользователь оценил
 }
 
 // Оставляет последние max сообщений для контекста LLM.

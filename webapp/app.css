@@ -297,6 +297,36 @@
 
         .onboarding-chip:active { opacity: .85; }
 
+        .citations {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px dashed rgba(0,0,0,.12);
+            font-size: 12px;
+            color: var(--hint);
+        }
+
+        .citations-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text);
+            font-size: 12px;
+        }
+
+        .citation-item {
+            margin-bottom: 8px;
+        }
+
+        .citation-head {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+
+        .citation-excerpt {
+            line-height: 1.35;
+            white-space: pre-wrap;
+        }
+
         .feedback-row {
             display: flex;
             gap: 6px;

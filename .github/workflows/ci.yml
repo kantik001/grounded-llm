@@ -47,6 +47,18 @@ jobs:
           DOMAINS_CONFIG_PATH: config/domains.json
         run: pytest tests/ -v --tb=short
 
+  eval-baseline-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate eval JSONL baselines
+        run: pip install pytest && pytest tests/test_eval_baseline.py -v
+
   docker-build:
     runs-on: ubuntu-latest
     steps:

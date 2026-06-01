@@ -21,9 +21,25 @@ def _load_few_shot() -> dict:
     return _few_shot_cache
 
 
+def _rag_k_for_domain(domain: dict) -> int:
+    raw = domain.get("rag_k", 8)
+    try:
+        k = int(raw)
+    except (TypeError, ValueError):
+        k = 8
+    return max(1, min(k, 20))
+
+
 def few_shot_for(domain_id: str, category: str = "general") -> str:
     domain_shots = _load_few_shot().get(domain_id, {})
     return domain_shots.get(category) or domain_shots.get("general", "")
+
+
+def _excerpt(text: str, max_len: int = 280) -> str:
+    s = (text or "").strip()
+    if len(s) <= max_len:
+        return s
+    return s[:max_len] + "…"
 
 
 def retrieve_rag_context(
@@ -58,7 +74,8 @@ def retrieve_rag_context(
         )
         return empty
 
-    fragments = search(q, domain_id=domain_id, k=8)
+    k = _rag_k_for_domain(domain)
+    fragments = search(q, domain_id=domain_id, k=k)
     if not fragments:
         name = domain.get("name") or domain.get("name_ru") or domain_id
         empty["error"] = f"Не нашёл информации в документах домена «{name}»."
@@ -71,8 +88,20 @@ def retrieve_rag_context(
     fr_json: List[Dict[str, str]] = []
     for frag in fragments:
         source_name = frag.metadata.get("filename", "Неизвестный источник")
-        context_parts.append(f"Фрагмент '{source_name}':\n{frag.page_content}")
-        fr_json.append({"filename": source_name, "content": frag.page_content})
+        page = frag.metadata.get("page")
+        page_label = f", стр. {int(page) + 1}" if page is not None else ""
+        context_parts.append(f"Фрагмент '{source_name}'{page_label}:\n{frag.page_content}")
+        entry: Dict[str, Any] = {
+            "filename": source_name,
+            "content": frag.page_content,
+            "excerpt": _excerpt(frag.page_content),
+        }
+        if page is not None:
+            try:
+                entry["page"] = int(page) + 1
+            except (TypeError, ValueError):
+                pass
+        fr_json.append(entry)
 
     context = "\n\n---\n\n".join(context_parts)
     few_shot = few_shot_for(domain_id, "general")

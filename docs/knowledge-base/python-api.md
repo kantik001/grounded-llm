@@ -16,6 +16,7 @@
 | `POST /rag/context` | Retrieval: фрагменты статей для вопроса (без LLM) |
 | `GET /domains` | Каталог доменов из `config/domains.json` |
 | `GET /health` | Healthcheck |
+| `GET /admin/index-stats` | Chunks per file (`?domain_id=`, `X-Admin-Secret`) |
 | `POST /admin/reindex` | Пересборка Chroma (`X-Admin-Secret`) |
 
 Go вызывает: `PYTHON_RAG_URL` → `http://python:5000/rag/context`.

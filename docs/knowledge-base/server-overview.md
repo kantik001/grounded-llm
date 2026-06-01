@@ -21,7 +21,7 @@
 | `main.go` | старт, router, миграции |
 | `config.go` | Config из env |
 | `llm.go` | OpenAI-compatible chat/completions |
-| `rag_chat.go` | RAG pipeline, `POST /chat` (deprecated) |
+| `rag_chat.go` | RAG pipeline, citations |
 | `rag_verify.go` | verify чисел, disclaimer |
 | `rag_log.go` | логи `[RAG]` |
 | `domains.go` | каталог `domains.json` |
@@ -83,10 +83,6 @@ flowchart TB
 | `ADMIN_PASSWORD`, `ADMIN_SECRET` | admin |
 
 ---
-
-## Deprecated API
-
-- `POST /chat` → use `POST /message`
 
 ---
 

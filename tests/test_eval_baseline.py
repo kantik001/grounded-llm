@@ -1,0 +1,31 @@
+"""Validate eval/*.jsonl baseline files (CI gate without running RAG)."""
+
+import json
+from pathlib import Path
+
+import pytest
+
+_ROOT = Path(__file__).resolve().parents[1]
+EVAL_FILES = list((_ROOT / "eval").glob("rag_*_baseline.jsonl"))
+
+
+@pytest.mark.parametrize("path", EVAL_FILES, ids=lambda p: p.name)
+def test_baseline_jsonl_structure(path: Path):
+    assert path.is_file(), f"missing {path}"
+    cases = []
+    with path.open(encoding="utf-8") as f:
+        for line_no, line in enumerate(f, 1):
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            case = json.loads(line)
+            assert "question" in case and case["question"].strip(), f"{path.name}:{line_no} question"
+            assert "domain_id" in case, f"{path.name}:{line_no} domain_id"
+            cases.append(case)
+    assert len(cases) >= 5, f"{path.name}: need at least 5 cases, got {len(cases)}"
+    for case in cases:
+        if case.get("expect_out_of_scope"):
+            continue
+        assert case.get("expect_context", True), "expect_context or expect_out_of_scope"
+        if case.get("expect_contains"):
+            assert isinstance(case["expect_contains"], list)

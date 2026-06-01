@@ -2,7 +2,7 @@
 
 | Файл | Домен | Вопросов |
 |------|-------|----------|
-| `rag_default_baseline.jsonl` | `default` | 5 |
+| `rag_default_baseline.jsonl` | `default` | 12 |
 
 Формат строки:
 

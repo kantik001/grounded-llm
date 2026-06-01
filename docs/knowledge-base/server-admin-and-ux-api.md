@@ -18,7 +18,12 @@ HTTP Basic: `ADMIN_USER` / `ADMIN_PASSWORD`. Пустой пароль → **503
 | GET | `handleAdminStatus` | `{ data_dir, domains }` |
 | GET | `handleAdminListArticles` | файлы в `data/{domain_id}/` |
 | POST | `handleAdminUpload` | сохранить документ |
+| DELETE | `handleAdminDeleteArticle` | удалить документ (`?domain_id=&filename=`) |
 | POST | `handleAdminReindex` | reindex через Python |
+
+### `GET /admin/articles`
+
+Ответ: `articles[]` с `filename`, `size_bytes`, `modified`, `chunks` (из Python `/admin/index-stats`).
 
 ### Upload
 
