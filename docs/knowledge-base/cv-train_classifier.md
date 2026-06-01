@@ -1,4 +1,11 @@
-﻿# Разбор: `cv/train_classifier.py`
+﻿# ⚠️ Optional module / Опциональный модуль (не в platform core)
+
+> **EN:** Training script for optional CV domain pack — not part of platform core.  
+> **RU:** Скрипт обучения для опционального vision-модуля; в ядре не используется.
+
+---
+
+# Разбор: `cv/train_classifier.py`
 
 **Исходный файл:** `cv/train_classifier.py`  
 **Язык:** Python (PyTorch)  
