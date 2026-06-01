@@ -5,5 +5,16 @@
   "domain_label": "Домен",
   "onboarding_title": "Примеры вопросов",
   "chat_divider": "Диалог с ассистентом",
-  "disclaimer": "Справочная информация из базы знаний. Не заменяет официальную консультацию специалиста."
+  "disclaimer": "Справочная информация из базы знаний. Не заменяет официальную консультацию специалиста.",
+  "page_title_suffix": "чат",
+  "typing_line": "Ассистент печатает…",
+  "message_placeholder": "Сообщение…",
+  "send_aria_label": "Отправить",
+  "domain_select_aria": "Выбор домена",
+  "empty_chat_hint": "Напишите вопрос по базе знаний выбранного домена.",
+  "citations_title": "Источники",
+  "document_fallback": "документ",
+  "page_prefix": "стр.",
+  "domain_coming_soon": " (скоро)",
+  "user_image_alt": "Фото пользователя"
 }

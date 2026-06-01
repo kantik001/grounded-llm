@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Админка — статьи RAG</title>
+    <title>Admin — RAG knowledge base</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -55,39 +55,39 @@
 </head>
 <body>
     <div class="wrap">
-        <h1>📚 Админка KB</h1>
-        <p class="hint">Загрузка .txt / .pdf / .docx в <code>data/{domain_id}/</code> и переиндексация Chroma. Логин из <code>ADMIN_USER</code> / <code>ADMIN_PASSWORD</code>.</p>
+        <h1>📚 Knowledge base admin</h1>
+        <p class="hint">Upload .txt / .pdf / .docx to <code>data/{domain_id}/</code> and reindex Chroma. Login from <code>ADMIN_USER</code> / <code>ADMIN_PASSWORD</code>.</p>
 
         <div class="card" id="loginCard">
-            <label for="adminUser">Логин</label>
+            <label for="adminUser">Username</label>
             <input type="text" id="adminUser" autocomplete="username">
-            <label for="adminPass">Пароль</label>
+            <label for="adminPass">Password</label>
             <input type="password" id="adminPass" autocomplete="current-password">
-            <button type="button" id="saveLoginBtn">Сохранить и проверить</button>
-            <p class="login-note">Учётные данные хранятся только в sessionStorage этой вкладки.</p>
+            <button type="button" id="saveLoginBtn">Save and verify</button>
+            <p class="login-note">Credentials are stored in this tab's sessionStorage only.</p>
             <div class="status" id="loginStatus"></div>
         </div>
 
         <div class="card" id="toolsCard" hidden>
-            <label for="domainSelect">Домен / Domain</label>
+            <label for="domainSelect">Domain</label>
             <select id="domainSelect">
                 <option value="">Loading…</option>
             </select>
 
-            <label id="filesLabel">Файлы в data/{domain_id}/</label>
+            <label id="filesLabel">Files in data/{domain_id}/</label>
             <ul id="fileList"><li>—</li></ul>
-            <button type="button" class="secondary" id="refreshBtn">Обновить список</button>
+            <button type="button" class="secondary" id="refreshBtn">Refresh list</button>
 
             <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
 
-            <label for="uploadFile">Загрузить документ (.txt, .pdf, .docx — латиница, до 10 МБ)</label>
+            <label for="uploadFile">Upload document (.txt, .pdf, .docx — Latin filename, up to 10 MB)</label>
             <input type="file" id="uploadFile" accept=".txt,.pdf,.docx,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
-            <button type="button" id="uploadBtn">Загрузить</button>
+            <button type="button" id="uploadBtn">Upload</button>
 
             <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
 
-            <p class="hint" style="margin-bottom:10px">После загрузки новых статей запустите переиндексацию RAG (может занять несколько минут).</p>
-            <button type="button" id="reindexBtn">Переиндексировать RAG</button>
+            <p class="hint" style="margin-bottom:10px">After uploading new documents, run RAG reindex (may take several minutes).</p>
+            <button type="button" id="reindexBtn">Reindex RAG</button>
             <div class="status" id="actionStatus"></div>
         </div>
     </div>
@@ -102,7 +102,7 @@
 
         function updateFilesLabel() {
             var id = selectedDomainId() || '…';
-            document.getElementById('filesLabel').textContent = 'Файлы в data/' + id + '/';
+            document.getElementById('filesLabel').textContent = 'Files in data/' + id + '/';
         }
 
         async function loadDomainsCatalog() {

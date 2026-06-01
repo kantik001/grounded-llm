@@ -1,9 +1,20 @@
 {
   "app_title": "Grounded LLM",
   "header_emoji": "🤖",
-  "header_subtitle": "Ответы на основе вашей базы знаний (RAG).",
-  "domain_label": "Домен",
-  "onboarding_title": "Примеры вопросов",
-  "chat_divider": "Диалог с ассистентом",
-  "disclaimer": "Справочная информация из базы знаний. Не заменяет официальную консультацию специалиста."
+  "header_subtitle": "Answers grounded in your knowledge base (RAG).",
+  "domain_label": "Domain",
+  "onboarding_title": "Sample questions",
+  "chat_divider": "Chat with assistant",
+  "disclaimer": "Reference information from the knowledge base. Not a substitute for official expert advice.",
+  "page_title_suffix": "Chat",
+  "typing_line": "Assistant is typing…",
+  "message_placeholder": "Message…",
+  "send_aria_label": "Send",
+  "domain_select_aria": "Select domain",
+  "empty_chat_hint": "Ask a question about the selected knowledge domain.",
+  "citations_title": "Sources",
+  "document_fallback": "document",
+  "page_prefix": "p.",
+  "domain_coming_soon": " (soon)",
+  "user_image_alt": "User photo"
 }

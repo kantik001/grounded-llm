@@ -1,39 +1,39 @@
 ﻿<!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Grounded LLM — чат</title>
+    <title>Grounded LLM — Chat</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link rel="stylesheet" href="app.css">
 </head>
 <body>
     <header class="chat-header">
         <h1 id="headerTitle">🤖 Grounded LLM</h1>
-        <p id="headerSubtitle">Ответы на основе вашей базы знаний (RAG).</p>
+        <p id="headerSubtitle">Answers grounded in your knowledge base (RAG).</p>
         <label class="domain-row">
-            <span id="domainLabel">Домен</span>
-            <select id="domainSelect" aria-label="Выбор домена"></select>
+            <span id="domainLabel">Domain</span>
+            <select id="domainSelect" aria-label="Select domain"></select>
         </label>
-        <p class="disclaimer" id="headerDisclaimer">Справочная информация из базы знаний.</p>
+        <p class="disclaimer" id="headerDisclaimer">Reference information from the knowledge base.</p>
     </header>
 
     <div class="onboarding" id="onboardingRoot" hidden>
-        <div class="onboarding-title" id="onboardingTitle">Примеры вопросов</div>
+        <div class="onboarding-title" id="onboardingTitle">Sample questions</div>
         <div class="onboarding-chips" id="onboardingChips"></div>
     </div>
 
     <div class="chat-scroll" id="chatScroll" aria-live="polite">
-        <div class="day-divider" id="chatDivider">Диалог с ассистентом</div>
+        <div class="day-divider" id="chatDivider">Chat with assistant</div>
         <div id="messagesRoot"></div>
     </div>
 
-    <div class="typing" id="typingLine">Ассистент печатает…</div>
+    <div class="typing" id="typingLine">Assistant is typing…</div>
 
     <div class="composer-wrap">
         <div class="composer">
-            <textarea id="inputText" rows="1" maxlength="4000" placeholder="Сообщение…" aria-label="Текст сообщения"></textarea>
-            <button type="button" class="send-btn" id="sendBtn" title="Отправить" aria-label="Отправить">➤</button>
+            <textarea id="inputText" rows="1" maxlength="4000" placeholder="Message…" aria-label="Message"></textarea>
+            <button type="button" class="send-btn" id="sendBtn" title="Send" aria-label="Send">➤</button>
         </div>
     </div>
 
