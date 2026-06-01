@@ -49,7 +49,7 @@ Legacy aliases: `GET /crops`, JSON field `crop_id`.
 ## New domain
 
 1. Add entry to `config/domains.json`
-2. Add `.txt` files under `data/{domain_id}/`
+2. Add `.txt`, `.pdf`, or `.docx` files under `data/{domain_id}/`
 3. Update `config/prompts.json`, `few_shot.json`, `onboarding.json`, `branding.json`
 4. Run `python scripts/reindex_rag.py`
 

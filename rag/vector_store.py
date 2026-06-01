@@ -1,12 +1,12 @@
-# Chroma vector store: documents under data/{domain_id}/*.txt
+# Chroma vector store: documents under data/{domain_id}/*.{txt,pdf,docx}
 import glob
 import os
 
 from langchain_chroma import Chroma
-from langchain_community.document_loaders import TextLoader
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
+from rag.document_loaders import load_file, supported_extensions
 from rag.domains_config import list_domains, normalize_domain_id
 
 _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -29,24 +29,11 @@ def load_all_documents():
         domain_dir = os.path.join(DATA_DIR, domain_id)
         if not os.path.isdir(domain_dir):
             continue
-        for file_path in glob.glob(os.path.join(domain_dir, "*.txt")):
-            all_docs.extend(_load_file(domain_id, file_path))
+        for ext in supported_extensions():
+            for file_path in glob.glob(os.path.join(domain_dir, f"*{ext}")):
+                all_docs.extend(load_file(domain_id, file_path))
 
     return all_docs
-
-
-def _load_file(domain_id: str, file_path: str):
-    filename = os.path.basename(file_path)
-    print(f"Загружаю [{domain_id}] {filename}")
-    loader = TextLoader(file_path, encoding="utf-8")
-    docs = loader.load()
-    for doc in docs:
-        if doc.metadata is None:
-            doc.metadata = {}
-        doc.metadata["filename"] = filename
-        doc.metadata["domain_id"] = domain_id
-        doc.metadata["source_file"] = filename
-    return docs
 
 
 def create_vector_store():

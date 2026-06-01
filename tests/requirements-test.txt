@@ -1,2 +1,5 @@
 pytest>=8.0.0
 langchain-core>=0.3.0
+langchain-community>=0.2.0
+pypdf>=4.0.0
+docx2txt>=0.8
