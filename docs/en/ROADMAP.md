@@ -1,6 +1,35 @@
 # Roadmap — Grounded LLM
 
-## Done
+Strategy: **international B2B product** — organizations deploy a document-grounded assistant on-prem or in private cloud.  
+Default language for sales and docs is **English**; Russian locale remains for local development and market.  
+No country-specific features in core — new languages ship as locale packs when there is paying demand.
+
+---
+
+## Vision
+
+**Product:** platform core for grounded assistants — answers **only from the knowledge base**, with citations and verification.
+
+**International positioning (one line):**
+
+> *Private AI assistant for internal documents — cited, verified, deployable in your infrastructure.*
+
+| We sell | We do not sell |
+|---------|----------------|
+| Trust, data control, fast domain pack rollout | “Another ChatGPT wrapper” |
+| On-prem / private cloud | Cloud-only SaaS from day one |
+
+**Revenue by phase:**
+
+| Phase | Revenue model |
+|-------|---------------|
+| A–B | Pilots, implementation, annual support |
+| C | Hosted multi-tenant + subscription tiers |
+| D | Partner channel + enterprise modules |
+
+---
+
+## Done (baseline)
 
 ### Platform core
 - Document pipeline: `.txt`, `.pdf`, `.docx`
@@ -8,26 +37,230 @@
 - Legacy API removed, `schema_migrations`
 
 ### Phase 1 — Trust
-- Citations in chat, `rag_k`, admin index stats + delete, expanded eval CI
+- Citations in chat, `rag_k`, admin index stats + delete, eval in CI
 
 ### Phase 2 — Integrators
 - **SSE streaming** — `POST /message?stream=1`
-- **API keys** — `X-API-Key`, env `API_KEYS` or `API_KEYS_FILE`
-- **API v1** — `/api/v1/*` + `GET /api/v1/openapi.json`
-- **Multi-tenant (minimal)** — `X-Tenant-ID`, `data/{tenant}/{domain}/`, Chroma filter `tenant_id`
-- **Observability** — `X-Request-ID`, `GET /metrics`, structured request logs
+- **API keys** — `X-API-Key`, `API_KEYS` / `API_KEYS_FILE`
+- **API v1** — `/api/v1/*` + OpenAPI
+- **Multi-tenant** — `X-Tenant-ID`, `data/{tenant}/{domain}/`, Chroma filter
+- **Observability** — `X-Request-ID`, `/metrics`, structured logs
 - **Admin feedback** — `GET /admin/feedback`
-- **Domain scaffold** — `scripts/init_domain.sh` / `init_domain.ps1`
+- **Domain scaffold** — `scripts/init_domain.sh` / `.ps1`
 
 ### i18n
 - Docs `docs/en/` and `docs/ru/`
-- Locale bundles `config/locales/{ru,en}/`
-- Middleware `X-Locale`, `Accept-Language`, `?locale=`
+- Bundles: `config/locales/{ru,en}/`
+- Middleware: `X-Locale`, `Accept-Language`, `?locale=`
+- English API errors outside RU locale zone
 
-## Phase 3 — Platform & monetization (next)
+**Summary:** strong **technical MVP** and **platform foundation**. Missing **product maturity** for international B2B sales (UI polish, security narrative, enterprise features, packaged vertical).
 
-- Helm / Terraform, managed vector DB
-- Open core vs hosted SaaS
-- Vision domain pack, audit log, analytics dashboard
+---
 
-See also: [ARCHITECTURE.md](./ARCHITECTURE.md), [DEPLOY.md](./DEPLOY.md).
+## Phase A — International-ready product (0–4 months)
+
+**Goal:** credible demo and pilot for international buyers and integrators.
+
+### Product
+
+| Item | Why |
+|------|-----|
+| **English-first UI** | Remove RU fallbacks in webapp; default `en` |
+| **Security brief** | 2-page PDF: data flow, on-prem, LLM API, no training on client docs |
+| **Pilot playbook** | 8-week SOW template, KPIs, demo script |
+| **HR domain pack (EN)** | Productized vertical: prompts, onboarding, demo KB, sales one-pager |
+| **Locale extensibility** | Document how to add a new language without core changes |
+
+### Engineering
+
+| Item | Why |
+|------|-----|
+| Finish webapp i18n | All UI strings from `/branding` and bundles |
+| Expand eval | 15–25 EN questions, CI gate on retrieval |
+| Smoke E2E in CI | `docker compose` + smoke script |
+| OpenAPI examples | curl/Postman for session, message, stream, admin |
+
+### GTM
+
+- 2–3 pilot conversations (remote, English)
+- 1 case study (anonymized OK)
+- GitHub + `docs/en/` as primary entry point
+
+### Success criteria
+
+- Demo → pilot conversion ≥20%
+- Pilot: ≥85% in-scope answers with citations
+- Fresh deploy: **&lt;1 day**
+
+**Revenue:** pilot **$8k–25k**.
+
+---
+
+## Phase B — Enterprise readiness (4–9 months)
+
+**Goal:** pass security review and procurement at mid-market and enterprise.
+
+### Product
+
+| Item | Why |
+|------|-----|
+| **RBAC** | Roles: chat-only, KB editor, admin, API manager |
+| **Audit log** | Upload, delete, reindex, admin login |
+| **Per-tenant quotas** | Messages/day, storage, domains — billing foundation |
+| **SSO (OIDC/SAML)** | Enterprise standard; Telegram stays optional |
+| **Analytics dashboard** | Questions/day, verify pass rate, KB gaps, feedback |
+| **Async reindex** | Job status instead of blocking admin |
+
+### Engineering
+
+| Item | Why |
+|------|-----|
+| Helm chart | Repeatable Kubernetes deploy |
+| Backup/restore | Postgres + Chroma + `data/` |
+| Readiness probes | postgres, python RAG, chroma separately |
+| Retention policies | Configurable message/session retention |
+| Retrieval improvements | Reranker or hybrid search; measured via eval |
+
+### GTM
+
+- **Annual license** (not card self-serve yet)
+- Partner program v1: 1–2 integrators, rev share
+- Trust center: security, architecture, subprocessors
+
+### Success criteria
+
+- 1–2 paid annual licenses
+- Security questionnaire without per-client custom code
+- Verify pass rate ≥75% on production eval
+- Admin NPS ≥40
+
+**Revenue:** annual license **$24k–80k** + support retainer.
+
+---
+
+## Phase C — Scalable platform & revenue (9–18 months)
+
+**Goal:** repeatable revenue without 100% custom work per client.
+
+### Product
+
+| Item | Why |
+|------|-----|
+| **Hosted multi-tenant SaaS** | Signup → tenant → domain → upload (controlled beta) |
+| **Billing** | Stripe/Paddle tied to quotas |
+| **Plan tiers** | Starter / Business / Enterprise |
+| **White-label light** | Logo, colors, app title via admin |
+| **Embeddable widget** | Intranet embed, not only Telegram |
+| **Managed vector DB** | Pinecone / Qdrant / pgvector |
+| **Domain pack templates** | HR, IT support, legal FAQ |
+
+### Engineering
+
+| Item | Why |
+|------|-----|
+| Terraform modules | AWS / GCP / Azure |
+| Multi-region deploy docs | Client chooses region |
+| E2E eval with LLM | Quality gate on staging |
+| SLA monitoring | Uptime and latency per tenant |
+
+### GTM
+
+- Self-serve for SMB
+- Enterprise sales for on-prem and large contracts
+
+### Success criteria
+
+- Positive MRR from hosted tier
+- Healthy gross margin on hosted (LLM + infra)
+- Annual contract churn &lt;5%
+- New domain pack in **&lt;3 days**
+
+---
+
+## Phase D — Ecosystem & scale (18+ months)
+
+**Goal:** partners and developers drive adoption, not only direct sales.
+
+| Item | Why |
+|------|-----|
+| Webhooks / events | document indexed, verify failed |
+| Ingest connectors | SharePoint, Google Drive, Confluence |
+| Open core | MIT core vs commercial enterprise module |
+| Partner certification | Integrator training program |
+| Advanced analytics | Topics, KB gaps, article suggestions |
+| Optional packs | Vision, support macros — separate SKUs |
+
+### Success criteria
+
+- ≥30% revenue through partners
+- ≥5 production domains per tenant (Business tier)
+- External contributions to domain packs
+
+---
+
+## Product principles (all phases)
+
+1. **Grounded first** — RAG quality and verify beat feature count.
+2. **Deploy anywhere** — on-prem, private cloud, hosted; same core.
+3. **English default, locales pluggable** — no country logic in core.
+4. **Domain pack = unit of sale** — platform is enabler, vertical is the offer.
+5. **Measure everything** — eval, metrics, feedback drive priorities.
+
+---
+
+## Explicitly out of scope (until demand)
+
+- Country-specific compliance packages without a paying client
+- New languages beyond EN (+ RU legacy) without a contract
+- Consumer mobile app
+- General chatbot without a knowledge base
+- Per-client model fine-tuning (services exception only)
+
+---
+
+## At a glance
+
+```text
+NOW          Phase A              Phase B                 Phase C              Phase D
+─────────────────────────────────────────────────────────────────────────────────────
+MVP+i18n  →  EN product + HR pack → RBAC, audit, SSO,     → SaaS + billing +      → Partners +
+             pilots + eval        dashboard               white-label             connectors
+```
+
+| Phase | Duration | Buyer | Revenue |
+|-------|----------|-------|---------|
+| **A** | 0–4 mo | HR / IT pilot sponsor | Pilot $8k–25k |
+| **B** | 4–9 mo | CISO + HR + procurement | License $24k–80k/yr |
+| **C** | 9–18 mo | SMB + enterprise | MRR + enterprise |
+| **D** | 18+ mo | Partners | License + marketplace |
+
+---
+
+## Next 90 days
+
+**Product:**
+
+1. English-first webapp (no RU fallbacks)
+2. Security & architecture brief (EN PDF)
+3. HR domain pack one-pager + demo script
+4. Expand eval + CI smoke
+5. Minimal audit log (before full RBAC)
+6. Merge i18n branch, tag `v0.9` «international beta»
+
+**Business:**
+
+1. 10 outbound conversations (LinkedIn, EN)
+2. 1 paid or funded pilot
+3. 1 integrator conversation
+
+---
+
+## Relation to old «Phase 3»
+
+The previous list (Helm, SaaS, vision pack, audit, dashboard) is **split across Phases B–D** and tied to buyers and revenue.  
+**Phase A** is the new prerequisite: international market does not open without it, even with good code.
+
+---
+
+See also: [ARCHITECTURE.md](./ARCHITECTURE.md), [DEPLOY.md](./DEPLOY.md), [Russian ROADMAP](../ru/ROADMAP.md).
