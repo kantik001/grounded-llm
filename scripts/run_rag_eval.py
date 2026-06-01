@@ -22,6 +22,7 @@ RESULTS_DIR = EVAL_DIR / "results"
 
 SUITES = {
     "default": EVAL_DIR / "rag_default_baseline.jsonl",
+    "default_en": EVAL_DIR / "rag_default_en_baseline.jsonl",
 }
 
 
@@ -127,8 +128,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="RAG eval (retrieval)")
     parser.add_argument(
         "--suite",
-        choices=["default", "all"],
-        default="default",
+        choices=["default", "default_en", "all"],
+        default="default_en",
         help="Question suite",
     )
     parser.add_argument(

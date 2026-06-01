@@ -1,0 +1,7 @@
+Sick leave and temporary incapacity (demo).
+
+On the first day of illness, the employee must notify their manager by 10:00 AM.
+
+The sick note must be submitted to HR within 3 working days after returning to work.
+
+Sick pay is calculated according to applicable law and internal rules after HR receives the sick note.

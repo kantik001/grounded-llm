@@ -83,7 +83,7 @@ reindex:
 ## RAG eval retrieval-only (PYTHON_RAG_URL, python на :5000)
 eval-retrieval:
 	pip install requests
-	python scripts/run_rag_eval.py --suite all
+	python scripts/run_rag_eval.py --suite default_en
 
 ## Помощь по доступным командам
 help:

@@ -62,7 +62,8 @@ make test
 make eval-retrieval
 ```
 
-Documentation: [`docs/README.md`](docs/README.md) — [English](docs/en/) and [Русский](docs/ru/).
+Documentation: [`docs/README.md`](docs/README.md) — [English](docs/en/) and [Русский](docs/ru/).  
+Phase A sales pack: [Security brief](docs/en/SECURITY_BRIEF.md) · [Pilot playbook](docs/en/PILOT_PLAYBOOK.md) · [HR domain pack](docs/en/domain-packs/HR.md)
 
 ## Publish to GitHub
 

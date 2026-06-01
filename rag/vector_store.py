@@ -109,7 +109,7 @@ def search(query: str, domain_id: str, tenant_id: str = DEFAULT_TENANT, k: int =
     return store.similarity_search(
         query,
         k=k,
-        filter={"domain_id": domain_id, "tenant_id": tenant_id},
+        filter={"$and": [{"domain_id": domain_id}, {"tenant_id": tenant_id}]},
     )
 
 

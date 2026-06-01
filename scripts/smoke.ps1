@@ -37,8 +37,14 @@ Test-Endpoint "health" GET "/health" | Out-Null
 Test-Endpoint "domains" GET "/api/domains" | Out-Null
 $sessionBody = '{"domain_id":"default"}'
 $sessionJson = Test-Endpoint "session" POST "/api/session" $sessionBody
-if ($sessionJson -match '"session_id"\s*:\s*"([^"]+)"') {
-    $sid = $Matches[1]
+$sid = $null
+if ($sessionJson) {
+    try {
+        $parsed = $sessionJson | ConvertFrom-Json
+        $sid = $parsed.session_id
+    } catch { }
+}
+if ($sid) {
     Test-Endpoint "onboarding" GET "/api/onboarding?domain_id=default" | Out-Null
     Write-Host "[INFO] session_id=$sid"
 } else {
