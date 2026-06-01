@@ -60,28 +60,30 @@
 
 ---
 
-## Фаза A — продукт для международного рынка (0–4 месяца)
+## Фаза A — продукт для международного рынка (0–4 месяца) ✅
 
 **Цель:** показать demo и запустить пилот без стыда — buyer или integrator понимает ценность за 30 минут.
 
+**Статус:** deliverables Фазы A реализованы в репозитории (ветка `feature/phase-a-complete`).
+
 ### Продукт
 
-| Задача | Зачем |
-|--------|-------|
-| **English-first UI** | Убрать русские fallback в webapp; по умолчанию `en` |
-| **Security brief** | PDF на 2 стр.: куда идут данные, on-prem, LLM API, «не обучаем на ваших документах» |
-| **Pilot playbook** | Шаблон SOW на 8 недель, KPI, сценарий demo |
-| **HR domain pack (EN)** | Готовый vertical: промпты, onboarding, demo KB, one-pager для продаж |
-| **Расширяемость locale** | Документ: как добавить новый язык без правок ядра |
+| Задача | Статус | Артефакт |
+|--------|--------|----------|
+| **English-first UI** | ✅ | `webapp/`, `DEFAULT_LOCALE=en` |
+| **Security brief** | ✅ | [SECURITY_BRIEF.md](./SECURITY_BRIEF.md) |
+| **Pilot playbook** | ✅ | [PILOT_PLAYBOOK.md](./PILOT_PLAYBOOK.md) |
+| **HR domain pack (EN)** | ✅ | [domain-packs/HR.md](./domain-packs/HR.md), `data/default/*_en.txt` |
+| **Расширяемость locale** | ✅ | [LOCALE_GUIDE.md](./LOCALE_GUIDE.md) |
 
 ### Инженерия
 
-| Задача | Зачем |
-|--------|-------|
-| Довести i18n в webapp | Все строки UI из `/branding` и bundles, не из кода |
-| Расширить eval | 15–25 EN-вопросов, gate в CI по retrieval |
-| Smoke E2E в CI | `docker compose` + smoke — стабильность для integrators |
-| Примеры OpenAPI | curl/Postman: session, message, stream, admin |
+| Задача | Статус | Артефакт |
+|--------|--------|----------|
+| i18n в webapp | ✅ | `/branding`, locale bundles |
+| Расширить eval | ✅ | `eval/rag_default_en_baseline.jsonl` (18 вопросов) |
+| Smoke E2E в CI | ✅ | job `smoke-api` в `.github/workflows/ci.yml` |
+| Примеры OpenAPI | ✅ | [API_EXAMPLES.md](./API_EXAMPLES.md) |
 
 ### Продажи и GTM (go-to-market)
 
@@ -241,20 +243,18 @@ MVP+i18n → EN product + HR pack → RBAC, audit, SSO,     → SaaS + billing +
 
 ## Ближайшие 90 дней (конкретный backlog)
 
-**Обязательно в продукте:**
+**Продукт (Фаза A) — выполнено:**
 
-1. English-first webapp (без RU fallback)
-2. Security & architecture brief (EN PDF)
-3. HR domain pack: one-pager + demo script
-4. Расширить eval + smoke в CI
-5. Audit log (минимальный) — даже до полного RBAC
-6. Смержить i18n-ветку, тег `v0.9` «international beta»
+1. ~~English-first webapp~~ ✅
+2. ~~Security & architecture brief~~ ✅ → [SECURITY_BRIEF.md](./SECURITY_BRIEF.md)
+3. ~~HR domain pack + demo script~~ ✅ → [domain-packs/HR.md](./domain-packs/HR.md)
+4. ~~Eval + smoke CI~~ ✅
 
-**Обязательно в бизнесе:**
+**Дальше — Фаза B:**
 
-1. 10 исходящих контактов (LinkedIn, EN)
-2. 1 платный или оплачиваемый пилот
-3. 1 разговор с integrator
+5. Audit log (минимальный)
+6. RBAC
+7. Первый платный пилот (GTM)
 
 ---
 

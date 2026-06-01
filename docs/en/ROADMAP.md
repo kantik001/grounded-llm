@@ -58,28 +58,30 @@ No country-specific features in core — new languages ship as locale packs when
 
 ---
 
-## Phase A — International-ready product (0–4 months)
+## Phase A — International-ready product (0–4 months) ✅
 
 **Goal:** credible demo and pilot for international buyers and integrators.
 
+**Status:** Phase A deliverables are in the repository (`feature/phase-a-complete`).
+
 ### Product
 
-| Item | Why |
-|------|-----|
-| **English-first UI** | Remove RU fallbacks in webapp; default `en` |
-| **Security brief** | 2-page PDF: data flow, on-prem, LLM API, no training on client docs |
-| **Pilot playbook** | 8-week SOW template, KPIs, demo script |
-| **HR domain pack (EN)** | Productized vertical: prompts, onboarding, demo KB, sales one-pager |
-| **Locale extensibility** | Document how to add a new language without core changes |
+| Item | Status | Artifact |
+|------|--------|----------|
+| **English-first UI** | ✅ | `webapp/`, `DEFAULT_LOCALE=en` |
+| **Security brief** | ✅ | [SECURITY_BRIEF.md](./SECURITY_BRIEF.md) |
+| **Pilot playbook** | ✅ | [PILOT_PLAYBOOK.md](./PILOT_PLAYBOOK.md) |
+| **HR domain pack (EN)** | ✅ | [domain-packs/HR.md](./domain-packs/HR.md), `data/default/*_en.txt` |
+| **Locale extensibility** | ✅ | [LOCALE_GUIDE.md](./LOCALE_GUIDE.md) |
 
 ### Engineering
 
-| Item | Why |
-|------|-----|
-| Finish webapp i18n | All UI strings from `/branding` and bundles |
-| Expand eval | 15–25 EN questions, CI gate on retrieval |
-| Smoke E2E in CI | `docker compose` + smoke script |
-| OpenAPI examples | curl/Postman for session, message, stream, admin |
+| Item | Status | Artifact |
+|------|--------|----------|
+| Webapp i18n | ✅ | `/branding`, locale bundles |
+| Expand eval | ✅ | `eval/rag_default_en_baseline.jsonl` (18 cases) |
+| Smoke E2E in CI | ✅ | `smoke-api` job in CI |
+| OpenAPI examples | ✅ | [API_EXAMPLES.md](./API_EXAMPLES.md) |
 
 ### GTM
 
@@ -239,20 +241,18 @@ MVP+i18n  →  EN product + HR pack → RBAC, audit, SSO,     → SaaS + billing
 
 ## Next 90 days
 
-**Product:**
+**Phase A product — done:**
 
-1. English-first webapp (no RU fallbacks)
-2. Security & architecture brief (EN PDF)
-3. HR domain pack one-pager + demo script
-4. Expand eval + CI smoke
-5. Minimal audit log (before full RBAC)
-6. Merge i18n branch, tag `v0.9` «international beta»
+1. ~~English-first webapp~~ ✅
+2. ~~Security brief~~ ✅
+3. ~~HR domain pack + demo script~~ ✅
+4. ~~Eval + smoke CI~~ ✅
 
-**Business:**
+**Next — Phase B:**
 
-1. 10 outbound conversations (LinkedIn, EN)
-2. 1 paid or funded pilot
-3. 1 integrator conversation
+5. Minimal audit log
+6. RBAC
+7. First paid pilot (GTM)
 
 ---
 

@@ -23,6 +23,8 @@ def test_baseline_jsonl_structure(path: Path):
             assert "domain_id" in case, f"{path.name}:{line_no} domain_id"
             cases.append(case)
     assert len(cases) >= 5, f"{path.name}: need at least 5 cases, got {len(cases)}"
+    if path.name == "rag_default_en_baseline.jsonl":
+        assert len(cases) >= 15, f"{path.name}: Phase A requires at least 15 EN cases, got {len(cases)}"
     for case in cases:
         if case.get("expect_out_of_scope"):
             continue
