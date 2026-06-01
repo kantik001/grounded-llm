@@ -61,8 +61,6 @@ docker build -f Dockerfile.python -t grounded-llm-python:ci .
 
 Образы не пушатся в registry — только проверка сборки.
 
-Legacy: раньше образ назывался `Dockerfile.classifier` / `doctor-gardens-*`.
-
 ---
 
 ## Локально повторить CI

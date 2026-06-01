@@ -83,7 +83,6 @@ func buildRAGUserPrompt(question, context, fewShot, taskIntro, constraints strin
 type ChatRequest struct {
 	Question string `json:"question"`
 	DomainID string `json:"domain_id"`
-	CropID   string `json:"crop_id"` // legacy
 }
 
 func answerWithRAG(q, domainID string, history []Message, sessionID string) (answer string, success bool, errMsg string, ragSoftFail bool) {
@@ -153,7 +152,7 @@ func handleChat(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Пустой вопрос"})
 		return
 	}
-	domainID := coalesceDomainID(req.DomainID, req.CropID)
+	domainID := strings.TrimSpace(req.DomainID)
 
 	answer, ok, errMsg, ragSoft := answerWithRAG(q, domainID, nil, "")
 	if ragSoft {

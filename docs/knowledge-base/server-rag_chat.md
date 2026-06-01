@@ -25,8 +25,6 @@ POST PYTHON_RAG_URL
 { "question": "...", "domain_id": "default" }
 ```
 
-Legacy: поле `crop_id`, env `CLASSIFIER_RAG_URL`.
-
 ---
 
 ## Deprecated

@@ -15,8 +15,6 @@
 | `onboarding.json` | Go | Стартовые вопросы в Web App |
 | `branding.json` | Go | Заголовки, дисклеймер UI |
 
-Legacy alias конфига: `crops.json` (не используется в репозитории по умолчанию).
-
 ---
 
 ## `domains.json`

@@ -27,9 +27,9 @@ check() {
 echo "Smoke test: $BASE_URL"
 
 check health GET /health
-check crops GET /api/crops
-check session POST /api/session '{"crop_id":"apple"}'
-check onboarding GET "/api/onboarding?crop_id=apple"
+check domains GET /api/domains
+check session POST /api/session '{"domain_id":"default"}'
+check onboarding GET "/api/onboarding?domain_id=default"
 
 if [[ "$FAILED" -gt 0 ]]; then
   echo "Smoke FAILED: $FAILED check(s)"

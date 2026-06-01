@@ -42,8 +42,6 @@ python scripts/reindex_rag.py
 | `ONBOARDING_CONFIG_PATH` | `onboarding.json` |
 | `BRANDING_CONFIG_PATH` | `branding.json` |
 
-Legacy alias: `CROPS_CONFIG_PATH` → тот же `domains.json`.
-
 **Перезагрузка Go без рестарта:**
 
 ```bash

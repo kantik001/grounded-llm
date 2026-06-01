@@ -25,7 +25,7 @@ def rag_context():
     try:
         data = request.get_json(silent=True) or {}
         question = (data.get("question") or "").strip()
-        domain_id = data.get("domain_id") or data.get("crop_id") or "default"
+        domain_id = (data.get("domain_id") or "default").strip()
         if not question:
             return jsonify({"success": False, "error": "Пустой вопрос"}), 400
 
@@ -40,19 +40,6 @@ def rag_context():
 @app.route("/domains", methods=["GET"])
 def domains_list():
     return jsonify({"success": True, **list_domains()}), 200
-
-
-@app.route("/crops", methods=["GET"])
-def crops_list_legacy():
-    """Legacy alias for /domains."""
-    data = list_domains()
-    return jsonify(
-        {
-            "success": True,
-            "default_crop": data.get("default_domain"),
-            "crops": data.get("domains", {}),
-        }
-    ), 200
 
 
 @app.route("/health", methods=["GET"])
@@ -77,5 +64,5 @@ def admin_reindex():
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PYTHON_SERVICE_PORT", os.environ.get("CLASSIFIER_PORT", 5000)))
+    port = int(os.environ.get("PYTHON_SERVICE_PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)

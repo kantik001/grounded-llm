@@ -9,8 +9,6 @@ func registerPublicRoutes(router *gin.Engine) {
 	router.GET("/api/health", handleHealthCheck)
 	router.GET("/domains", handleListDomains)
 	router.GET("/api/domains", handleListDomains)
-	router.GET("/crops", handleListCropsLegacy)
-	router.GET("/api/crops", handleListCropsLegacy)
 	router.GET("/onboarding", handleOnboarding)
 	router.GET("/api/onboarding", handleOnboarding)
 	router.GET("/branding", handleBranding)

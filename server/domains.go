@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +14,7 @@ import (
 type DomainInfo struct {
 	ID         string `json:"-"`
 	Name       string `json:"name"`
-	NameRU     string `json:"name_ru,omitempty"` // legacy alias
+	NameRU     string `json:"name_ru,omitempty"`
 	Emoji      string `json:"emoji"`
 	RAGEnabled bool   `json:"rag_enabled"`
 	UIHidden   bool   `json:"ui_hidden,omitempty"`
@@ -47,24 +46,8 @@ func loadDomainCatalog() error {
 	if err != nil {
 		return fmt.Errorf("read domains config %s: %w", path, err)
 	}
-	var raw map[string]json.RawMessage
-	if err := json.Unmarshal(body, &raw); err != nil {
+	if err := json.Unmarshal(body, &domainCatalog); err != nil {
 		return fmt.Errorf("parse domains config: %w", err)
-	}
-	if _, ok := raw["domains"]; ok {
-		if err := json.Unmarshal(body, &domainCatalog); err != nil {
-			return fmt.Errorf("parse domains config: %w", err)
-		}
-	} else {
-		var legacy struct {
-			DefaultCrop string                       `json:"default_crop"`
-			Crops       map[string]DomainInfo        `json:"crops"`
-		}
-		if err := json.Unmarshal(body, &legacy); err != nil {
-			return fmt.Errorf("parse legacy crops config: %w", err)
-		}
-		domainCatalog.DefaultDomain = legacy.DefaultCrop
-		domainCatalog.Domains = legacy.Crops
 	}
 	for id, d := range domainCatalog.Domains {
 		d.ID = id
@@ -80,18 +63,7 @@ func loadDomainCatalog() error {
 }
 
 func domainsConfigPath() string {
-	if p := strings.TrimSpace(os.Getenv("DOMAINS_CONFIG_PATH")); p != "" {
-		return p
-	}
-	if p := strings.TrimSpace(os.Getenv("CROPS_CONFIG_PATH")); p != "" {
-		return p
-	}
-	return resolveConfigPath("", append(
-		defaultConfigCandidates("domains.json"),
-		filepath.Join("/config", "crops.json"),
-		filepath.Join("..", "config", "crops.json"),
-		filepath.Join("config", "crops.json"),
-	)...)
+	return resolveConfigPath("DOMAINS_CONFIG_PATH", defaultConfigCandidates("domains.json")...)
 }
 
 func normalizeDomainID(raw string) (string, error) {
@@ -200,27 +172,5 @@ func handleListDomains(c *gin.Context) {
 		"success":         true,
 		"default_domain":  domainCatalog.DefaultDomain,
 		"domains":         list,
-	})
-}
-
-// GET /crops — legacy alias.
-func handleListCropsLegacy(c *gin.Context) {
-	list := make([]gin.H, 0, len(domainCatalog.Domains))
-	for id, info := range domainCatalog.Domains {
-		if info.UIHidden {
-			continue
-		}
-		list = append(list, gin.H{
-			"id":          id,
-			"name_ru":     domainDisplayName(info),
-			"emoji":       info.Emoji,
-			"rag_enabled": info.RAGEnabled,
-			"cv_enabled":  false,
-		})
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"success":      true,
-		"default_crop": domainCatalog.DefaultDomain,
-		"crops":        list,
 	})
 }

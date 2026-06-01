@@ -12,7 +12,6 @@ type jsonMessageRequest struct {
 	SessionID string `json:"session_id"`
 	Text      string `json:"text"`
 	DomainID  string `json:"domain_id"`
-	CropID    string `json:"crop_id"` // legacy API alias for domain_id
 }
 
 func handleMessage(c *gin.Context) {
@@ -30,7 +29,7 @@ func handleMessage(c *gin.Context) {
 		}
 		sessionID = strings.TrimSpace(c.PostForm("session_id"))
 		text = strings.TrimSpace(c.PostForm("text"))
-		domainIDRaw = coalesceDomainID(c.PostForm("domain_id"), c.PostForm("crop_id"))
+		domainIDRaw = domainIDFromForm(c)
 		imageData, err = readImageFromFormFile(c, "image")
 		if err != nil {
 			jsonError(c, http.StatusBadRequest, err)
@@ -44,7 +43,7 @@ func handleMessage(c *gin.Context) {
 		}
 		sessionID = strings.TrimSpace(req.SessionID)
 		text = strings.TrimSpace(req.Text)
-		domainIDRaw = coalesceDomainID(req.DomainID, req.CropID)
+		domainIDRaw = strings.TrimSpace(req.DomainID)
 	}
 
 	if text == "" && len(imageData) == 0 {

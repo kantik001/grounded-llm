@@ -56,12 +56,6 @@ Product packs (HR, legal, support и т.д.) — **domain pack**: `config/` + `d
 
 ---
 
-## Legacy
-
-API и JSON: alias `crop_id`, `GET /crops` — совместимость со старыми клиентами.
-
----
-
 ## Документация / Docs
 
 Язык: **RU + EN** (постепенный перевод). Подробности: `docs/knowledge-base/README.md`.

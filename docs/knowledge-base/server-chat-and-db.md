@@ -15,8 +15,6 @@ JSON:
 { "session_id": "...", "text": "...", "domain_id": "default" }
 ```
 
-Legacy: `crop_id`.
-
 **Только текст** — RAG через `answerWithRAG`.  
 **Multipart с image** — отклоняется с сообщением «vision module not in core» (подключите domain pack).
 

@@ -11,33 +11,16 @@ _CONFIG_MTIME: Optional[float] = None
 
 
 def _config_path() -> str:
-    env = os.environ.get("DOMAINS_CONFIG_PATH") or os.environ.get("CROPS_CONFIG_PATH")
+    env = os.environ.get("DOMAINS_CONFIG_PATH")
     if env and os.path.isfile(env):
         return env
     for candidate in (
         os.path.join(_PROJECT_ROOT, "config", "domains.json"),
         "/config/domains.json",
-        os.path.join(_PROJECT_ROOT, "config", "crops.json"),
-        "/config/crops.json",
     ):
         if os.path.isfile(candidate):
             return candidate
     return os.path.join(_PROJECT_ROOT, "config", "domains.json")
-
-
-def _normalize_catalog(raw: Dict[str, Any]) -> Dict[str, Any]:
-    """Support legacy crops.json (default_crop / crops keys)."""
-    if "domains" in raw:
-        return raw
-    domains = raw.get("crops", {})
-    default = raw.get("default_crop") or raw.get("default_domain") or "default"
-    out: Dict[str, Any] = {"default_domain": default, "domains": {}}
-    for did, info in domains.items():
-        entry = dict(info)
-        if "name" not in entry and "name_ru" in entry:
-            entry["name"] = entry["name_ru"]
-        out["domains"][did] = entry
-    return out
 
 
 def load_domains_config() -> Dict[str, Any]:
@@ -50,7 +33,11 @@ def load_domains_config() -> Dict[str, Any]:
     if _CONFIG is not None and _CONFIG_MTIME == mtime:
         return _CONFIG
     with open(path, encoding="utf-8") as f:
-        _CONFIG = _normalize_catalog(json.load(f))
+        raw = json.load(f)
+    for did, info in raw.get("domains", {}).items():
+        if isinstance(info, dict) and "name" not in info and "name_ru" in info:
+            info["name"] = info["name_ru"]
+    _CONFIG = raw
     _CONFIG_MTIME = mtime
     return _CONFIG
 

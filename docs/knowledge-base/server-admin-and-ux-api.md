@@ -22,7 +22,7 @@ HTTP Basic: `ADMIN_USER` / `ADMIN_PASSWORD`. Пустой пароль → **503
 
 ### Upload
 
-- `domain_id` (legacy form field: `crop_id`)
+- `domain_id`
 - Форматы: **`.txt`**, **`.pdf`**, **`.docx`**
 - Regex: `^[a-zA-Z0-9._-]+\.(txt|pdf|docx)$`
 - Max size: **10 МБ**
@@ -37,8 +37,6 @@ HTTP Basic: `ADMIN_USER` / `ADMIN_PASSWORD`. Пустой пароль → **503
 ### `GET /domains`, `/api/domains`
 
 Публично, без Telegram auth.
-
-Legacy: `GET /crops` — тот же каталог в старом формате JSON.
 
 ---
 

@@ -14,7 +14,6 @@ type BrandingConfig struct {
 	HeaderEmoji      string `json:"header_emoji"`
 	HeaderSubtitle   string `json:"header_subtitle"`
 	DomainLabel      string `json:"domain_label"`
-	CropLabel        string `json:"crop_label"` // legacy
 	OnboardingTitle  string `json:"onboarding_title"`
 	ChatDivider      string `json:"chat_divider"`
 	Disclaimer       string `json:"disclaimer"`
