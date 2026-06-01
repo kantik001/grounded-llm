@@ -5,10 +5,10 @@ import "fmt"
 func requireRAGEnabled(domainID string) error {
 	info, ok := domainInfo(domainID)
 	if !ok {
-		return fmt.Errorf("неизвестный домен: %s", domainID)
+		return fmt.Errorf("unknown domain: %s", domainID)
 	}
 	if !info.RAGEnabled {
-		return fmt.Errorf("для домена «%s» текстовый помощник пока недоступен", domainDisplayName(info))
+		return fmt.Errorf("text assistant is not available for domain %q", domainDisplayName(info, appDefaultLocale))
 	}
 	return nil
 }

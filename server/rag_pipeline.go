@@ -13,14 +13,15 @@ type ragPrepared struct {
 	LLMMessages []Message
 	Fragments   []RAGFragment
 	DomainID    string
+	Locale      string
 }
 
-func prepareRAGMessages(q, domainID, tenantID string, history []Message, sessionID string) (ragPrepared, error) {
+func prepareRAGMessages(q, domainID, tenantID, locale string, history []Message, sessionID string) (ragPrepared, error) {
 	var fail ragPrepared
 	metricRAGRequests.Add(1)
 	q = strings.TrimSpace(strings.ReplaceAll(strings.ReplaceAll(q, "\r", " "), "\n", " "))
 	if q == "" {
-		fail.ErrMsg = "Пустой вопрос"
+		fail.ErrMsg = "Empty question"
 		return fail, nil
 	}
 
@@ -34,7 +35,7 @@ func prepareRAGMessages(q, domainID, tenantID string, history []Message, session
 		return fail, nil
 	}
 
-	ragOut, err := fetchRAGContext(q, tenantID, domainID)
+	ragOut, err := fetchRAGContext(q, tenantID, domainID, locale)
 	if err != nil {
 		log.Printf("RAG fetch error: %v", err)
 		msg := publicAPIError(err)
@@ -51,12 +52,12 @@ func prepareRAGMessages(q, domainID, tenantID string, history []Message, session
 		return fail, nil
 	}
 	if config.LLMAPIKey == "" {
-		fail.ErrMsg = "Для текстового чата задайте LLM_API_KEY (OpenRouter / OpenAI-совместимый API)."
+		fail.ErrMsg = "Set LLM_API_KEY for text chat (OpenRouter / OpenAI-compatible API)."
 		return fail, nil
 	}
 
-	prompts := promptsForDomain(domainID)
-	userPrompt := buildRAGUserPrompt(q, ragOut.Context, ragOut.FewShot, prompts.RAGTaskIntro, ragConstraintsText())
+	prompts := promptsForDomainLocale(domainID, locale)
+	userPrompt := buildRAGUserPrompt(q, ragOut.Context, ragOut.FewShot, prompts.RAGTaskIntro, ragConstraintsForLocale(locale))
 	var msgs []Message
 	msgs = append(msgs, Message{Role: "system", Content: prompts.RAGSystem})
 	msgs = append(msgs, history...)
@@ -67,18 +68,19 @@ func prepareRAGMessages(q, domainID, tenantID string, history []Message, session
 		LLMMessages: msgs,
 		Fragments:   ragOut.Fragments,
 		DomainID:    domainID,
+		Locale:      locale,
 	}, nil
 }
 
 func finalizeRAGAnswer(raw string, p ragPrepared) RAGAnswerResult {
 	answer := cleanRAGAnswer(raw)
-	answer = appendRAGDisclaimer(answer)
-	passed, reason := verifyRAGAnswer(answer, p.Fragments)
+	answer = appendRAGDisclaimer(answer, p.Locale)
+	passed, reason := verifyRAGAnswer(answer, p.Fragments, p.Locale)
 	logRAGOutcome(p.DomainID, "", len(p.Fragments), passed, reason, "", !passed)
 	citations := publicCitations(p.Fragments)
 	if !passed {
 		return RAGAnswerResult{
-			Answer:    fmt.Sprintf("⚠️ Система не смогла подтвердить ответ источниками. %s\n\n%s", reason, verifyFailHint()),
+			Answer:    fmt.Sprintf("⚠️ Could not verify the answer against sources. %s\n\n%s", reason, verifyFailHintForLocale(p.Locale)),
 			Citations: citations,
 			OK:        true,
 		}
@@ -86,8 +88,8 @@ func finalizeRAGAnswer(raw string, p ragPrepared) RAGAnswerResult {
 	return RAGAnswerResult{Answer: answer, Citations: citations, OK: true}
 }
 
-func answerWithRAG(q, tenantID, domainID string, history []Message, sessionID string) RAGAnswerResult {
-	prepared, err := prepareRAGMessages(q, domainID, tenantID, history, sessionID)
+func answerWithRAG(q, tenantID, domainID, locale string, history []Message, sessionID string) RAGAnswerResult {
+	prepared, err := prepareRAGMessages(q, domainID, tenantID, locale, history, sessionID)
 	if err != nil {
 		return RAGAnswerResult{ErrMsg: publicAPIError(err)}
 	}

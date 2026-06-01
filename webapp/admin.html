@@ -71,7 +71,7 @@
         <div class="card" id="toolsCard" hidden>
             <label for="domainSelect">Домен / Domain</label>
             <select id="domainSelect">
-                <option value="">Загрузка…</option>
+                <option value="">Loading…</option>
             </select>
 
             <label id="filesLabel">Файлы в data/{domain_id}/</label>
@@ -107,7 +107,7 @@
 
         async function loadDomainsCatalog() {
             var sel = document.getElementById('domainSelect');
-            sel.innerHTML = '<option value="">Загрузка…</option>';
+            sel.innerHTML = '<option value="">Loading…</option>';
             sel.disabled = true;
             try {
                 var res = await fetch('/api/domains', { method: 'GET' });
@@ -116,7 +116,7 @@
                 try { data = JSON.parse(txt); } catch (e) { throw new Error(txt.slice(0, 200)); }
                 if (!res.ok || !data.success) throw new Error(data.error || ('HTTP ' + res.status));
                 var domains = data.domains || [];
-                if (!domains.length) throw new Error('Каталог доменов пуст');
+                if (!domains.length) throw new Error('Domain catalog is empty');
                 sel.innerHTML = '';
                 domains.forEach(function(d) {
                     var opt = document.createElement('option');
@@ -167,7 +167,7 @@
 
         async function adminFetch(path, init) {
             var h = authHeader();
-            if (!h) throw new Error('Сначала введите логин и пароль');
+            if (!h) throw new Error('Enter login and password first');
             var opts = init ? Object.assign({}, init) : {};
             opts.headers = Object.assign({}, opts.headers || {}, { 'Authorization': h });
             var res = await fetch('/api/admin' + path, opts);
@@ -181,7 +181,7 @@
         async function checkLogin() {
             var data = await adminFetch('/status', { method: 'GET' });
             document.getElementById('toolsCard').hidden = false;
-            setStatus(document.getElementById('loginStatus'), 'Подключено. data_dir: ' + (data.data_dir || '—'), true);
+            setStatus(document.getElementById('loginStatus'), 'Connected. data_dir: ' + (data.data_dir || '—'), true);
             await loadDomainsCatalog();
             await refreshFiles();
         }
@@ -190,13 +190,13 @@
             var domainId = selectedDomainId();
             if (!domainId) return;
             var list = document.getElementById('fileList');
-            list.innerHTML = '<li>Загрузка…</li>';
+            list.innerHTML = '<li>Loading…</li>';
             try {
                 var data = await adminFetch('/articles?domain_id=' + encodeURIComponent(domainId), { method: 'GET' });
                 list.innerHTML = '';
                 var articles = data.articles || data.files || [];
                 if (!articles.length) {
-                    list.innerHTML = '<li>(нет файлов)</li>';
+                    list.innerHTML = '<li>(no files)</li>';
                     return;
                 }
                 articles.forEach(function(a) {
@@ -206,15 +206,15 @@
                         li.textContent = a;
                     } else {
                         var chunks = a.chunks != null ? a.chunks : '—';
-                        var kb = a.size_bytes ? (Math.round(a.size_bytes / 1024) + ' КБ') : '';
+                        var kb = a.size_bytes ? (Math.round(a.size_bytes / 1024) + ' KB') : '';
                         li.textContent = name + (kb ? ' · ' + kb : '') + ' · chunks: ' + chunks;
                         var del = document.createElement('button');
                         del.type = 'button';
-                        del.textContent = 'Удалить';
+                        del.textContent = 'Delete';
                         del.style.marginLeft = '8px';
                         del.style.fontSize = '12px';
                         del.addEventListener('click', function() {
-                            if (!confirm('Удалить ' + name + '? После удаления запустите переиндексацию.')) return;
+                            if (!confirm('Delete ' + name + '? Run reindex after deletion.')) return;
                             adminFetch('/articles?domain_id=' + encodeURIComponent(domainId) +
                                 '&filename=' + encodeURIComponent(name), { method: 'DELETE' })
                                 .then(function() { return refreshFiles(); })
@@ -225,7 +225,7 @@
                     list.appendChild(li);
                 });
             } catch (e) {
-                list.innerHTML = '<li>Ошибка: ' + e.message + '</li>';
+                list.innerHTML = '<li>Error: ' + e.message + '</li>';
             }
         }
 
@@ -233,11 +233,11 @@
             var user = document.getElementById('adminUser').value.trim();
             var pass = document.getElementById('adminPass').value;
             if (!user || !pass) {
-                setStatus(document.getElementById('loginStatus'), 'Введите логин и пароль', false);
+                setStatus(document.getElementById('loginStatus'), 'Enter login and password', false);
                 return;
             }
             sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ user: user, pass: pass }));
-            setStatus(document.getElementById('loginStatus'), 'Проверка…', true);
+            setStatus(document.getElementById('loginStatus'), 'Checking…', true);
             checkLogin().catch(function(e) {
                 setStatus(document.getElementById('loginStatus'), e.message, false);
             });
@@ -261,7 +261,7 @@
             var fileInput = document.getElementById('uploadFile');
             var f = fileInput.files && fileInput.files[0];
             if (!f) {
-                setStatus(document.getElementById('actionStatus'), 'Выберите файл (.txt, .pdf или .docx)', false);
+                setStatus(document.getElementById('actionStatus'), 'Select a file (.txt, .pdf, or .docx)', false);
                 return;
             }
             var fd = new FormData();
@@ -271,7 +271,7 @@
             btn.disabled = true;
             try {
                 var data = await adminFetch('/upload', { method: 'POST', body: fd });
-                setStatus(document.getElementById('actionStatus'), 'Загружено: ' + data.filename, true);
+                setStatus(document.getElementById('actionStatus'), 'Uploaded: ' + data.filename, true);
                 fileInput.value = '';
                 await refreshFiles();
             } catch (e) {
@@ -284,10 +284,10 @@
         document.getElementById('reindexBtn').addEventListener('click', async function() {
             var btn = document.getElementById('reindexBtn');
             btn.disabled = true;
-            setStatus(document.getElementById('actionStatus'), 'Переиндексация… подождите', true);
+            setStatus(document.getElementById('actionStatus'), 'Reindexing… please wait', true);
             try {
                 var data = await adminFetch('/reindex', { method: 'POST' });
-                setStatus(document.getElementById('actionStatus'), data.message || 'Готово', true);
+                setStatus(document.getElementById('actionStatus'), data.message || 'Done', true);
             } catch (e) {
                 setStatus(document.getElementById('actionStatus'), e.message, false);
             } finally {

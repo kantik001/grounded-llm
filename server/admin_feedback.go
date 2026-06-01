@@ -9,7 +9,7 @@ import (
 // GET /admin/feedback — сводка 👍/👎 по сообщениям ассистента.
 func handleAdminFeedbackSummary(c *gin.Context) {
 	if chatStore == nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"success": false, "error": "БД недоступна"})
+		c.JSON(http.StatusServiceUnavailable, gin.H{"success": false, "error": "Database unavailable"})
 		return
 	}
 	summary, err := chatStore.FeedbackSummary(c.Request.Context())

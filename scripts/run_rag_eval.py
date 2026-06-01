@@ -25,6 +25,14 @@ SUITES = {
 }
 
 
+def _is_out_of_scope_error(error: str) -> bool:
+    err = error.lower()
+    return any(
+        token in err
+        for token in ("not found", "no information", "no documents", "нет")
+    )
+
+
 def load_cases(path: Path) -> List[Dict[str, Any]]:
     cases = []
     with path.open(encoding="utf-8") as f:
@@ -57,7 +65,7 @@ def check_retrieval(case: Dict[str, Any], ctx: Dict[str, Any]) -> Dict[str, Any]
 
     if case.get("expect_out_of_scope"):
         # Допускаем soft fail от RAG или короткий контекст
-        ok = ok or (not context_text.strip()) or "нет" in (ctx.get("error") or "").lower()
+        ok = ok or (not context_text.strip()) or _is_out_of_scope_error(ctx.get("error") or "")
     else:
         if case.get("expect_context", True) and ok:
             ok = bool(context_text.strip()) or len(fragments) > 0
@@ -121,7 +129,7 @@ def main() -> int:
         "--suite",
         choices=["default", "all"],
         default="default",
-        help="Набор вопросов",
+        help="Question suite",
     )
     parser.add_argument(
         "--rag-url",
@@ -141,7 +149,7 @@ def main() -> int:
     for name in suites:
         path = SUITES[name]
         if not path.is_file():
-            print(f"Нет файла: {path}", file=sys.stderr)
+            print(f"File not found: {path}", file=sys.stderr)
             exit_code = 1
             continue
         summary = run_suite(name, path, args.rag_url, args.timeout)
@@ -157,7 +165,7 @@ def main() -> int:
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     out = RESULTS_DIR / f"{stamp}_{args.suite}.json"
     out.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"Отчёт: {out}")
+    print(f"Report: {out}")
     return exit_code
 
 

@@ -12,12 +12,13 @@ import (
 
 // DomainInfo описывает один домен знаний (workspace).
 type DomainInfo struct {
-	ID         string `json:"-"`
-	Name       string `json:"name"`
-	NameRU     string `json:"name_ru,omitempty"`
-	Emoji      string `json:"emoji"`
-	RAGEnabled bool   `json:"rag_enabled"`
-	UIHidden   bool   `json:"ui_hidden,omitempty"`
+	ID         string            `json:"-"`
+	Name       string            `json:"name"`
+	Names      map[string]string `json:"names,omitempty"`
+	NameRU     string            `json:"name_ru,omitempty"` // legacy
+	Emoji      string            `json:"emoji"`
+	RAGEnabled bool              `json:"rag_enabled"`
+	UIHidden   bool              `json:"ui_hidden,omitempty"`
 }
 
 type domainsFile struct {
@@ -26,19 +27,6 @@ type domainsFile struct {
 }
 
 var domainCatalog domainsFile
-
-type domainPrompts struct {
-	RAGSystem    string `json:"rag_system"`
-	RAGTaskIntro string `json:"rag_task_intro"`
-}
-
-type platformPrompts struct {
-	RAGConstraints  string `json:"rag_constraints"`
-	VerifyFailHint  string `json:"verify_fail_hint"`
-}
-
-var promptCatalog map[string]domainPrompts
-var platformPrompt platformPrompts
 
 func loadDomainCatalog() error {
 	path := domainsConfigPath()
@@ -72,7 +60,7 @@ func normalizeDomainID(raw string) (string, error) {
 		id = domainCatalog.DefaultDomain
 	}
 	if _, ok := domainCatalog.Domains[id]; !ok {
-		return "", fmt.Errorf("неизвестный домен: %s", raw)
+		return "", fmt.Errorf("unknown domain: %s", raw)
 	}
 	return id, nil
 }
@@ -89,73 +77,21 @@ func domainInfo(domainID string) (DomainInfo, bool) {
 	return d, ok
 }
 
-func domainDisplayName(d DomainInfo) string {
+func domainDisplayName(d DomainInfo, locale string) string {
+	if d.Names != nil {
+		if n := strings.TrimSpace(d.Names[bundleLocale(locale)]); n != "" {
+			return n
+		}
+	}
 	if d.Name != "" {
 		return d.Name
 	}
 	return d.NameRU
 }
 
-func loadPromptCatalog() error {
-	path := promptsConfigPath()
-	body, err := os.ReadFile(path)
-	if err != nil {
-		return fmt.Errorf("read prompts config %s: %w", path, err)
-	}
-	var raw map[string]json.RawMessage
-	if err := json.Unmarshal(body, &raw); err != nil {
-		return fmt.Errorf("parse prompts config: %w", err)
-	}
-	promptCatalog = make(map[string]domainPrompts)
-	for key, val := range raw {
-		if key == "_platform" {
-			if err := json.Unmarshal(val, &platformPrompt); err != nil {
-				return fmt.Errorf("parse _platform prompts: %w", err)
-			}
-			continue
-		}
-		var p domainPrompts
-		if err := json.Unmarshal(val, &p); err != nil {
-			return fmt.Errorf("parse prompts for %s: %w", key, err)
-		}
-		promptCatalog[key] = p
-	}
-	return nil
-}
-
-func promptsConfigPath() string {
-	return resolveConfigPath("PROMPTS_CONFIG_PATH", defaultConfigCandidates("prompts.json")...)
-}
-
-func promptsForDomain(domainID string) domainPrompts {
-	if p, ok := promptCatalog[domainID]; ok {
-		return p
-	}
-	if p, ok := promptCatalog[defaultDomainID()]; ok {
-		return p
-	}
-	return domainPrompts{
-		RAGSystem:    "Ты — ассистент по документам организации. Отвечай только на основе контекста.",
-		RAGTaskIntro: "Отвечай строго на основе контекста.",
-	}
-}
-
-func ragConstraintsText() string {
-	if platformPrompt.RAGConstraints != "" {
-		return platformPrompt.RAGConstraints
-	}
-	return `- НЕ ВЫДУМЫВАЙ. Если ответа нет в контексте — скажи: "В справочных материалах нет информации по вашему вопросу."`
-}
-
-func verifyFailHint() string {
-	if platformPrompt.VerifyFailHint != "" {
-		return platformPrompt.VerifyFailHint
-	}
-	return "Обратитесь к администратору базы знаний."
-}
-
 // GET /domains — список доменов.
 func handleListDomains(c *gin.Context) {
+	locale := ctxLocale(c)
 	list := make([]gin.H, 0, len(domainCatalog.Domains))
 	for id, info := range domainCatalog.Domains {
 		if info.UIHidden {
@@ -163,7 +99,7 @@ func handleListDomains(c *gin.Context) {
 		}
 		list = append(list, gin.H{
 			"id":          id,
-			"name":        domainDisplayName(info),
+			"name":        domainDisplayName(info, locale),
 			"emoji":       info.Emoji,
 			"rag_enabled": info.RAGEnabled,
 		})
@@ -171,6 +107,7 @@ func handleListDomains(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success":         true,
 		"default_domain":  domainCatalog.DefaultDomain,
+		"locale":          locale,
 		"domains":         list,
 	})
 }

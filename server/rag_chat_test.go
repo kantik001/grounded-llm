@@ -6,7 +6,7 @@ import (
 )
 
 func TestExtractNumbersFromText(t *testing.T) {
-	nums := extractNumbersFromText("Прирост 748,5 см и 31.8%")
+	nums := extractNumbersFromText("Growth 748.5 cm and 31.8%")
 	if len(nums) != 2 {
 		t.Fatalf("expected 2 numbers, got %v", nums)
 	}
@@ -16,27 +16,27 @@ func TestExtractNumbersFromText(t *testing.T) {
 }
 
 func TestVerifyRAGAnswer_NoNumbersOK(t *testing.T) {
-	fragments := []RAGFragment{{Filename: "Статья", Content: "Парша проявляется пятнами."}}
-	answer := appendRAGDisclaimer("Парша проявляется пятнами на листьях.")
-	ok, reason := verifyRAGAnswer(answer, fragments)
+	fragments := []RAGFragment{{Filename: "Article", Content: "Spots on leaves."}}
+	answer := appendRAGDisclaimer("Spots appear on the leaves.", "en")
+	ok, reason := verifyRAGAnswer(answer, fragments, "en")
 	if !ok {
 		t.Fatalf("expected pass, got: %s", reason)
 	}
 }
 
 func TestVerifyRAGAnswer_NumberInContextOK(t *testing.T) {
-	fragments := []RAGFragment{{Filename: "Таблица", Content: "Среднее значение 77 и повторность 3-72."}}
-	answer := appendRAGDisclaimer("Среднее 77.")
-	ok, reason := verifyRAGAnswer(answer, fragments)
+	fragments := []RAGFragment{{Filename: "Table", Content: "Average value 77 and range 3-72."}}
+	answer := appendRAGDisclaimer("Average 77.", "en")
+	ok, reason := verifyRAGAnswer(answer, fragments, "en")
 	if !ok {
 		t.Fatalf("expected pass, got: %s", reason)
 	}
 }
 
 func TestVerifyRAGAnswer_HallucinatedNumberFails(t *testing.T) {
-	fragments := []RAGFragment{{Filename: "Статья", Content: "Без цифр в тексте."}}
-	answer := appendRAGDisclaimer("Рентабельность 72%.")
-	ok, reason := verifyRAGAnswer(answer, fragments)
+	fragments := []RAGFragment{{Filename: "Article", Content: "No digits in text."}}
+	answer := appendRAGDisclaimer("Margin 72%.", "en")
+	ok, reason := verifyRAGAnswer(answer, fragments, "en")
 	if ok {
 		t.Fatal("expected verification to fail for hallucinated number")
 	}
@@ -46,22 +46,30 @@ func TestVerifyRAGAnswer_HallucinatedNumberFails(t *testing.T) {
 }
 
 func TestAppendRAGDisclaimer_StripsSourceAndAddsDisclaimer(t *testing.T) {
-	raw := "Ответ по теме.\n\nИсточник: \"Секретная статья\""
-	out := appendRAGDisclaimer(raw)
-	if strings.Contains(out, "Источник:") || strings.Contains(out, "Секретная статья") {
+	raw := "Answer body.\n\nSource: \"Secret article\""
+	out := appendRAGDisclaimer(raw, "en")
+	if strings.Contains(out, "Source:") || strings.Contains(out, "Secret article") {
 		t.Fatalf("source attribution should be removed: %q", out)
 	}
-	if !strings.Contains(out, "Не заменяет официальную консультацию") {
+	if !strings.Contains(out, "Not a substitute for official expert advice") {
 		t.Fatalf("expected disclaimer, got: %q", out)
 	}
 }
 
+func TestAppendRAGDisclaimer_RussianLocale(t *testing.T) {
+	initLocaleConfig(&Config{DefaultLocale: "ru"})
+	out := appendRAGDisclaimer("Ответ.", "ru")
+	if !strings.Contains(out, "Не заменяет официальную консультацию") {
+		t.Fatalf("expected RU disclaimer from locale bundle, got: %q", out)
+	}
+}
+
 func TestCleanRAGAnswer_StripsIntroPhrase(t *testing.T) {
-	out := cleanRAGAnswer("Я думаю, что парша опасна для урожая.")
-	if strings.Contains(out, "Я думаю") {
+	out := cleanRAGAnswer("I think the crop is at risk.")
+	if strings.Contains(out, "I think") {
 		t.Fatalf("intro should be stripped, got: %q", out)
 	}
-	if !strings.Contains(out, "парша") {
+	if !strings.Contains(out, "crop") {
 		t.Fatalf("got %q", out)
 	}
 }

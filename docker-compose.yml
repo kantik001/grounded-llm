@@ -65,9 +65,8 @@ services:
       - UPLOAD_DIR=/data/uploads
       - MIGRATIONS_DIR=/migrations
       - DOMAINS_CONFIG_PATH=/config/domains.json
-      - PROMPTS_CONFIG_PATH=/config/prompts.json
-      - ONBOARDING_CONFIG_PATH=/config/onboarding.json
-      - BRANDING_CONFIG_PATH=/config/branding.json
+      - LOCALES_ROOT=/config/locales
+      - DEFAULT_LOCALE=${DEFAULT_LOCALE:-ru}
       - CONFIG_RELOAD_INTERVAL_SEC=${CONFIG_RELOAD_INTERVAL_SEC:-0}
       - DATA_DIR=/app/data
       - PYTHON_BASE_URL=http://python:5000

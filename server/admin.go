@@ -35,7 +35,7 @@ func adminBasicAuth(cfg *Config) gin.HandlerFunc {
 		if cfg.AdminPassword == "" {
 			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{
 				"success": false,
-				"error":   "Админка отключена: задайте ADMIN_PASSWORD в .env",
+				"error":   "Admin UI disabled: set ADMIN_PASSWORD in .env",
 			})
 			return
 		}
@@ -129,13 +129,13 @@ func handleAdminDeleteArticle(c *gin.Context) {
 	}
 	name := filepath.Base(strings.TrimSpace(c.Query("filename")))
 	if !safeFilename.MatchString(name) {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Некорректное имя файла"})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Invalid filename"})
 		return
 	}
 	path := filepath.Join(kbDataDir(adminTenantID(c), domainID), name)
 	if err := os.Remove(path); err != nil {
 		if os.IsNotExist(err) {
-			c.JSON(http.StatusNotFound, gin.H{"success": false, "error": "Файл не найден"})
+			c.JSON(http.StatusNotFound, gin.H{"success": false, "error": "File not found"})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
@@ -153,16 +153,16 @@ func handleAdminUpload(c *gin.Context) {
 	}
 	fh, err := c.FormFile("file")
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Нужен файл .txt, .pdf или .docx"})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "A .txt, .pdf, or .docx file is required"})
 		return
 	}
 	name := filepath.Base(fh.Filename)
 	if !safeFilename.MatchString(name) {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Имя файла: латиница, цифры, расширение .txt/.pdf/.docx"})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Filename: Latin letters, digits, extension .txt/.pdf/.docx"})
 		return
 	}
 	if fh.Size > maxKnowledgeFileBytes {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Макс. размер файла 10 МБ"})
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Max file size is 10 MB"})
 		return
 	}
 	dir := kbDataDir(adminTenantID(c), domainID)
@@ -191,7 +191,7 @@ func handleAdminUpload(c *gin.Context) {
 		body, err := os.ReadFile(dst)
 		if err != nil || len(strings.TrimSpace(string(body))) == 0 {
 			_ = os.Remove(dst)
-			c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "TXT-файл пустой"})
+			c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "TXT file is empty"})
 			return
 		}
 	}
@@ -206,13 +206,13 @@ func handleAdminReindex(c *gin.Context) {
 		c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Переиндексация RAG запущена"})
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "RAG reindex started"})
 }
 
 // Вызывает POST /admin/reindex на Python-сервисе с X-Admin-Secret.
 func triggerRAGReindex() error {
 	if config.AdminSecret == "" {
-		return fmt.Errorf("ADMIN_SECRET не задан")
+		return fmt.Errorf("ADMIN_SECRET is not set")
 	}
 	url := strings.TrimRight(config.PythonBaseURL, "/") + "/admin/reindex"
 	req, err := http.NewRequest(http.MethodPost, url, nil)
@@ -243,7 +243,7 @@ type pythonIndexStatsResponse struct {
 
 func fetchPythonIndexStats(tenantID, domainID string) (map[string]int, error) {
 	if config.AdminSecret == "" {
-		return nil, fmt.Errorf("ADMIN_SECRET не задан")
+		return nil, fmt.Errorf("ADMIN_SECRET is not set")
 	}
 	url := strings.TrimRight(config.PythonBaseURL, "/") +
 		"/admin/index-stats?domain_id=" + domainID + "&tenant_id=" + tenantID

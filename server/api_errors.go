@@ -7,24 +7,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// publicAPIError возвращает безопасное сообщение для клиента; детали — в лог.
+// publicAPIError returns a safe client-facing message; details go to the log.
 func publicAPIError(err error) string {
 	if err == nil {
-		return "Ошибка сервера"
+		return "Server error"
 	}
 	s := strings.TrimSpace(err.Error())
 	if s == "" {
-		return "Ошибка сервера"
+		return "Server error"
 	}
 
-	// Сообщения уже на русском из normalizeDomainID и domain guards.
-	if strings.Contains(s, "домен") ||
-		strings.Contains(s, "файл") ||
-		strings.Contains(s, "сессия") ||
-		strings.Contains(s, "помощник") ||
-		strings.Contains(s, "Пустой вопрос") ||
-		strings.Contains(s, "LLM_API_KEY") ||
-		strings.Contains(s, "изображен") {
+	// Known user-safe messages from domain guards, RAG, auth, uploads, etc.
+	if isPublicClientMessage(s) {
 		return s
 	}
 
@@ -35,14 +29,31 @@ func publicAPIError(err error) string {
 		strings.Contains(lower, "no such host"),
 		strings.Contains(lower, "rag request failed"),
 		strings.Contains(lower, "python reindex"):
-		return "Сервис анализа временно недоступен. Попробуйте позже."
+		return "Analysis service is temporarily unavailable. Please try again later."
 	case strings.Contains(lower, "unauthorized"),
 		strings.Contains(lower, "telegram"):
-		return "Ошибка авторизации. Откройте приложение из бота Telegram."
+		return "Authentication failed. Open the app from the Telegram bot."
 	default:
-		log.Printf("publicAPIError (скрыта деталь): %v", err)
-		return "Ошибка сервера"
+		log.Printf("publicAPIError (detail hidden): %v", err)
+		return "Server error"
 	}
+}
+
+func isPublicClientMessage(s string) bool {
+	lower := strings.ToLower(s)
+	prefixes := []string{
+		"unknown domain", "text assistant is not available", "unknown tenant",
+		"empty question", "llm_api_key", "image upload", "image too large",
+		"invalid", "required", "not found", "too many requests",
+		"telegram", "api key", "admin", "session", "rating", "file",
+		"domain", "tenant", "multipart", "text required", "storage",
+	}
+	for _, p := range prefixes {
+		if strings.Contains(lower, p) {
+			return true
+		}
+	}
+	return strings.Contains(s, "LLM_API_KEY")
 }
 
 func jsonError(c *gin.Context, code int, err error) {

@@ -13,13 +13,7 @@ func reloadRuntimeConfig() error {
 	if err := loadDomainCatalog(); err != nil {
 		return err
 	}
-	if err := loadPromptCatalog(); err != nil {
-		return err
-	}
-	if err := loadOnboardingConfig(); err != nil {
-		return err
-	}
-	if err := loadBrandingConfig(); err != nil {
+	if err := loadAllLocaleBundles(); err != nil {
 		return err
 	}
 	log.Printf("Config reloaded: domains=%d", len(domainCatalog.Domains))

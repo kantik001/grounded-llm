@@ -31,7 +31,7 @@ function Test-Endpoint {
 }
 
 Write-Host "Smoke test: $BaseUrl"
-Write-Host "(ожидается TELEGRAM_AUTH_DISABLED=true для /api/session)"
+Write-Host "(expects TELEGRAM_AUTH_DISABLED=true for /api/session)"
 
 Test-Endpoint "health" GET "/health" | Out-Null
 Test-Endpoint "domains" GET "/api/domains" | Out-Null
@@ -42,7 +42,7 @@ if ($sessionJson -match '"session_id"\s*:\s*"([^"]+)"') {
     Test-Endpoint "onboarding" GET "/api/onboarding?domain_id=default" | Out-Null
     Write-Host "[INFO] session_id=$sid"
 } else {
-    Write-Host "[WARN] session: проверьте TELEGRAM_AUTH_DISABLED или initData"
+    Write-Host "[WARN] session: check TELEGRAM_AUTH_DISABLED or initData"
 }
 
 if ($failed -gt 0) {

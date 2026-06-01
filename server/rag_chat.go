@@ -27,11 +27,12 @@ type pythonRAGContextResponse struct {
 	Fragments []RAGFragment `json:"fragments,omitempty"`
 }
 
-func fetchRAGContext(question, tenantID, domainID string) (*pythonRAGContextResponse, error) {
+func fetchRAGContext(question, tenantID, domainID, locale string) (*pythonRAGContextResponse, error) {
 	body := map[string]string{
 		"question":  question,
 		"domain_id": domainID,
 		"tenant_id": tenantID,
+		"locale":    locale,
 	}
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
@@ -68,14 +69,14 @@ func fetchRAGContext(question, tenantID, domainID string) (*pythonRAGContextResp
 const ragUserPromptTpl = `<system>%s</system>
 <context>%s</context>
 <examples>%s</examples>
-<task>Ответь на вопрос пользователя чётко, по делу, грамотно.</task>
+<task>Answer the user's question clearly and accurately.</task>
 <constraints>
 %s
 </constraints>
 <output_format>
-Ответ должен начинаться сразу с факта, без лишних вступлений. Будь подробным и грамотным.
+Start with the fact directly, without filler introductions. Be thorough and clear.
 </output_format>
-Вопрос: %s
+Question: %s
 `
 
 func buildRAGUserPrompt(question, context, fewShot, taskIntro, constraints string) string {

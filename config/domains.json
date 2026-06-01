@@ -4,6 +4,10 @@
   "domains": {
     "default": {
       "name": "Knowledge base",
+      "names": {
+        "ru": "База знаний",
+        "en": "Knowledge base"
+      },
       "emoji": "📚",
       "rag_enabled": true,
       "rag_k": 8

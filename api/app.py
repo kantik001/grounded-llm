@@ -27,10 +27,13 @@ def rag_context():
         question = (data.get("question") or "").strip()
         domain_id = (data.get("domain_id") or "default").strip()
         tenant_id = (data.get("tenant_id") or os.environ.get("DEFAULT_TENANT_ID", "default")).strip()
+        locale = (data.get("locale") or os.environ.get("DEFAULT_LOCALE", "ru")).strip()
         if not question:
-            return jsonify({"success": False, "error": "Пустой вопрос"}), 400
+            return jsonify({"success": False, "error": "Empty question"}), 400
 
-        payload = retrieve_rag_context(question, domain_id=domain_id, tenant_id=tenant_id)
+        payload = retrieve_rag_context(
+            question, domain_id=domain_id, tenant_id=tenant_id, locale=locale
+        )
         resp = jsonify(payload)
         resp.headers.set("Content-Type", "application/json; charset=utf-8")
         return resp, 200
@@ -76,8 +79,8 @@ def admin_reindex():
         vs.reset_vector_store()
         store = vs.load_vector_store(force_reindex=True)
         if store is None:
-            return jsonify({"success": False, "error": "Нет документов для индексации"}), 400
-        return jsonify({"success": True, "message": "RAG переиндексирован"}), 200
+            return jsonify({"success": False, "error": "No documents to index"}), 400
+        return jsonify({"success": True, "message": "RAG reindexed"}), 200
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 

@@ -31,6 +31,7 @@ type Config struct {
 	AdminPassword          string
 	AdminSecret            string
 	DefaultTenantID        string
+	DefaultLocale          string
 }
 
 var config *Config
@@ -70,6 +71,7 @@ func loadConfig() *Config {
 		AdminPassword:          getEnv("ADMIN_PASSWORD", ""),
 		AdminSecret:            getEnv("ADMIN_SECRET", ""),
 		DefaultTenantID:        getEnv("DEFAULT_TENANT_ID", "default"),
+		DefaultLocale:          getEnv("DEFAULT_LOCALE", "ru"),
 	}
 }
 
@@ -102,6 +104,7 @@ func logStartup(cfg *Config) {
 		log.Printf("API keys: %d configured", len(apiKeyRegistry))
 	}
 	log.Printf("Default tenant: %s", cfg.DefaultTenantID)
+	log.Printf("Default locale: %s", cfg.DefaultLocale)
 	log.Printf("CORS origins: %v", cfg.CORSAllowedOrigins)
 	log.Printf("Rate limit: %d req/min per user", cfg.RateLimitPerMinute)
 	log.Printf("Database URL: configured")
