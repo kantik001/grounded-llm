@@ -14,7 +14,7 @@
 | Пользователи | До 500 активных |
 | Деплой | On-prem / private cloud (Docker) |
 | Каналы | Web-чат (+ Telegram опционально) |
-| Язык | English (locale bundles) |
+| Язык | English или **русский** (`DEFAULT_LOCALE=ru`) — см. [SALES_ONE_PAGER_RF.md](./SALES_ONE_PAGER_RF.md) |
 | Поддержка | 2 созвона в неделю на пилоте |
 
 **Ориентир цены пилота:** $8 000 – $25 000 USD.

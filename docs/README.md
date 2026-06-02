@@ -18,4 +18,11 @@
 | Locale guide | [LOCALE_GUIDE.md](en/LOCALE_GUIDE.md) | [LOCALE_GUIDE.md](ru/LOCALE_GUIDE.md) |
 | API examples | [API_EXAMPLES.md](en/API_EXAMPLES.md) | [API_EXAMPLES.md](ru/API_EXAMPLES.md) |
 
+## Продажи — рынок РФ
+
+| Документ | Описание |
+|----------|----------|
+| [SALES_ONE_PAGER_RF.md](ru/SALES_ONE_PAGER_RF.md) | Pitch, цены в ₽, чеклист ИБ, demo |
+| [DEMO_SCRIPT_RU.md](ru/domain-packs/DEMO_SCRIPT_RU.md) | 30-мин demo на русской локали |
+
 Тексты интерфейса и промпты LLM: `config/locales/{ru,en}/`.

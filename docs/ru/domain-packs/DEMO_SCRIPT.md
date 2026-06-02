@@ -1,5 +1,7 @@
 # Сценарий HR-demo (30 минут)
 
+> **Рынок РФ:** используйте [DEMO_SCRIPT_RU.md](./DEMO_SCRIPT_RU.md) и [SALES_ONE_PAGER_RF.md](../SALES_ONE_PAGER_RF.md).
+
 Домен **default**, локаль **en** (`?locale=en` или `DEFAULT_LOCALE=en`).
 
 ---

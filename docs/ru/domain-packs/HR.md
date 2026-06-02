@@ -30,7 +30,9 @@
 | UI branding | `config/locales/en/branding.json` |
 | Few-shot | `config/locales/en/few_shot.json` |
 | Eval (EN) | `eval/rag_default_en_baseline.jsonl` |
-| Сценарий demo | [DEMO_SCRIPT.md](./DEMO_SCRIPT.md) |
+| Сценарий demo (EN) | [DEMO_SCRIPT.md](./DEMO_SCRIPT.md) |
+| Сценарий demo (RU) | [DEMO_SCRIPT_RU.md](./DEMO_SCRIPT_RU.md) |
+| Sales one-pager (РФ) | [SALES_ONE_PAGER_RF.md](../SALES_ONE_PAGER_RF.md) |
 
 Русские демо-документы (`policy_*.txt` без `_en`) — для локали `ru` и русскоязычных пилотов.
 
