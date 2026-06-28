@@ -4,11 +4,13 @@ import "strings"
 
 // RAGAnswerResult — ответ RAG-пайплайна с источниками для UI.
 type RAGAnswerResult struct {
-	Answer    string
-	Citations []RAGFragment
-	OK        bool
-	ErrMsg    string
-	SoftFail  bool
+	Answer        string
+	Citations     []RAGFragment
+	OK            bool
+	ErrMsg        string
+	SoftFail      bool
+	VerifyPass    bool
+	FragmentCount int
 }
 
 func publicCitations(fragments []RAGFragment) []RAGFragment {

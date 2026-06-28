@@ -8,8 +8,8 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// LogEvent записывает продуктовое событие (без PII в payload).
-func (st *ChatStore) LogEvent(ctx context.Context, telegramID int64, eventType string, payload map[string]any) error {
+// LogAnalyticsEvent записывает продуктовое событие (user_id опционален).
+func (st *ChatStore) LogAnalyticsEvent(ctx context.Context, telegramID int64, eventType string, payload map[string]any) error {
 	if payload == nil {
 		payload = map[string]any{}
 	}
@@ -18,18 +18,25 @@ func (st *ChatStore) LogEvent(ctx context.Context, telegramID int64, eventType s
 		return err
 	}
 	var userID *int64
-	var uid int64
-	err = st.pool.QueryRow(ctx, `SELECT id FROM users WHERE telegram_id = $1`, telegramID).Scan(&uid)
-	if err == nil {
-		userID = &uid
-	} else if !errors.Is(err, pgx.ErrNoRows) {
-		return err
+	if telegramID > 0 {
+		var uid int64
+		err = st.pool.QueryRow(ctx, `SELECT id FROM users WHERE telegram_id = $1`, telegramID).Scan(&uid)
+		if err == nil {
+			userID = &uid
+		} else if !errors.Is(err, pgx.ErrNoRows) {
+			return err
+		}
 	}
 	_, err = st.pool.Exec(ctx,
 		`INSERT INTO analytics_events (user_id, event_type, payload) VALUES ($1, $2, $3)`,
 		userID, eventType, raw,
 	)
 	return err
+}
+
+// LogEvent записывает продуктовое событие (без PII в payload).
+func (st *ChatStore) LogEvent(ctx context.Context, telegramID int64, eventType string, payload map[string]any) error {
+	return st.LogAnalyticsEvent(ctx, telegramID, eventType, payload)
 }
 
 // SaveMessageFeedback сохраняет оценку ответа ассистента (1 или -1).

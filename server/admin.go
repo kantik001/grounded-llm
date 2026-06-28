@@ -54,6 +54,7 @@ func registerAdminRouteGroup(g *gin.RouterGroup, auth gin.HandlerFunc) {
 	adminOnly := g.Group("")
 	adminOnly.Use(requireAdminRoles(RoleAdmin))
 	adminOnly.GET("/feedback", handleAdminFeedbackSummary)
+	adminOnly.GET("/analytics", handleAdminAnalytics)
 	adminOnly.GET("/audit-log", handleAdminAuditLog)
 
 	apiMgr := g.Group("")

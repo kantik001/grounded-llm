@@ -51,6 +51,16 @@
         .status.ok { color: #198754; }
         .status.err { color: #c0392b; }
         .login-note { font-size: 12px; color: #777; margin-top: 8px; }
+        .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 12px 0; }
+        .metric {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px 12px;
+        }
+        .metric .val { font-size: 20px; font-weight: 700; }
+        .metric .lbl { font-size: 12px; color: #666; }
+        table.analytics { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+        table.analytics th, table.analytics td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #eee; }
     </style>
 </head>
 <body>
@@ -113,6 +123,40 @@
             <button type="button" class="secondary" id="auditRefreshBtn">Refresh audit log</button>
             </div>
 
+            <div id="analyticsSection">
+            <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
+
+            <label>Analytics</label>
+            <p class="hint" style="margin-bottom:8px">Questions, verify pass rate, feedback, and KB gaps.</p>
+            <div class="row" style="margin-bottom:10px">
+                <div style="flex:1;min-width:120px">
+                    <label for="analyticsTenant">Tenant (optional)</label>
+                    <input type="text" id="analyticsTenant" placeholder="default">
+                </div>
+                <div style="flex:0 0 100px">
+                    <label for="analyticsDays">Days</label>
+                    <select id="analyticsDays">
+                        <option value="7" selected>7</option>
+                        <option value="14">14</option>
+                        <option value="30">30</option>
+                    </select>
+                </div>
+            </div>
+            <button type="button" class="secondary" id="analyticsRefreshBtn">Refresh analytics</button>
+            <div class="metrics" id="analyticsMetrics">
+                <div class="metric"><div class="val" id="mQuestions">—</div><div class="lbl">Questions</div></div>
+                <div class="metric"><div class="val" id="mToday">—</div><div class="lbl">Today</div></div>
+                <div class="metric"><div class="val" id="mVerify">—</div><div class="lbl">Verify pass %</div></div>
+                <div class="metric"><div class="val" id="mSoftFail">—</div><div class="lbl">No context</div></div>
+                <div class="metric"><div class="val" id="mThumbsUp">—</div><div class="lbl">👍</div></div>
+                <div class="metric"><div class="val" id="mThumbsDown">—</div><div class="lbl">👎</div></div>
+            </div>
+            <label style="margin-top:12px">Questions per day</label>
+            <table class="analytics" id="analyticsDaily"><thead><tr><th>Date</th><th>Count</th></tr></thead><tbody><tr><td colspan="2">—</td></tr></tbody></table>
+            <label style="margin-top:12px">KB gaps (recent)</label>
+            <ul id="analyticsGaps"><li>—</li></ul>
+            </div>
+
             <div id="apiKeysSection">
             <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
 
@@ -140,6 +184,7 @@
         function applyRoleUI() {
             document.getElementById('kbEditorSection').hidden = !hasAdminRole('kb_editor');
             document.getElementById('auditSection').hidden = !hasAdminRole('admin');
+            document.getElementById('analyticsSection').hidden = !hasAdminRole('admin');
             document.getElementById('apiKeysSection').hidden = !hasAdminRole('api_manager');
             var hint = document.getElementById('rolesHint');
             if (adminRoles && adminRoles.length) {
@@ -261,6 +306,7 @@
             }
             if (hasAdminRole('admin')) {
                 await refreshAuditLog();
+                await refreshAnalytics();
             }
             if (hasAdminRole('api_manager')) {
                 await refreshAPIKeys();
@@ -405,6 +451,65 @@
         }
 
         document.getElementById('auditRefreshBtn').addEventListener('click', refreshAuditLog);
+
+        async function refreshAnalytics() {
+            var tenant = document.getElementById('analyticsTenant').value.trim();
+            var days = document.getElementById('analyticsDays').value || '7';
+            var q = '?days=' + encodeURIComponent(days);
+            if (tenant) q += '&tenant_id=' + encodeURIComponent(tenant);
+            try {
+                var data = await adminFetch('/analytics' + q, { method: 'GET' });
+                var a = data.analytics || {};
+                var rag = a.rag || {};
+                document.getElementById('mQuestions').textContent = a.questions_total != null ? a.questions_total : '—';
+                document.getElementById('mToday').textContent = a.questions_today != null ? a.questions_today : '—';
+                document.getElementById('mVerify').textContent = rag.verify_pass_rate != null
+                    ? Math.round(rag.verify_pass_rate) + '%' : '—';
+                document.getElementById('mSoftFail').textContent = rag.soft_fail != null ? rag.soft_fail : '—';
+                var up = 0, down = 0;
+                (a.feedback || []).forEach(function(f) {
+                    if (f.rating === 1) up = f.count;
+                    if (f.rating === -1) down = f.count;
+                });
+                document.getElementById('mThumbsUp').textContent = up;
+                document.getElementById('mThumbsDown').textContent = down;
+                var tbody = document.querySelector('#analyticsDaily tbody');
+                tbody.innerHTML = '';
+                var daily = a.questions_per_day || [];
+                if (!daily.length) {
+                    tbody.innerHTML = '<tr><td colspan="2">(no data)</td></tr>';
+                } else {
+                    daily.forEach(function(row) {
+                        var tr = document.createElement('tr');
+                        tr.innerHTML = '<td>' + row.date + '</td><td>' + row.count + '</td>';
+                        tbody.appendChild(tr);
+                    });
+                }
+                var gaps = document.getElementById('analyticsGaps');
+                gaps.innerHTML = '';
+                var kb = a.kb_gaps || [];
+                if (!kb.length) {
+                    gaps.innerHTML = '<li>(no gaps in window)</li>';
+                } else {
+                    kb.forEach(function(g) {
+                        var li = document.createElement('li');
+                        var preview = g.question_preview ? (' · "' + g.question_preview + '"') : '';
+                        li.textContent = (g.occurred_at || '') + ' · ' + (g.domain_id || '?') +
+                            ' · ' + (g.kind || '') + preview;
+                        gaps.appendChild(li);
+                    });
+                }
+            } catch (e) {
+                document.getElementById('mQuestions').textContent = '!';
+                setStatus(document.getElementById('actionStatus'), 'Analytics: ' + e.message, false);
+            }
+        }
+
+        document.getElementById('analyticsRefreshBtn').addEventListener('click', function() {
+            refreshAnalytics().catch(function(e) {
+                setStatus(document.getElementById('actionStatus'), e.message, false);
+            });
+        });
 
         async function refreshAPIKeys() {
             var list = document.getElementById('apiKeysList');
