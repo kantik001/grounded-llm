@@ -1,10 +1,18 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/binary"
 	"encoding/json"
 	"log"
 	"os"
 	"strings"
+)
+
+const (
+	ctxKeyAPIKeyLabel = "api_key_label"
+	ctxKeyAPIActorID  = "api_actor_id"
+	headerAPIKey      = "X-API-Key"
 )
 
 type apiKeyRecord struct {
@@ -73,4 +81,10 @@ func loadAPIKeys(cfg *Config) {
 func lookupAPIKey(key string) (apiKeyRecord, bool) {
 	rec, ok := apiKeyRegistry[strings.TrimSpace(key)]
 	return rec, ok
+}
+
+func apiKeyActorID(key string) int64 {
+	sum := sha256.Sum256([]byte(key))
+	n := binary.BigEndian.Uint64(sum[:8]) & 0x7FFFFFFFFFFFFFFF
+	return -int64(n)
 }
