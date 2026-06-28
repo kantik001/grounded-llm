@@ -17,7 +17,7 @@ def _domains_config(monkeypatch):
 
 def test_discover_legacy_default_and_nested_it_support():
     from rag.domains_config import reload_domains_config
-    from rag.vector_store import discover_kb_directories
+    from rag.kb_discovery import discover_kb_directories
 
     reload_domains_config()
     pairs = {(tenant_id, domain_id) for tenant_id, domain_id, _ in discover_kb_directories()}
@@ -28,7 +28,7 @@ def test_discover_legacy_default_and_nested_it_support():
 
 def test_discover_nested_paths_include_it_support_files():
     from rag.domains_config import reload_domains_config
-    from rag.vector_store import discover_kb_directories
+    from rag.kb_discovery import discover_kb_directories
 
     reload_domains_config()
     it_paths = [p for t, d, p in discover_kb_directories() if t == "default" and d == "it_support"]
