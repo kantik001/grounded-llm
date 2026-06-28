@@ -1,7 +1,7 @@
 # PostgreSQL migrations (`migrations/*.sql`)
 
 **Folder:** `migrations/`  
-**Files:** `001_init.sql`, `002_domain_id.sql`, `003_feedback_analytics.sql`, `005_message_citations.sql`, `006_tenant_id.sql`  
+**Files:** `001_init.sql`, `002_domain_id.sql`, `003_feedback_analytics.sql`, `005_message_citations.sql`, `006_tenant_id.sql`, `007_audit_log.sql`  
 **Applied by:** Go server on startup (`server/postgres_store.go` → `runAllMigrations`)  
 **DB:** PostgreSQL 16 (Compose service `postgres`)
 
@@ -141,6 +141,23 @@ Adds `tenant_id` to `chat_sessions` (default `'default'`) for workspace isolatio
 
 ---
 
+## `007_audit_log.sql` — admin audit trail
+
+Table **`audit_log`** — append-only admin events:
+
+| Column | Purpose |
+|--------|---------|
+| `action` | `admin_login`, `admin_login_failed`, `kb_upload`, `kb_delete`, `kb_reindex` |
+| `actor` | Admin username (Basic Auth) |
+| `tenant_id`, `domain_id`, `resource` | Context (filename for KB ops) |
+| `client_ip`, `request_id` | Traceability |
+| `success` | Outcome |
+| `details` | JSONB (e.g. error message, file size) |
+
+Written from `server/admin.go` + `server/audit_store.go`. Read via `GET /admin/audit-log`.
+
+---
+
 ## File order
 
 ```
@@ -149,6 +166,7 @@ Adds `tenant_id` to `chat_sessions` (default `'default'`) for workspace isolatio
 003_feedback_analytics.sql
 005_message_citations.sql
 006_tenant_id.sql
+007_audit_log.sql
 ```
 
 Go sorts by name. **New migration:** e.g. `007_something.sql` — do not edit old files after production deploy.
@@ -164,6 +182,7 @@ Go sorts by name. **New migration:** e.g. `007_something.sql` — do not edit ol
 | `messages` | chat persistence, `citations` |
 | `message_feedback` | `server/feedback.go` |
 | `analytics_events` | `server/analytics_store.go` |
+| `audit_log` | `server/audit_store.go`, `server/admin.go` |
 
 ---
 
@@ -176,5 +195,6 @@ Go sorts by name. **New migration:** e.g. `007_something.sql` — do not edit ol
 | **003** | message_feedback, analytics_events |
 | **005** | `citations JSONB` on assistant messages |
 | **006** | `tenant_id` on sessions |
+| **007** | `audit_log` admin events |
 
 Migrations are **versioned SQL schema**. Go applies each file once and records the name in `schema_migrations`.

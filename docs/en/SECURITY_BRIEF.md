@@ -54,7 +54,7 @@ User (Web / Telegram / API)
 
 | Component | Stores | Location |
 |-----------|--------|----------|
-| PostgreSQL | Users, sessions, messages, feedback, analytics events | Client DB volume |
+| PostgreSQL | Users, sessions, messages, feedback, analytics events, **audit log** | Client DB volume |
 | Chroma | Embedding vectors + chunk metadata | Client volume (`chroma_data`) |
 | File system | Uploaded KB documents (`.txt`, `.pdf`, `.docx`) | `data/{tenant_id}/{domain_id}/` |
 | Uploads | User images (optional) | Configured `UPLOAD_DIR` |
@@ -101,8 +101,7 @@ Embeddings model (`intfloat/multilingual-e5-small`) runs **inside the Python con
 - Structured request logs with `X-Request-ID`
 - `[RAG]` logs: domain, session, fragment count, verify result — **no full LLM body**
 - Prometheus metrics at `GET /metrics` (protect in production)
-
-Audit log UI is planned for Phase B; admin actions are currently logged at application level.
+- **Admin audit log** (Postgres `audit_log`): failed admin login, successful admin verify (`GET /admin/status`), KB upload/delete/reindex — query via `GET /admin/audit-log` or Admin UI
 
 ---
 

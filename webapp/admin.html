@@ -89,6 +89,13 @@
             <p class="hint" style="margin-bottom:10px">After uploading new documents, run RAG reindex (may take several minutes).</p>
             <button type="button" id="reindexBtn">Reindex RAG</button>
             <div class="status" id="actionStatus"></div>
+
+            <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
+
+            <label>Recent audit log</label>
+            <p class="hint" style="margin-bottom:8px">KB upload/delete/reindex and admin login events.</p>
+            <ul id="auditList"><li>—</li></ul>
+            <button type="button" class="secondary" id="auditRefreshBtn">Refresh audit log</button>
         </div>
     </div>
 
@@ -184,6 +191,7 @@
             setStatus(document.getElementById('loginStatus'), 'Connected. data_dir: ' + (data.data_dir || '—'), true);
             await loadDomainsCatalog();
             await refreshFiles();
+            await refreshAuditLog();
         }
 
         async function refreshFiles() {
@@ -218,6 +226,7 @@
                             adminFetch('/articles?domain_id=' + encodeURIComponent(domainId) +
                                 '&filename=' + encodeURIComponent(name), { method: 'DELETE' })
                                 .then(function() { return refreshFiles(); })
+                                .then(function() { return refreshAuditLog(); })
                                 .catch(function(e) { setStatus(document.getElementById('actionStatus'), e.message, false); });
                         });
                         li.appendChild(del);
@@ -274,12 +283,41 @@
                 setStatus(document.getElementById('actionStatus'), 'Uploaded: ' + data.filename, true);
                 fileInput.value = '';
                 await refreshFiles();
+                await refreshAuditLog();
             } catch (e) {
                 setStatus(document.getElementById('actionStatus'), e.message, false);
             } finally {
                 btn.disabled = false;
             }
         });
+
+        async function refreshAuditLog() {
+            var list = document.getElementById('auditList');
+            list.innerHTML = '<li>Loading…</li>';
+            try {
+                var data = await adminFetch('/audit-log?limit=20', { method: 'GET' });
+                var entries = data.entries || [];
+                list.innerHTML = '';
+                if (!entries.length) {
+                    list.innerHTML = '<li>(no events yet)</li>';
+                    return;
+                }
+                entries.forEach(function(e) {
+                    var li = document.createElement('li');
+                    var ok = e.success ? 'ok' : 'fail';
+                    var parts = [e.occurred_at || '', e.action || '', ok];
+                    if (e.actor) parts.push('actor=' + e.actor);
+                    if (e.domain_id) parts.push('domain=' + e.domain_id);
+                    if (e.resource) parts.push(e.resource);
+                    li.textContent = parts.join(' · ');
+                    list.appendChild(li);
+                });
+            } catch (e) {
+                list.innerHTML = '<li>' + e.message + '</li>';
+            }
+        }
+
+        document.getElementById('auditRefreshBtn').addEventListener('click', refreshAuditLog);
 
         document.getElementById('reindexBtn').addEventListener('click', async function() {
             var btn = document.getElementById('reindexBtn');
@@ -288,6 +326,7 @@
             try {
                 var data = await adminFetch('/reindex', { method: 'POST' });
                 setStatus(document.getElementById('actionStatus'), data.message || 'Done', true);
+                await refreshAuditLog();
             } catch (e) {
                 setStatus(document.getElementById('actionStatus'), e.message, false);
             } finally {

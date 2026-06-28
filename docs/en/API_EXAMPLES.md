@@ -141,6 +141,14 @@ curl -sS -u admin:your-password -X POST http://localhost:8080/api/admin/reindex
 
 ---
 
+## Admin — audit log
+
+```bash
+curl -sS -u admin:your-password "http://localhost:8080/api/admin/audit-log?limit=20"
+```
+
+---
+
 ## Metrics (Prometheus)
 
 ```bash

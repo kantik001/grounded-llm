@@ -41,9 +41,22 @@ func adminBasicAuth(cfg *Config) gin.HandlerFunc {
 		}
 		user, pass, ok := c.Request.BasicAuth()
 		if !ok || user != cfg.AdminUser || pass != cfg.AdminPassword {
+			recordAdminAudit(c, auditOpts{
+				Action:  auditActionLoginFailed,
+				Actor:   user,
+				Success: false,
+			})
 			c.Header("WWW-Authenticate", `Basic realm="Grounded LLM Admin"`)
 			c.AbortWithStatus(http.StatusUnauthorized)
 			return
+		}
+		c.Set(ctxKeyAdminActor, user)
+		if isAdminStatusCheck(c) {
+			recordAdminAudit(c, auditOpts{
+				Action:  auditActionLogin,
+				Actor:   user,
+				Success: true,
+			})
 		}
 		c.Next()
 	}
@@ -63,6 +76,7 @@ func registerAdminRouteGroup(g *gin.RouterGroup, auth gin.HandlerFunc) {
 	g.DELETE("/articles", handleAdminDeleteArticle)
 	g.POST("/upload", handleAdminUpload)
 	g.GET("/feedback", handleAdminFeedbackSummary)
+	g.GET("/audit-log", handleAdminAuditLog)
 	g.POST("/reindex", handleAdminReindex)
 }
 
@@ -142,6 +156,13 @@ func handleAdminDeleteArticle(c *gin.Context) {
 		return
 	}
 	log.Printf("Admin delete: %s", path)
+	recordAdminAudit(c, auditOpts{
+		Action:   auditActionKBDelete,
+		TenantID: adminTenantID(c),
+		DomainID: domainID,
+		Resource: name,
+		Success:  true,
+	})
 	c.JSON(http.StatusOK, gin.H{"success": true, "domain_id": domainID, "filename": name, "reindex_recommended": true})
 }
 
@@ -196,6 +217,14 @@ func handleAdminUpload(c *gin.Context) {
 		}
 	}
 	log.Printf("Admin upload: %s -> %s", name, dst)
+	recordAdminAudit(c, auditOpts{
+		Action:   auditActionKBUpload,
+		TenantID: adminTenantID(c),
+		DomainID: domainID,
+		Resource: name,
+		Success:  true,
+		Details:  map[string]any{"size_bytes": fh.Size},
+	})
 	c.JSON(http.StatusOK, gin.H{"success": true, "domain_id": domainID, "filename": name, "path": dst})
 }
 
@@ -203,9 +232,18 @@ func handleAdminUpload(c *gin.Context) {
 func handleAdminReindex(c *gin.Context) {
 	if err := triggerRAGReindex(); err != nil {
 		log.Printf("Admin reindex: %v", err)
+		recordAdminAudit(c, auditOpts{
+			Action:  auditActionKBReindex,
+			Success: false,
+			Details: map[string]any{"error": err.Error()},
+		})
 		c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": err.Error()})
 		return
 	}
+	recordAdminAudit(c, auditOpts{
+		Action:  auditActionKBReindex,
+		Success: true,
+	})
 	c.JSON(http.StatusOK, gin.H{"success": true, "message": "RAG reindex started"})
 }
 
