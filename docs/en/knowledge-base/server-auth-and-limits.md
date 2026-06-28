@@ -1,6 +1,6 @@
 # Authentication and limits (`server/`)
 
-**Files:** `auth_telegram.go`, `api_keys.go`, `auth_combined.go`, `middleware.go`, `ratelimit.go`  
+**Files:** `auth_telegram.go`, `api_keys.go`, `auth_combined.go`, `rbac.go`, `admin_users.go`, `middleware.go`, `ratelimit.go`  
 **See also:** [webapp-overview.md](./webapp-overview.md) (initData header), [server-overview.md](./server-overview.md) (routes)
 
 ---
@@ -11,7 +11,7 @@
 |------|-----|-----|
 | **End user** | Telegram Web App | `X-Telegram-Init-Data` → HMAC validation |
 | **Integrator** | HTTP clients, bots | `X-API-Key` (env `API_KEYS` or `API_KEYS_FILE`) |
-| **Admin** | Browser `/admin.html` | HTTP Basic `ADMIN_USER` / `ADMIN_PASSWORD` |
+| **Admin** | Browser `/admin.html` | HTTP Basic — legacy `ADMIN_USER`/`ADMIN_PASSWORD` or `ADMIN_USERS_FILE` (RBAC) |
 
 This article covers **Telegram + API keys + CORS + rate limit**.
 
@@ -41,9 +41,26 @@ Tests: `auth_telegram_test.go`.
 
 ## `api_keys.go` — integrator auth
 
-- Header `X-API-Key` matched against `API_KEYS` (comma-separated) or lines in `API_KEYS_FILE`.
+- Header `X-API-Key` matched against `API_KEYS` or `API_KEYS_FILE`.
+- Optional `roles` per key (default `chat_only`). Keys without chat role get **403** on chat routes.
 - Used by `combinedAuthMiddleware` together with Telegram auth.
 - OpenAPI: `/api/v1/openapi.json` documents API key security.
+
+---
+
+## RBAC (`rbac.go`, `admin_users.go`)
+
+**Roles:** `chat_only`, `kb_editor`, `admin`, `api_manager`.
+
+| Principal | Config | Roles |
+|-----------|--------|-------|
+| Telegram user | — | implicit `chat_only` |
+| API key | `API_KEYS_FILE` | per-key `roles` (default `chat_only`) |
+| Admin user | `ADMIN_PASSWORD` or `ADMIN_USERS_FILE` | per-user `roles` |
+
+`admin` is superuser on admin routes. Route guards in `admin.go`; chat API checks API key roles.
+
+Full guide: [config/RBAC.md](../../../config/RBAC.md).
 
 ---
 
@@ -131,6 +148,8 @@ sequenceDiagram
 | 401 invalid signature | wrong `TELEGRAM_BOT_TOKEN` |
 | 401 expired | stale initData — reopen Web App |
 | 401 API key | missing or wrong `X-API-Key` |
+| 403 API key | key valid but missing `chat_only` role |
+| 403 admin | authenticated but insufficient role for route |
 | 429 | more than N requests per minute from one user id |
 
 ---

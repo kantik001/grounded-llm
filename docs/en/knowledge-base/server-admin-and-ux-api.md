@@ -22,6 +22,7 @@ HTTP Basic: `ADMIN_USER` / `ADMIN_PASSWORD`. Empty password → **503**.
 | POST | `handleAdminReindex` | reindex via Python |
 | GET | `handleAdminFeedbackSummary` | aggregated thumbs up/down |
 | GET | `handleAdminAuditLog` | admin audit trail (`?limit=&offset=&action=`) |
+| GET | `handleAdminAPIKeys` | API key labels + roles, admin user list (no secrets) |
 
 ### `GET /admin/articles`
 

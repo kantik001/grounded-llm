@@ -69,7 +69,7 @@ Multi-tenant isolation: `tenant_id` on sessions and in Chroma metadata filters.
 |---------|-----------|
 | Web App / chat API | Telegram `initData` HMAC (or `TELEGRAM_AUTH_DISABLED=true` for dev only) |
 | Integrators | `X-API-Key` header |
-| Admin (KB upload) | HTTP Basic Auth (`ADMIN_USER` / `ADMIN_PASSWORD`) |
+| Admin (KB upload) | HTTP Basic Auth (`ADMIN_USER` / `ADMIN_PASSWORD` or `ADMIN_USERS_FILE`) |
 | Python admin (reindex) | Shared secret `X-Admin-Secret` |
 
 **Recommendations for production:**
@@ -102,6 +102,7 @@ Embeddings model (`intfloat/multilingual-e5-small`) runs **inside the Python con
 - `[RAG]` logs: domain, session, fragment count, verify result — **no full LLM body**
 - Prometheus metrics at `GET /metrics` (protect in production)
 - **Admin audit log** (Postgres `audit_log`): failed admin login, successful admin verify (`GET /admin/status`), KB upload/delete/reindex — query via `GET /admin/audit-log` or Admin UI
+- **RBAC** (file-based): roles `chat_only`, `kb_editor`, `admin`, `api_manager` — see [config/RBAC.md](../../config/RBAC.md)
 
 ---
 

@@ -103,6 +103,11 @@ func logStartup(cfg *Config) {
 	if len(apiKeyRegistry) > 0 {
 		log.Printf("API keys: %d configured", len(apiKeyRegistry))
 	}
+	if len(adminUserRegistry) > 0 {
+		log.Printf("Admin users (RBAC): %d from ADMIN_USERS_FILE", len(adminUserRegistry))
+	} else if cfg.AdminPassword != "" {
+		log.Printf("Admin auth: legacy single user %q (role: admin)", cfg.AdminUser)
+	}
 	log.Printf("Default tenant: %s", cfg.DefaultTenantID)
 	log.Printf("Default locale: %s", cfg.DefaultLocale)
 	log.Printf("CORS origins: %v", cfg.CORSAllowedOrigins)

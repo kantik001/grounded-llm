@@ -32,15 +32,25 @@ func isKnowledgeFile(name string) bool {
 // Basic Auth для маршрутов /admin (ADMIN_USER / ADMIN_PASSWORD).
 func adminBasicAuth(cfg *Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if cfg.AdminPassword == "" {
+		if cfg.AdminPassword == "" && len(adminUserRegistry) == 0 {
 			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{
 				"success": false,
-				"error":   "Admin UI disabled: set ADMIN_PASSWORD in .env",
+				"error":   "Admin UI disabled: set ADMIN_PASSWORD or ADMIN_USERS_FILE",
 			})
 			return
 		}
 		user, pass, ok := c.Request.BasicAuth()
-		if !ok || user != cfg.AdminUser || pass != cfg.AdminPassword {
+		if !ok {
+			recordAdminAudit(c, auditOpts{
+				Action:  auditActionLoginFailed,
+				Success: false,
+			})
+			c.Header("WWW-Authenticate", `Basic realm="Grounded LLM Admin"`)
+			c.AbortWithStatus(http.StatusUnauthorized)
+			return
+		}
+		roles, authed := authenticateAdminUser(user, pass)
+		if !authed {
 			recordAdminAudit(c, auditOpts{
 				Action:  auditActionLoginFailed,
 				Actor:   user,
@@ -51,6 +61,7 @@ func adminBasicAuth(cfg *Config) gin.HandlerFunc {
 			return
 		}
 		c.Set(ctxKeyAdminActor, user)
+		c.Set(ctxKeyAdminRoles, roles)
 		if isAdminStatusCheck(c) {
 			recordAdminAudit(c, auditOpts{
 				Action:  auditActionLogin,
@@ -71,13 +82,24 @@ func registerAdminRoutes(router *gin.Engine, cfg *Config) {
 
 func registerAdminRouteGroup(g *gin.RouterGroup, auth gin.HandlerFunc) {
 	g.Use(auth)
+
 	g.GET("/status", handleAdminStatus)
-	g.GET("/articles", handleAdminListArticles)
-	g.DELETE("/articles", handleAdminDeleteArticle)
-	g.POST("/upload", handleAdminUpload)
-	g.GET("/feedback", handleAdminFeedbackSummary)
-	g.GET("/audit-log", handleAdminAuditLog)
-	g.POST("/reindex", handleAdminReindex)
+
+	kb := g.Group("")
+	kb.Use(requireAdminRoles(RoleKBEditor))
+	kb.GET("/articles", handleAdminListArticles)
+	kb.DELETE("/articles", handleAdminDeleteArticle)
+	kb.POST("/upload", handleAdminUpload)
+	kb.POST("/reindex", handleAdminReindex)
+
+	adminOnly := g.Group("")
+	adminOnly.Use(requireAdminRoles(RoleAdmin))
+	adminOnly.GET("/feedback", handleAdminFeedbackSummary)
+	adminOnly.GET("/audit-log", handleAdminAuditLog)
+
+	apiMgr := g.Group("")
+	apiMgr.Use(requireAdminRoles(RoleAPIManager))
+	apiMgr.GET("/api-keys", handleAdminAPIKeys)
 }
 
 // GET /admin/status: data_dir и число доменов.
@@ -86,6 +108,7 @@ func handleAdminStatus(c *gin.Context) {
 		"success":  true,
 		"data_dir": config.DataDir,
 		"domains":  len(domainCatalog.Domains),
+		"roles":    adminRolesFromContext(c),
 	})
 }
 

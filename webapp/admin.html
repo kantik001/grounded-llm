@@ -69,6 +69,9 @@
         </div>
 
         <div class="card" id="toolsCard" hidden>
+            <p class="hint" id="rolesHint" hidden></p>
+
+            <div id="kbEditorSection">
             <label for="domainSelect">Domain</label>
             <select id="domainSelect">
                 <option value="">Loading…</option>
@@ -89,19 +92,50 @@
             <p class="hint" style="margin-bottom:10px">After uploading new documents, run RAG reindex (may take several minutes).</p>
             <button type="button" id="reindexBtn">Reindex RAG</button>
             <div class="status" id="actionStatus"></div>
+            </div>
 
+            <div id="auditSection">
             <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
 
             <label>Recent audit log</label>
             <p class="hint" style="margin-bottom:8px">KB upload/delete/reindex and admin login events.</p>
             <ul id="auditList"><li>—</li></ul>
             <button type="button" class="secondary" id="auditRefreshBtn">Refresh audit log</button>
+            </div>
+
+            <div id="apiKeysSection">
+            <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
+
+            <label>API keys (labels + roles)</label>
+            <ul id="apiKeysList"><li>—</li></ul>
+            <button type="button" class="secondary" id="apiKeysRefreshBtn">Refresh API keys</button>
+            </div>
         </div>
     </div>
 
     <script>
         const STORAGE_KEY = 'grounded_llm_admin_basic';
         const DOMAIN_STORAGE_KEY = 'grounded_llm_admin_domain_id';
+        var adminRoles = [];
+
+        function hasAdminRole(role) {
+            if (!adminRoles || !adminRoles.length) return true;
+            if (adminRoles.indexOf('admin') >= 0) return true;
+            return adminRoles.indexOf(role) >= 0;
+        }
+
+        function applyRoleUI() {
+            document.getElementById('kbEditorSection').hidden = !hasAdminRole('kb_editor');
+            document.getElementById('auditSection').hidden = !hasAdminRole('admin');
+            document.getElementById('apiKeysSection').hidden = !hasAdminRole('api_manager');
+            var hint = document.getElementById('rolesHint');
+            if (adminRoles && adminRoles.length) {
+                hint.hidden = false;
+                hint.textContent = 'Roles: ' + adminRoles.join(', ');
+            } else {
+                hint.hidden = true;
+            }
+        }
 
         function selectedDomainId() {
             return document.getElementById('domainSelect').value;
@@ -187,11 +221,20 @@
 
         async function checkLogin() {
             var data = await adminFetch('/status', { method: 'GET' });
+            adminRoles = data.roles || [];
+            applyRoleUI();
             document.getElementById('toolsCard').hidden = false;
             setStatus(document.getElementById('loginStatus'), 'Connected. data_dir: ' + (data.data_dir || '—'), true);
-            await loadDomainsCatalog();
-            await refreshFiles();
-            await refreshAuditLog();
+            if (hasAdminRole('kb_editor')) {
+                await loadDomainsCatalog();
+                await refreshFiles();
+            }
+            if (hasAdminRole('admin')) {
+                await refreshAuditLog();
+            }
+            if (hasAdminRole('api_manager')) {
+                await refreshAPIKeys();
+            }
         }
 
         async function refreshFiles() {
@@ -318,6 +361,29 @@
         }
 
         document.getElementById('auditRefreshBtn').addEventListener('click', refreshAuditLog);
+
+        async function refreshAPIKeys() {
+            var list = document.getElementById('apiKeysList');
+            list.innerHTML = '<li>Loading…</li>';
+            try {
+                var data = await adminFetch('/api-keys', { method: 'GET' });
+                var keys = data.keys || [];
+                list.innerHTML = '';
+                if (!keys.length) {
+                    list.innerHTML = '<li>(no API keys configured)</li>';
+                    return;
+                }
+                keys.forEach(function(k) {
+                    var li = document.createElement('li');
+                    li.textContent = (k.label || '?') + ' · roles: ' + ((k.roles || []).join(', ') || 'chat_only');
+                    list.appendChild(li);
+                });
+            } catch (e) {
+                list.innerHTML = '<li>' + e.message + '</li>';
+            }
+        }
+
+        document.getElementById('apiKeysRefreshBtn').addEventListener('click', refreshAPIKeys);
 
         document.getElementById('reindexBtn').addEventListener('click', async function() {
             var btn = document.getElementById('reindexBtn');

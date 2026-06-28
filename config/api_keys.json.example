@@ -1,0 +1,12 @@
+[
+  {
+    "key": "replace-with-random-secret",
+    "label": "chat-bot",
+    "roles": ["chat_only"]
+  },
+  {
+    "key": "replace-with-mgmt-secret",
+    "label": "integrations",
+    "roles": ["chat_only"]
+  }
+]
