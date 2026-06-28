@@ -20,7 +20,7 @@
       },
       "emoji": "🛠️",
       "rag_enabled": true,
-      "rag_k": 8
+      "rag_k": 12
     }
   }
 }

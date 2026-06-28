@@ -109,8 +109,9 @@
 
             <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
 
-            <p class="hint" style="margin-bottom:10px">After uploading new documents, run RAG reindex (may take several minutes).</p>
+            <p class="hint" style="margin-bottom:10px">After uploading new documents, run RAG reindex. The job runs in the background — you can keep using the admin panel.</p>
             <button type="button" id="reindexBtn">Reindex RAG</button>
+            <p class="hint" id="reindexJobHint" hidden></p>
             <div class="status" id="actionStatus"></div>
             </div>
 
@@ -303,6 +304,7 @@
             if (hasAdminRole('kb_editor')) {
                 await loadDomainsCatalog();
                 await refreshFiles();
+                await resumeReindexIfActive();
             }
             if (hasAdminRole('admin')) {
                 await refreshAuditLog();
@@ -534,17 +536,71 @@
 
         document.getElementById('apiKeysRefreshBtn').addEventListener('click', refreshAPIKeys);
 
+        var reindexPollTimer = null;
+
+        async function pollReindexJob(jobId) {
+            var data = await adminFetch('/reindex/status?job_id=' + encodeURIComponent(jobId), { method: 'GET' });
+            var job = data.job || {};
+            var label = data.status_label || job.status || '?';
+            var hint = document.getElementById('reindexJobHint');
+            hint.hidden = false;
+            hint.textContent = 'Job #' + job.id + ' · ' + label;
+            if (data.done) {
+                if (reindexPollTimer) {
+                    clearInterval(reindexPollTimer);
+                    reindexPollTimer = null;
+                }
+                document.getElementById('reindexBtn').disabled = false;
+                if (job.status === 'failed') {
+                    setStatus(document.getElementById('actionStatus'), 'Reindex failed: ' + (job.error_msg || 'unknown error'), false);
+                } else {
+                    setStatus(document.getElementById('actionStatus'), 'Reindex completed (job #' + job.id + ')', true);
+                    await refreshAuditLog();
+                }
+                return;
+            }
+            setStatus(document.getElementById('actionStatus'), 'Reindex ' + label + ' (job #' + job.id + ')…', true);
+        }
+
+        async function resumeReindexIfActive() {
+            try {
+                var data = await adminFetch('/reindex/status', { method: 'GET' });
+                if (!data.success || data.done) return;
+                var job = data.job || {};
+                if (!job.id) return;
+                document.getElementById('reindexBtn').disabled = true;
+                await pollReindexJob(job.id);
+                if (reindexPollTimer) clearInterval(reindexPollTimer);
+                reindexPollTimer = setInterval(function() {
+                    pollReindexJob(job.id).catch(function(e) {
+                        setStatus(document.getElementById('actionStatus'), e.message, false);
+                    });
+                }, 2000);
+            } catch (e) { /* no prior job */ }
+        }
+
         document.getElementById('reindexBtn').addEventListener('click', async function() {
             var btn = document.getElementById('reindexBtn');
             btn.disabled = true;
-            setStatus(document.getElementById('actionStatus'), 'Reindexing… please wait', true);
+            setStatus(document.getElementById('actionStatus'), 'Queuing reindex…', true);
             try {
                 var data = await adminFetch('/reindex', { method: 'POST' });
-                setStatus(document.getElementById('actionStatus'), data.message || 'Done', true);
-                await refreshAuditLog();
+                var jobId = data.job_id;
+                if (!jobId) throw new Error('No job_id in response');
+                await pollReindexJob(jobId);
+                if (reindexPollTimer) clearInterval(reindexPollTimer);
+                reindexPollTimer = setInterval(function() {
+                    pollReindexJob(jobId).catch(function(e) {
+                        setStatus(document.getElementById('actionStatus'), e.message, false);
+                        btn.disabled = false;
+                        if (reindexPollTimer) {
+                            clearInterval(reindexPollTimer);
+                            reindexPollTimer = null;
+                        }
+                    });
+                }, 2000);
             } catch (e) {
                 setStatus(document.getElementById('actionStatus'), e.message, false);
-            } finally {
                 btn.disabled = false;
             }
         });

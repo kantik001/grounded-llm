@@ -133,10 +133,14 @@ curl -sS -u admin:your-password \
 
 ---
 
-## Admin — reindex RAG
+## Admin — reindex RAG (async)
 
 ```bash
+# Queue job (returns immediately)
 curl -sS -u admin:your-password -X POST http://localhost:8080/api/admin/reindex
+
+# Poll status
+curl -sS -u admin:your-password "http://localhost:8080/api/admin/reindex/status?job_id=1"
 ```
 
 ---
