@@ -1,0 +1,35 @@
+# Grounded LLM official template pack manifest (v1)
+pack: hr
+version: "1.0.0"
+description: HR policy and employee handbook assistant (English demo)
+
+domain:
+  id: default
+  emoji: "📚"
+  name: Knowledge base
+  names:
+    en: Knowledge base
+    ru: База знаний
+  rag_enabled: true
+  rag_k: 8
+
+locale: en
+
+prompts:
+  rag_system: >-
+    You are an assistant for internal organizational documents.
+    Answer only from the provided context. Use English.
+  rag_task_intro: Answer strictly based on the documents in the context.
+
+onboarding:
+  - How many paid vacation days do I get?
+  - How do I report sick leave?
+  - Is remote work allowed?
+
+few_shot:
+  general: |
+    Sample question: "How many vacation days?"
+    Sample answer: Standard paid vacation is 28 calendar days for full-time employees.
+
+eval:
+  suite: default_en

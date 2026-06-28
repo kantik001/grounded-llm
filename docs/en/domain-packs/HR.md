@@ -33,13 +33,24 @@ A ready-to-run **policy Q&A assistant** grounded in company documents:
 | UI branding | `config/locales/en/branding.json` |
 | Few-shot retrieval hints | `config/locales/en/few_shot.json` |
 | Eval baseline (EN) | `eval/rag_default_en_baseline.jsonl` |
+| Pack manifest | `packs/hr/pack.yaml` |
 | Live demo script | [DEMO_SCRIPT.md](./DEMO_SCRIPT.md) |
 
 ---
 
 ## Deploy from template (2–5 days)
 
-1. Scaffold: `./scripts/init_domain.sh hr default` (or copy `default` domain entry in `config/domains.json`).
+**Recommended — install from pack:**
+
+```bash
+python scripts/init_pack.py install hr
+python scripts/reindex_rag.py
+python scripts/run_rag_eval.py --suite default_en
+```
+
+**Manual steps:**
+
+1. Scaffold: copy `default` domain entry in `config/domains.json` (or use pack install above).
 2. Replace demo files with your policies under `data/{tenant}/hr/`.
 3. Tune `config/locales/en/prompts.json` and `branding.json`.
 4. Update onboarding questions for your topics.

@@ -80,14 +80,14 @@ python scripts/reindex_rag.py
 **New assistant from template:**
 
 ```bash
-./scripts/init_domain.sh hr_policies default
-# 1. Add entry to config/domains.json
-# 2. Add documents under data/default/hr_policies/
-# 3. Tune config/locales/en/ (prompts, branding, onboarding)
-# 4. python scripts/reindex_rag.py
+python scripts/init_pack.py list
+python scripts/init_pack.py install it_support   # or: install hr
+python scripts/reindex_rag.py
 ```
 
-Reference template: [HR domain pack](docs/en/domain-packs/HR.md) · [IT Support pack](docs/en/domain-packs/IT_SUPPORT.md) · [domain-pack-template/](domain-pack-template/)
+Legacy scaffold: `./scripts/init_domain.sh hr_policies default` (data dir only).
+
+Reference templates: [HR domain pack](docs/en/domain-packs/HR.md) · [IT Support pack](docs/en/domain-packs/IT_SUPPORT.md) · [packs/](packs/)
 
 ---
 
