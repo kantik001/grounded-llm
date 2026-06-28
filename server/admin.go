@@ -49,6 +49,7 @@ func registerAdminRouteGroup(g *gin.RouterGroup, auth gin.HandlerFunc) {
 	kb.DELETE("/articles", handleAdminDeleteArticle)
 	kb.POST("/upload", handleAdminUpload)
 	kb.POST("/reindex", handleAdminReindex)
+	kb.GET("/reindex/status", handleAdminReindexStatus)
 	kb.GET("/quotas", handleAdminQuotas)
 
 	adminOnly := g.Group("")
@@ -217,49 +218,6 @@ func handleAdminUpload(c *gin.Context) {
 		Details:  map[string]any{"size_bytes": fh.Size},
 	})
 	c.JSON(http.StatusOK, gin.H{"success": true, "domain_id": domainID, "filename": name, "path": dst})
-}
-
-// POST /admin/reindex: запуск переиндексации Chroma в Python.
-func handleAdminReindex(c *gin.Context) {
-	if err := triggerRAGReindex(); err != nil {
-		log.Printf("Admin reindex: %v", err)
-		recordAdminAudit(c, auditOpts{
-			Action:  auditActionKBReindex,
-			Success: false,
-			Details: map[string]any{"error": err.Error()},
-		})
-		c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": err.Error()})
-		return
-	}
-	recordAdminAudit(c, auditOpts{
-		Action:  auditActionKBReindex,
-		Success: true,
-	})
-	c.JSON(http.StatusOK, gin.H{"success": true, "message": "RAG reindex started"})
-}
-
-// Вызывает POST /admin/reindex на Python-сервисе с X-Admin-Secret.
-func triggerRAGReindex() error {
-	if config.AdminSecret == "" {
-		return fmt.Errorf("ADMIN_SECRET is not set")
-	}
-	url := strings.TrimRight(config.PythonBaseURL, "/") + "/admin/reindex"
-	req, err := http.NewRequest(http.MethodPost, url, nil)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("X-Admin-Secret", config.AdminSecret)
-	client := &http.Client{Timeout: 10 * time.Minute}
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	body, _ := io.ReadAll(resp.Body)
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("python reindex HTTP %d: %s", resp.StatusCode, string(body))
-	}
-	return nil
 }
 
 type pythonIndexStatsResponse struct {

@@ -253,6 +253,7 @@ baseline      + positioning        connectors start        template catalog     
 11. ~~Per-tenant quotas~~ ✅ → [config/QUOTAS.md](../../config/QUOTAS.md)
 12. ~~SSO (OIDC)~~ ✅ → [config/SSO.md](../../config/SSO.md)
 13. ~~Analytics dashboard~~ ✅ → [config/ANALYTICS.md](../../config/ANALYTICS.md)
+14. ~~Async reindex~~ ✅ → [config/REINDEX.md](../../config/REINDEX.md)
 
 The previous list (Helm, SaaS, vision pack, dashboard) is **split across Phases B–D** and tied to platform maturity.
 
