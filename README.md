@@ -1,31 +1,71 @@
 # Grounded LLM
 
-Universal **grounded LLM platform core**: answers grounded in your documents (RAG), sessions, Telegram Web App, admin upload, eval harness.
+[![CI](https://github.com/kantik001/grounded-llm/actions/workflows/ci.yml/badge.svg)](https://github.com/kantik001/grounded-llm/actions/workflows/ci.yml)
 
-Not tied to any industry. The bundled `default` domain is a demo HR knowledge base in `data/default/`.
+**Open platform to deploy cited, verified document assistants in days — templates, API, on-prem.**
+
+Grounded LLM is a production-oriented platform for **document-grounded** assistants: answers come **only from your knowledge base**, with **source citations**, **numeric verification**, and **measurable retrieval quality**. Not a generic chatbot builder.
+
+| | |
+|---|---|
+| **Cited RAG** | Every answer links to source documents |
+| **Eval-driven quality** | JSONL baselines + CI validation |
+| **Enterprise-ready deploy** | Docker Compose, multi-tenant API, on-prem |
+
+**Channels:** Web chat · REST API (`/api/v1`) · Telegram Mini App (optional)
+
+---
+
+## Why this exists
+
+Organizations cannot use public ChatGPT for internal policies and handbooks. They need assistants that stay **inside their infrastructure**, cite **their** documents, and **refuse to hallucinate** when the answer is not in the knowledge base.
+
+Grounded LLM separates **orchestration** (Go: auth, sessions, LLM, verify) from **retrieval** (Python: embeddings, Chroma) so teams can ship a new assistant from a **template pack** in days—not rebuild RAG from scratch.
+
+---
 
 ## Architecture
 
-```
-Telegram Web App  →  Go (auth, sessions, LLM orchestration, verify)
-                         ↓
-                    Python (RAG retrieval only)
-                         ↓
-                    Chroma + embeddings
-                         ↓
-                    data/{domain_id}/*.{txt,pdf,docx}
+```mermaid
+flowchart TB
+    subgraph clients [Clients]
+        Web[Web chat]
+        API[REST API / SSE]
+        TG[Telegram optional]
+    end
+    subgraph go [Go server]
+        Auth[Auth and sessions]
+        LLM[LLM orchestration]
+        Verify[Answer verify]
+    end
+    subgraph py [Python RAG]
+        Retrieve[Retrieval]
+        Chroma[(Chroma index)]
+    end
+    Docs["data/{tenant}/{domain}/*.txt,pdf,docx"]
+    Web --> Auth
+    API --> Auth
+    TG --> Auth
+    Auth --> LLM
+    LLM --> Retrieve
+    Retrieve --> Chroma
+    Chroma --> Docs
 ```
 
 | Layer | Path | Purpose |
 |-------|------|---------|
-| **Core** | `server/`, `api/`, `rag/`, `migrations/`, `webapp/` | Orchestration, retrieval, reference UI |
-| **Domain pack** | `config/`, `config/locales/{ru,en}/`, `data/{tenant}/{domain}/` | Prompts, branding, knowledge documents |
+| **Platform core** | `server/`, `api/`, `rag/`, `migrations/`, `webapp/` | Orchestration, retrieval, reference UI |
+| **Template pack** | `config/`, `config/locales/{en,ru}/`, `data/{tenant}/{domain}/` | Prompts, branding, knowledge documents |
+
+See [PLATFORM_VISION.md](PLATFORM_VISION.md) for positioning and [docs/en/ARCHITECTURE.md](docs/en/ARCHITECTURE.md) for details.
+
+---
 
 ## Quick start
 
 ```bash
 cp .env.example .env
-# Set LLM_API_KEY, TELEGRAM_BOT_TOKEN (or TELEGRAM_AUTH_DISABLED=true for local dev)
+# Set LLM_API_KEY (OpenAI-compatible). For local browser dev: TELEGRAM_AUTH_DISABLED=true
 
 docker compose up -d --build
 python scripts/reindex_rag.py
@@ -35,45 +75,68 @@ python scripts/reindex_rag.py
 |---------|-----|
 | Web App | http://localhost/ |
 | Go API | http://localhost:8080/health |
-| Python | http://localhost:5000/health |
+| OpenAPI | http://localhost:8080/api/v1/openapi.json |
 
-## API
+**New assistant from template:**
+
+```bash
+./scripts/init_domain.sh hr_policies default
+# 1. Add entry to config/domains.json
+# 2. Add documents under data/default/hr_policies/
+# 3. Tune config/locales/en/ (prompts, branding, onboarding)
+# 4. python scripts/reindex_rag.py
+```
+
+Reference template: [HR domain pack](docs/en/domain-packs/HR.md) · [domain-pack-template/](domain-pack-template/)
+
+---
+
+## API highlights
 
 - `GET /domains` — domain catalog
 - `POST /session`, `GET /history`, `POST /message` — chat (`domain_id` in JSON)
-- `GET /branding`, `GET /onboarding?domain_id=` — locale via `X-Locale`, `?locale=`, or `Accept-Language` (`ru` / `en`)
-- Admin: `POST /admin/upload`, `POST /admin/reindex`
+- `POST /message?stream=1` — SSE streaming
+- `GET /branding`, `GET /onboarding` — locale via `X-Locale`, `?locale=`, `Accept-Language`
+- Admin: upload, reindex, index stats, feedback summary
+- Integrators: `X-API-Key` + `X-Tenant-ID`, OpenAPI at `/api/v1/openapi.json`
 
-Integrators (Phase 2): `X-API-Key` + `X-Tenant-ID`, streaming `POST /message?stream=1`, OpenAPI at `/api/v1/openapi.json`, metrics at `/metrics`.
+Examples: [docs/en/API_EXAMPLES.md](docs/en/API_EXAMPLES.md)
 
-## New domain
+---
 
-1. Add entry to `config/domains.json`
-2. Add `.txt`, `.pdf`, or `.docx` files under `data/{domain_id}/`
-3. Update `config/locales/ru/` and `config/locales/en/` (prompts, few_shot, onboarding, branding)
-4. Run `python scripts/reindex_rag.py`
-
-## Development
+## Quality and security
 
 ```bash
-cd server && go run .
-python api/app.py
-make test
-make eval-retrieval
+make test                    # Go + Python unit tests
+make eval-retrieval          # RAG baseline (needs Python on :5000)
 ```
 
-Documentation: [`docs/README.md`](docs/README.md) — [English](docs/en/) and [Русский](docs/ru/).  
-Phase A sales pack: [Security brief](docs/en/SECURITY_BRIEF.md) · [Pilot playbook](docs/en/PILOT_PLAYBOOK.md) · [HR domain pack](docs/en/domain-packs/HR.md)
+- Eval suites: `eval/rag_default_en_baseline.jsonl` (18 cases), `eval/rag_default_baseline.jsonl` (RU)
+- Security overview: [docs/en/SECURITY_BRIEF.md](docs/en/SECURITY_BRIEF.md)
 
-## Publish to GitHub
+---
 
-```powershell
-# Install https://cli.github.com/ then:
-gh auth login
-powershell -ExecutionPolicy Bypass -File scripts/create_github_repo.ps1
-```
+## Documentation
 
-Creates private repo **`grounded-llm`** on your account and pushes `main`.
+| Doc | Description |
+|-----|-------------|
+| [PLATFORM_VISION.md](PLATFORM_VISION.md) | What we are (and are not) |
+| [HIRING.md](HIRING.md) | Design decisions and interview talking points |
+| [docs/en/](docs/en/) | Architecture, deploy, roadmap, templates |
+| [docs/ru/](docs/ru/) | Russian docs (legacy locale) |
+
+---
+
+## Author
+
+Built by **Kantemir Satibalov** — platform engineer focused on production RAG systems.
+
+Open to **LLM / RAG / Platform Engineer** roles worldwide (remote and relocation to Canada, USA, Australia, New Zealand).
+
+- Portfolio narrative: [HIRING.md](HIRING.md)
+- LinkedIn: *(add your profile URL)*
+
+---
 
 ## License
 

@@ -1,26 +1,29 @@
-# HR Domain Pack (English)
+# HR Template Pack (reference)
 
-**SKU:** Policy Assistant — HR & Employee Handbook  
-**Domain ID:** `default` (demo) or client-specific `hr`  
+**Use case:** internal HR and employee handbook Q&A  
+**Domain ID:** `default` (demo) or your slug e.g. `hr`  
 **Locale:** `config/locales/en/`
+
+This is the **reference template** for Grounded LLM. Copy and adapt it to ship a new document-grounded assistant in days.
 
 ---
 
-## What you sell
+## What this template provides
 
-A ready-to-deploy **internal HR Q&A assistant** grounded in company policies:
+A ready-to-run **policy Q&A assistant** grounded in company documents:
 
 - Paid leave and vacation planning  
 - Sick leave reporting  
 - Remote / hybrid work rules  
 - Conduct and HR escalation  
 
-**Pitch (one line):**  
-*Employees get instant, cited answers from your HR handbook — hosted in your infrastructure.*
+**One-liner:**
+
+> Employees get instant, cited answers from your handbook — deployed in your infrastructure.
 
 ---
 
-## Included in this pack
+## Included assets
 
 | Asset | Path |
 |-------|------|
@@ -30,38 +33,32 @@ A ready-to-deploy **internal HR Q&A assistant** grounded in company policies:
 | UI branding | `config/locales/en/branding.json` |
 | Few-shot retrieval hints | `config/locales/en/few_shot.json` |
 | Eval baseline (EN) | `eval/rag_default_en_baseline.jsonl` |
-| Demo script | [DEMO_SCRIPT.md](./DEMO_SCRIPT.md) |
+| Live demo script | [DEMO_SCRIPT.md](./DEMO_SCRIPT.md) |
 
 ---
 
-## Client onboarding (2–5 days)
+## Deploy from template (2–5 days)
 
-1. Copy domain entry in `config/domains.json` → `hr` (or rename `default`).
-2. Replace demo TXT/PDF/DOCX with client policies under `data/{tenant}/hr/`.
-3. Tune `config/locales/en/prompts.json` tone (formal / friendly).
-4. Update onboarding questions to match client topics.
+1. Scaffold: `./scripts/init_domain.sh hr default` (or copy `default` domain entry in `config/domains.json`).
+2. Replace demo files with your policies under `data/{tenant}/hr/`.
+3. Tune `config/locales/en/prompts.json` and `branding.json`.
+4. Update onboarding questions for your topics.
 5. `python scripts/reindex_rag.py` or `POST /admin/reindex`.
-6. Run `python scripts/run_rag_eval.py --suite default_en`.
-7. Pilot per [PILOT_PLAYBOOK.md](../PILOT_PLAYBOOK.md).
+6. Validate: `python scripts/run_rag_eval.py --suite default_en`.
+7. Review [SECURITY_BRIEF.md](../SECURITY_BRIEF.md) with your IT team before production.
 
 ---
 
-## Pricing guide (reference)
-
-| Deliverable | Guide |
-|-------------|-------|
-| Pack setup (docs + prompts + deploy) | Included in pilot or $3k–8k setup |
-| Pilot (8 weeks) | $8k–25k |
-| Annual license | $24k–80k |
-
----
-
-## Out of scope (Phase A)
+## Out of scope (platform today)
 
 - Payroll calculation, individual PII lookup  
-- Legal advice disclaimer remains in branding  
-- SSO / RBAC — Phase B  
+- SSO / RBAC — see [roadmap Phase B](../ROADMAP.md)  
+- Legal advice — disclaimer remains in branding bundles  
 
 ---
 
-See also: [SECURITY_BRIEF.md](../SECURITY_BRIEF.md), [LOCALE_GUIDE.md](../LOCALE_GUIDE.md).
+## Related
+
+- [PLATFORM_VISION.md](../../../PLATFORM_VISION.md) — platform positioning  
+- [LOCALE_GUIDE.md](../LOCALE_GUIDE.md) — add locales  
+- [domain-pack-template/](../../../domain-pack-template/) — generic scaffold  

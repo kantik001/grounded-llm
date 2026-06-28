@@ -1,31 +1,35 @@
 # Roadmap — Grounded LLM
 
-Strategy: **international B2B product** — organizations deploy a document-grounded assistant on-prem or in private cloud.  
-Default language for sales and docs is **English**; Russian locale remains for local development and market.  
-No country-specific features in core — new languages ship as locale packs when there is paying demand.
+Strategy: **open platform for document-grounded assistants** — templates, API, on-prem deploy.  
+Default language for docs and templates is **English**; Russian locale remains as a legacy locale pack.  
+No country-specific logic in core — new languages ship as locale packs.
+
+See also: [PLATFORM_VISION.md](../../PLATFORM_VISION.md) · [HIRING.md](../../HIRING.md)
 
 ---
 
 ## Vision
 
-**Product:** platform core for grounded assistants — answers **only from the knowledge base**, with citations and verification.
+**Product:** platform to ship **cited, verified** internal document assistants from template packs in days.
 
-**International positioning (one line):**
+**Positioning (one line):**
 
-> *Private AI assistant for internal documents — cited, verified, deployable in your infrastructure.*
+> *Open platform to deploy cited, verified document assistants in days — templates, API, on-prem.*
 
-| We sell | We do not sell |
-|---------|----------------|
-| Trust, data control, fast domain pack rollout | “Another ChatGPT wrapper” |
-| On-prem / private cloud | Cloud-only SaaS from day one |
+| We build | We do not build |
+|----------|-----------------|
+| Trust, data control, fast template rollout | “Another ChatGPT wrapper” |
+| On-prem / private cloud first | Cloud-only lock-in |
+| Measurable RAG quality (eval) | Unbounded agent workflows |
 
-**Revenue by phase:**
+**Platform success metrics:**
 
-| Phase | Revenue model |
-|-------|---------------|
-| A–B | Pilots, implementation, annual support |
-| C | Hosted multi-tenant + subscription tiers |
-| D | Partner channel + enterprise modules |
+| Metric | Target |
+|--------|--------|
+| New assistant from template | **&lt;3 days** (engineer-led) |
+| Eval pass rate (retrieval) | Stable or improving per release |
+| Fresh deploy | **&lt;1 day** |
+| Community / adoption | Templates contributed, GitHub traction |
 
 ---
 
@@ -54,15 +58,15 @@ No country-specific features in core — new languages ship as locale packs when
 - Middleware: `X-Locale`, `Accept-Language`, `?locale=`
 - English API errors outside RU locale zone
 
-**Summary:** strong **technical MVP** and **platform foundation**. Missing **product maturity** for international B2B sales (UI polish, security narrative, enterprise features, packaged vertical).
+**Summary:** strong **platform foundation**. Next: enterprise hardening (Phase B) and template catalog growth.
 
 ---
 
-## Phase A — International-ready product (0–4 months) ✅
+## Phase A — Platform baseline ✅
 
-**Goal:** credible demo and pilot for international buyers and integrators.
+**Goal:** credible platform demo and reference template for integrators and hiring portfolio.
 
-**Status:** Phase A deliverables are in the repository (`feature/phase-a-complete`).
+**Status:** complete in repository.
 
 ### Product
 
@@ -70,8 +74,8 @@ No country-specific features in core — new languages ship as locale packs when
 |------|--------|----------|
 | **English-first UI** | ✅ | `webapp/`, `DEFAULT_LOCALE=en` |
 | **Security brief** | ✅ | [SECURITY_BRIEF.md](./SECURITY_BRIEF.md) |
-| **Pilot playbook** | ✅ | [PILOT_PLAYBOOK.md](./PILOT_PLAYBOOK.md) |
-| **HR domain pack (EN)** | ✅ | [domain-packs/HR.md](./domain-packs/HR.md), `data/default/*_en.txt` |
+| **HR reference template** | ✅ | [domain-packs/HR.md](./domain-packs/HR.md), `data/default/*_en.txt` |
+| **Platform positioning** | ✅ | [PLATFORM_VISION.md](../../PLATFORM_VISION.md), [HIRING.md](../../HIRING.md) |
 | **Locale extensibility** | ✅ | [LOCALE_GUIDE.md](./LOCALE_GUIDE.md) |
 
 ### Engineering
@@ -83,19 +87,11 @@ No country-specific features in core — new languages ship as locale packs when
 | Smoke E2E in CI | ✅ | `smoke-api` job in CI |
 | OpenAPI examples | ✅ | [API_EXAMPLES.md](./API_EXAMPLES.md) |
 
-### GTM
-
-- 2–3 pilot conversations (remote, English)
-- 1 case study (anonymized OK)
-- GitHub + `docs/en/` as primary entry point
-
 ### Success criteria
 
-- Demo → pilot conversion ≥20%
-- Pilot: ≥85% in-scope answers with citations
 - Fresh deploy: **&lt;1 day**
-
-**Revenue:** pilot **$8k–25k**.
+- Reference template runnable with eval pass
+- README + vision clear in **&lt;60 seconds** for reviewers
 
 ---
 
@@ -124,26 +120,23 @@ No country-specific features in core — new languages ship as locale packs when
 | Retention policies | Configurable message/session retention |
 | Retrieval improvements | Reranker or hybrid search; measured via eval |
 
-### GTM
+### Adoption
 
-- **Annual license** (not card self-serve yet)
-- Partner program v1: 1–2 integrators, rev share
+- Template catalog growth (IT support, legal FAQ)
 - Trust center: security, architecture, subprocessors
+- Partner integrators (optional)
 
 ### Success criteria
 
-- 1–2 paid annual licenses
-- Security questionnaire without per-client custom code
+- Security questionnaire answerable without per-client custom code
 - Verify pass rate ≥75% on production eval
-- Admin NPS ≥40
-
-**Revenue:** annual license **$24k–80k** + support retainer.
+- External teams deploy from templates without forking core
 
 ---
 
-## Phase C — Scalable platform & revenue (9–18 months)
+## Phase C — Scalable platform (9–18 months)
 
-**Goal:** repeatable revenue without 100% custom work per client.
+**Goal:** repeatable rollouts without custom work per assistant.
 
 ### Product
 
@@ -166,17 +159,16 @@ No country-specific features in core — new languages ship as locale packs when
 | E2E eval with LLM | Quality gate on staging |
 | SLA monitoring | Uptime and latency per tenant |
 
-### GTM
+### Adoption
 
-- Self-serve for SMB
-- Enterprise sales for on-prem and large contracts
+- Self-serve signup (controlled beta) for SMB
+- Partner integrators ship on-prem for enterprise
 
 ### Success criteria
 
-- Positive MRR from hosted tier
-- Healthy gross margin on hosted (LLM + infra)
-- Annual contract churn &lt;5%
-- New domain pack in **&lt;3 days**
+- New template pack in **&lt;3 days**
+- Positive hosted tier margin (if enabled)
+- Annual churn &lt;5% on supported deployments
 
 ---
 
@@ -206,7 +198,7 @@ No country-specific features in core — new languages ship as locale packs when
 1. **Grounded first** — RAG quality and verify beat feature count.
 2. **Deploy anywhere** — on-prem, private cloud, hosted; same core.
 3. **English default, locales pluggable** — no country logic in core.
-4. **Domain pack = unit of sale** — platform is enabler, vertical is the offer.
+4. **Domain pack = unit of rollout** — platform is enabler, template is the deliverable.
 5. **Measure everything** — eval, metrics, feedback drive priorities.
 
 ---
@@ -226,40 +218,41 @@ No country-specific features in core — new languages ship as locale packs when
 ```text
 NOW          Phase A              Phase B                 Phase C              Phase D
 ─────────────────────────────────────────────────────────────────────────────────────
-MVP+i18n  →  EN product + HR pack → RBAC, audit, SSO,     → SaaS + billing +      → Partners +
-             pilots + eval        dashboard               white-label             connectors
+Platform  →  templates + eval   → RBAC, audit, SSO,     → hosted tier +       → partners +
+baseline      + positioning        connectors start        template catalog      marketplace
 ```
 
-| Phase | Duration | Buyer | Revenue |
-|-------|----------|-------|---------|
-| **A** | 0–4 mo | HR / IT pilot sponsor | Pilot $8k–25k |
-| **B** | 4–9 mo | CISO + HR + procurement | License $24k–80k/yr |
-| **C** | 9–18 mo | SMB + enterprise | MRR + enterprise |
-| **D** | 18+ mo | Partners | License + marketplace |
+| Phase | Focus | Outcome |
+|-------|-------|---------|
+| **A** ✅ | Core + HR template + docs | Deployable platform |
+| **B** | Enterprise hardening | Pass security review |
+| **C** | Scale + optional SaaS | Repeatable rollouts |
+| **D** | Ecosystem | Community-driven packs |
 
 ---
 
-## Next 90 days
+## Next priorities
 
-**Phase A product — done:**
+**Phase A — done:**
 
 1. ~~English-first webapp~~ ✅
 2. ~~Security brief~~ ✅
-3. ~~HR domain pack + demo script~~ ✅
+3. ~~HR reference template + demo script~~ ✅
 4. ~~Eval + smoke CI~~ ✅
+5. ~~Platform vision + hiring portfolio docs~~ ✅
 
-**Next — Phase B:**
+**Phase B — next:**
 
-5. Minimal audit log
-6. RBAC
-7. First paid pilot (GTM)
+6. Minimal audit log
+7. RBAC
+8. Retrieval eval gate in CI (Python + Chroma)
+9. IT support template pack
 
 ---
 
 ## Relation to old «Phase 3»
 
-The previous list (Helm, SaaS, vision pack, audit, dashboard) is **split across Phases B–D** and tied to buyers and revenue.  
-**Phase A** is the new prerequisite: international market does not open without it, even with good code.
+The previous list (Helm, SaaS, vision pack, audit, dashboard) is **split across Phases B–D** and tied to platform maturity.
 
 ---
 
