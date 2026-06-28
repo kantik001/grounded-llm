@@ -84,7 +84,8 @@ See also: [PLATFORM_VISION.md](../../PLATFORM_VISION.md) · [HIRING.md](../../HI
 |------|--------|----------|
 | Webapp i18n | ✅ | `/branding`, locale bundles |
 | Expand eval | ✅ | `eval/rag_default_en_baseline.jsonl` (18 cases) |
-| Smoke E2E in CI | ✅ | `smoke-api` job in CI |
+| Retrieval eval gate in CI | ✅ | job `eval-retrieval-gate` |
+| Smoke E2E in CI | ✅ | job `smoke-api` |
 | OpenAPI examples | ✅ | [API_EXAMPLES.md](./API_EXAMPLES.md) |
 
 ### Success criteria
@@ -245,7 +246,7 @@ baseline      + positioning        connectors start        template catalog     
 
 6. Minimal audit log
 7. RBAC
-8. Retrieval eval gate in CI (Python + Chroma)
+8. ~~Retrieval eval gate in CI (Python + Chroma)~~ ✅
 9. IT support template pack
 
 ---

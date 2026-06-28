@@ -9,7 +9,7 @@ Grounded LLM is a production-oriented platform for **document-grounded** assista
 | | |
 |---|---|
 | **Cited RAG** | Every answer links to source documents |
-| **Eval-driven quality** | JSONL baselines + CI validation |
+| **Eval-driven quality** | JSONL baselines + **retrieval gate in CI** |
 | **Enterprise-ready deploy** | Docker Compose, multi-tenant API, on-prem |
 
 **Channels:** Web chat · REST API (`/api/v1`) · Telegram Mini App (optional)
@@ -108,10 +108,12 @@ Examples: [docs/en/API_EXAMPLES.md](docs/en/API_EXAMPLES.md)
 
 ```bash
 make test                    # Go + Python unit tests
-make eval-retrieval          # RAG baseline (needs Python on :5000)
+make eval-retrieval-ci         # Full retrieval gate (reindex + eval, same as CI)
+make eval-retrieval            # RAG baseline only (needs Python already on :5000)
 ```
 
-- Eval suites: `eval/rag_default_en_baseline.jsonl` (18 cases), `eval/rag_default_baseline.jsonl` (RU)
+- **CI:** `eval-retrieval-gate` runs all suites (EN 18 + RU 12) on every push/PR
+- Eval suites: `eval/rag_default_en_baseline.jsonl`, `eval/rag_default_baseline.jsonl`
 - Security overview: [docs/en/SECURITY_BRIEF.md](docs/en/SECURITY_BRIEF.md)
 
 ---
