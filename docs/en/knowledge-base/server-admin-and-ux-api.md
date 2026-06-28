@@ -1,6 +1,6 @@
 ﻿# Admin and UX API
 
-**Files:** `admin.go`, `admin_feedback.go`, `domains.go`, `onboarding.go`, `branding.go`, `feedback.go`, `analytics_store.go`, `locale.go`  
+**Files:** `admin.go`, `audit.go`, `audit_store.go`, `admin_feedback.go`, `domains.go`, `onboarding.go`, `branding.go`, `feedback.go`, `analytics_store.go`, `locale.go`  
 **Client:** [webapp-overview.md](./webapp-overview.md)
 
 ---
@@ -21,6 +21,7 @@ HTTP Basic: `ADMIN_USER` / `ADMIN_PASSWORD`. Empty password → **503**.
 | DELETE | `handleAdminDeleteArticle` | delete document (`?domain_id=&filename=&tenant_id=`) |
 | POST | `handleAdminReindex` | reindex via Python |
 | GET | `handleAdminFeedbackSummary` | aggregated thumbs up/down |
+| GET | `handleAdminAuditLog` | admin audit trail (`?limit=&offset=&action=`) |
 
 ### `GET /admin/articles`
 
@@ -65,6 +66,16 @@ Loaded from `config/locales/{locale}/onboarding.json`.
 ## `feedback.go`
 
 `POST /feedback` — rating `1` / `-1` on an assistant message (Telegram or API key auth).
+
+---
+
+### `GET /admin/audit-log`
+
+Query: `limit` (default 50, max 200), `offset`, optional `action` filter.
+
+Response: `entries[]` with `occurred_at`, `action`, `actor`, `tenant_id`, `domain_id`, `resource`, `success`, `details`.
+
+Actions: `admin_login`, `admin_login_failed`, `kb_upload`, `kb_delete`, `kb_reindex`.
 
 ---
 
