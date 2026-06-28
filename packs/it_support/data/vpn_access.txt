@@ -1,0 +1,11 @@
+VPN access (demo IT knowledge base).
+
+Approved VPN client: GlobalProtect.
+
+To request VPN access: IT Portal → Requests → VPN Access. Direct manager approval is required.
+
+Standard provisioning time: within 1 business day after approval.
+
+VPN uses split tunneling: only corporate applications and internal networks route through the VPN.
+
+Do not share VPN credentials or install VPN profiles from unofficial sources.

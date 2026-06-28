@@ -12,3 +12,4 @@ chromadb>=0.4.0
 sentence-transformers>=2.6.0
 pypdf>=4.0.0
 docx2txt>=0.8
+pyyaml>=6.0.1

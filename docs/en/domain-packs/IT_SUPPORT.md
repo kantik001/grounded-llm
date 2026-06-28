@@ -35,10 +35,21 @@ Document-grounded answers for common employee IT questions:
 | Onboarding chips | `config/locales/en/onboarding.json` → `it_support` |
 | Few-shot hints | `config/locales/en/few_shot.json` → `it_support` |
 | Eval baseline | `eval/rag_it_support_baseline.jsonl` (16 cases) |
+| Pack manifest | `packs/it_support/pack.yaml` |
 
 ---
 
 ## Deploy from template (2–5 days)
+
+**Recommended — install from pack:**
+
+```bash
+python scripts/init_pack.py install it_support
+python scripts/reindex_rag.py
+python scripts/run_rag_eval.py --suite it_support
+```
+
+**Manual steps:**
 
 1. Copy or keep domain `it_support` in `config/domains.json`.
 2. Replace demo TXT files with your runbooks under `data/{tenant}/it_support/`.
@@ -48,12 +59,7 @@ Document-grounded answers for common employee IT questions:
 6. Validate: `python scripts/run_rag_eval.py --suite it_support`.
 7. Review [SECURITY_BRIEF.md](../SECURITY_BRIEF.md) with IT security before production.
 
-**Quick scaffold:**
-
-```bash
-./scripts/init_domain.sh it_support default
-# merge domains.json entry + locale keys from this pack, add docs, reindex
-```
+Legacy scaffold (data dir only): `./scripts/init_domain.sh it_support default`
 
 ---
 
@@ -83,3 +89,4 @@ Full suite: `eval/rag_it_support_baseline.jsonl`.
 - [HR template](./HR.md)  
 - [PLATFORM_VISION.md](../../../PLATFORM_VISION.md)  
 - [domain-pack-template/](../../../domain-pack-template/)  
+- [packs/README.md](../../../packs/README.md)  

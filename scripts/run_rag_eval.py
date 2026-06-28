@@ -20,11 +20,28 @@ _ROOT = Path(__file__).resolve().parents[1]
 EVAL_DIR = _ROOT / "eval"
 RESULTS_DIR = EVAL_DIR / "results"
 
-SUITES = {
-    "default": EVAL_DIR / "rag_default_baseline.jsonl",
-    "default_en": EVAL_DIR / "rag_default_en_baseline.jsonl",
-    "it_support": EVAL_DIR / "rag_it_support_baseline.jsonl",
-}
+SUITES: Dict[str, Path] = {}
+
+
+def discover_suites() -> Dict[str, Path]:
+    """Map suite name → JSONL path (rag_{suite}_baseline.jsonl)."""
+    suites: Dict[str, Path] = {}
+    if not EVAL_DIR.is_dir():
+        return suites
+    for path in sorted(EVAL_DIR.glob("rag_*_baseline.jsonl")):
+        stem = path.stem
+        if stem.startswith("rag_") and stem.endswith("_baseline"):
+            name = stem[4:-9]
+            if name:
+                suites[name] = path
+    return suites
+
+
+def get_suites() -> Dict[str, Path]:
+    global SUITES
+    if not SUITES:
+        SUITES = discover_suites()
+    return SUITES
 
 
 def _is_out_of_scope_error(error: str) -> bool:
@@ -129,9 +146,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="RAG eval (retrieval)")
     parser.add_argument(
         "--suite",
-        choices=["default", "default_en", "it_support", "all"],
         default="default_en",
-        help="Question suite",
+        help="Question suite name (see eval/rag_{suite}_baseline.jsonl)",
     )
     parser.add_argument(
         "--rag-url",
@@ -140,7 +156,14 @@ def main() -> int:
     parser.add_argument("--timeout", type=int, default=120)
     args = parser.parse_args()
 
-    suites = list(SUITES.keys()) if args.suite == "all" else [args.suite]
+    suites_map = get_suites()
+    if args.suite == "all":
+        suites = list(suites_map.keys())
+    else:
+        if args.suite not in suites_map:
+            print(f"Unknown suite: {args.suite}. Available: {', '.join(sorted(suites_map))}", file=sys.stderr)
+            return 1
+        suites = [args.suite]
     report = {
         "mode": "retrieval",
         "rag_url": args.rag_url,
@@ -149,7 +172,7 @@ def main() -> int:
     }
     exit_code = 0
     for name in suites:
-        path = SUITES[name]
+        path = suites_map[name]
         if not path.is_file():
             print(f"File not found: {path}", file=sys.stderr)
             exit_code = 1

@@ -1,0 +1,18 @@
+{"domain_id": "default", "question": "How many paid vacation days do employees get?", "expect_contains": ["28"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "How far in advance must vacation be planned in HR Portal?", "expect_contains": ["14"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "What is the maximum vacation days carry-over to next year?", "expect_contains": ["14"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "By what time must I notify my manager on the first sick day?", "expect_contains": ["10:00"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "Within how many working days must I submit a sick note to HR?", "expect_contains": ["3"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "How many remote work days per week are allowed?", "expect_contains": ["2"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "Which days are recommended in office for team sync?", "expect_contains": ["tuesday", "thursday"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "What are core messenger availability hours?", "expect_contains": ["09:00", "18:00"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "How can I escalate a conflict with my manager?", "expect_contains": ["hr@"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "Within how many business days does HR schedule a conflict meeting?", "expect_contains": ["5"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "Who approves vacation after the direct manager?", "expect_contains": ["hr"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "Is discrimination in the workplace allowed?", "expect_contains": ["prohibited"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "Can I work remotely five days every week?", "expect_contains": ["2"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "Where can I report a conflict anonymously?", "expect_contains": ["portal"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "When is sick pay calculated?", "expect_contains": ["sick"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "What is the CEO salary on the Moon in 2099?", "expect_out_of_scope": true, "expect_contains": [], "category": "edge"}
+{"domain_id": "default", "question": "How many vacation days for employees on Mars?", "expect_out_of_scope": true, "expect_contains": [], "category": "edge"}
+{"domain_id": "default", "question": "What is the stock ticker symbol for our company on Neptune?", "expect_out_of_scope": true, "expect_contains": [], "category": "edge"}

@@ -245,16 +245,13 @@ baseline      + positioning        connectors start        template catalog     
 
 **Phase B — next:**
 
-6. Minimal audit log
-7. RBAC
-8. ~~Retrieval eval gate in CI (Python + Chroma)~~ ✅ (see `feature/eval-retrieval-ci-gate`)
-9. ~~IT support template pack~~ ✅ → [IT_SUPPORT.md](./domain-packs/IT_SUPPORT.md)
+6. ~~Retrieval eval gate in CI (Python + Chroma)~~ ✅
+7. ~~IT support template pack~~ ✅ → [IT_SUPPORT.md](./domain-packs/IT_SUPPORT.md)
+8. ~~`pack.yaml` spec + `init-pack` CLI~~ ✅ → [packs/README.md](../../packs/README.md)
+9. Minimal audit log
+10. RBAC
 
----
-
-## Relation to old «Phase 3»
-
-The previous list (Helm, SaaS, vision pack, audit, dashboard) is **split across Phases B–D** and tied to platform maturity.
+The previous list (Helm, SaaS, vision pack, dashboard) is **split across Phases B–D** and tied to platform maturity.
 
 ---
 

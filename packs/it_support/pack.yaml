@@ -1,0 +1,35 @@
+# Grounded LLM official template pack manifest (v1)
+pack: it_support
+version: "1.0.0"
+description: Internal IT helpdesk runbooks (password, VPN, hardware, SLAs)
+
+domain:
+  id: it_support
+  emoji: "🛠️"
+  name: IT Support
+  names:
+    en: IT Support
+    ru: IT поддержка
+  rag_enabled: true
+  rag_k: 8
+
+locale: en
+
+prompts:
+  rag_system: >-
+    You are an internal IT helpdesk assistant.
+    Answer only from the provided IT documentation. Use clear English.
+  rag_task_intro: Answer strictly based on the IT knowledge base context.
+
+onboarding:
+  - How do I reset my password?
+  - How do I request VPN access?
+  - What is the P1 ticket response time?
+
+few_shot:
+  general: |
+    Sample question: "How do I request VPN access?"
+    Sample answer: Submit the VPN Access form in the IT Portal. Manager approval is required; access is provisioned within one business day.
+
+eval:
+  suite: it_support

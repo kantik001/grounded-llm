@@ -85,9 +85,16 @@ eval-retrieval:
 	pip install requests
 	python scripts/run_rag_eval.py --suite default_en
 
-## Full retrieval gate (reindex + start Python + all suites) — same as CI job eval-retrieval-gate
+## Full retrieval gate locally (reindex + start Python + all suites)
 eval-retrieval-ci:
 	bash scripts/ci_eval_retrieval.sh
+
+## Template pack CLI
+init-pack-list:
+	python scripts/init_pack.py list
+
+init-pack-install:
+	python scripts/init_pack.py install $(PACK)
 
 ## Помощь по доступным командам
 help:
@@ -111,5 +118,7 @@ help:
 	@echo "  make test           - test-go + test-py"
 	@echo "  make eval-retrieval   - RAG eval (needs Python on :5000)"
 	@echo "  make eval-retrieval-ci - Reindex + RAG + all eval suites (local CI gate)"
+	@echo "  make init-pack-list    - List official template packs"
+	@echo "  make init-pack-install PACK=it_support - Install a template pack"
 	@echo "  make smoke          - Smoke API (localhost:8080)"
 	@echo "  make help           - Эта справка"

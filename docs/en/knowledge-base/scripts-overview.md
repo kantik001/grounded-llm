@@ -34,7 +34,7 @@ python scripts/run_rag_eval.py --suite default
 python scripts/run_rag_eval.py --suite all
 ```
 
-Suites: see `SUITES` in script (`default` → `eval/rag_default_baseline.jsonl`).
+Suites: discovered from `eval/rag_{suite}_baseline.jsonl` (see `discover_suites()` in script). Use `--suite all` to run every baseline.
 
 Optional `--full`: end-to-end via Go message API — requires `LLM_API_KEY`.
 
