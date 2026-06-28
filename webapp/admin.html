@@ -56,19 +56,29 @@
 <body>
     <div class="wrap">
         <h1>📚 Knowledge base admin</h1>
-        <p class="hint">Upload .txt / .pdf / .docx to <code>data/{domain_id}/</code> and reindex Chroma. Login from <code>ADMIN_USER</code> / <code>ADMIN_PASSWORD</code>.</p>
+        <p class="hint">Upload .txt / .pdf / .docx to <code>data/{domain_id}/</code> and reindex Chroma. Sign in with corporate SSO or local admin credentials.</p>
 
         <div class="card" id="loginCard">
+            <div id="ssoLoginBlock" hidden>
+                <button type="button" id="ssoLoginBtn">Sign in with SSO</button>
+                <p class="login-note">Uses your organization OIDC provider (Azure AD, Okta, Google, etc.).</p>
+                <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
+            </div>
+            <div id="basicLoginBlock">
             <label for="adminUser">Username</label>
             <input type="text" id="adminUser" autocomplete="username">
             <label for="adminPass">Password</label>
             <input type="password" id="adminPass" autocomplete="current-password">
             <button type="button" id="saveLoginBtn">Save and verify</button>
             <p class="login-note">Credentials are stored in this tab's sessionStorage only.</p>
+            </div>
             <div class="status" id="loginStatus"></div>
         </div>
 
         <div class="card" id="toolsCard" hidden>
+            <div class="row" style="margin-bottom:12px">
+                <button type="button" class="secondary" id="logoutBtn" hidden>Sign out</button>
+            </div>
             <p class="hint" id="rolesHint" hidden></p>
 
             <div id="kbEditorSection">
@@ -117,6 +127,9 @@
         const STORAGE_KEY = 'grounded_llm_admin_basic';
         const DOMAIN_STORAGE_KEY = 'grounded_llm_admin_domain_id';
         var adminRoles = [];
+        var ssoEnabled = false;
+        var basicAuthEnabled = true;
+        var usingSSOSession = false;
 
         function hasAdminRole(role) {
             if (!adminRoles || !adminRoles.length) return true;
@@ -195,6 +208,20 @@
             }
         }
 
+        async function loadAuthConfig() {
+            try {
+                var res = await fetch('/api/admin/auth/config', { credentials: 'include' });
+                var data = await res.json();
+                if (data.success) {
+                    ssoEnabled = !!data.sso_enabled;
+                    basicAuthEnabled = data.basic_auth !== false;
+                }
+            } catch (e) { /* ignore */ }
+            document.getElementById('ssoLoginBlock').hidden = !ssoEnabled;
+            document.getElementById('basicLoginBlock').hidden = !basicAuthEnabled;
+            document.getElementById('logoutBtn').hidden = !ssoEnabled;
+        }
+
         function authHeader() {
             var c = getCreds();
             if (!c || !c.user) return null;
@@ -207,10 +234,12 @@
         }
 
         async function adminFetch(path, init) {
-            var h = authHeader();
-            if (!h) throw new Error('Enter login and password first');
             var opts = init ? Object.assign({}, init) : {};
-            opts.headers = Object.assign({}, opts.headers || {}, { 'Authorization': h });
+            opts.credentials = 'include';
+            var h = authHeader();
+            if (h) {
+                opts.headers = Object.assign({}, opts.headers || {}, { 'Authorization': h });
+            }
             var res = await fetch('/api/admin' + path, opts);
             var txt = await res.text();
             var data;
@@ -221,6 +250,7 @@
 
         async function checkLogin() {
             var data = await adminFetch('/status', { method: 'GET' });
+            usingSSOSession = !authHeader();
             adminRoles = data.roles || [];
             applyRoleUI();
             document.getElementById('toolsCard').hidden = false;
@@ -280,6 +310,20 @@
                 list.innerHTML = '<li>Error: ' + e.message + '</li>';
             }
         }
+
+        document.getElementById('ssoLoginBtn').addEventListener('click', function() {
+            window.location.href = '/api/admin/auth/login';
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', async function() {
+            try {
+                await fetch('/api/admin/auth/logout', { method: 'POST', credentials: 'include' });
+            } catch (e) { /* ignore */ }
+            sessionStorage.removeItem(STORAGE_KEY);
+            document.getElementById('toolsCard').hidden = true;
+            usingSSOSession = false;
+            setStatus(document.getElementById('loginStatus'), 'Signed out', true);
+        });
 
         document.getElementById('saveLoginBtn').addEventListener('click', function() {
             var user = document.getElementById('adminUser').value.trim();
@@ -401,12 +445,18 @@
         });
 
         (function init() {
-            var c = getCreds();
-            if (c) {
-                document.getElementById('adminUser').value = c.user || '';
-                document.getElementById('adminPass').value = c.pass || '';
+            loadAuthConfig().then(function() {
+                var params = new URLSearchParams(window.location.search);
+                if (params.get('sso_error')) {
+                    setStatus(document.getElementById('loginStatus'), 'SSO failed: ' + params.get('sso_error'), false);
+                }
+                var c = getCreds();
+                if (c) {
+                    document.getElementById('adminUser').value = c.user || '';
+                    document.getElementById('adminPass').value = c.pass || '';
+                }
                 checkLogin().catch(function() {});
-            }
+            });
         })();
     </script>
 </body>

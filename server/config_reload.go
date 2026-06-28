@@ -18,7 +18,9 @@ func reloadRuntimeConfig() error {
 	}
 	loadAPIKeys(config)
 	loadAdminUsers(config)
+	loadOIDCSettings(config)
 	loadTenantQuotas()
+	resetOIDCProvider()
 	log.Printf("Config reloaded: domains=%d api_keys=%d admin_users=%d tenant_quotas=%d",
 		len(domainCatalog.Domains), len(apiKeyRegistry), len(adminUserRegistry), len(tenantQuotaRegistry))
 	return nil

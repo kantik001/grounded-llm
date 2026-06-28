@@ -251,6 +251,7 @@ baseline      + positioning        connectors start        template catalog     
 9. ~~Minimal audit log~~ ✅
 10. ~~RBAC~~ ✅ → [config/RBAC.md](../../config/RBAC.md)
 11. ~~Per-tenant quotas~~ ✅ → [config/QUOTAS.md](../../config/QUOTAS.md)
+12. ~~SSO (OIDC)~~ ✅ → [config/SSO.md](../../config/SSO.md)
 
 The previous list (Helm, SaaS, vision pack, dashboard) is **split across Phases B–D** and tied to platform maturity.
 
