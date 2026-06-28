@@ -149,10 +149,10 @@ curl -sS -u admin:your-password "http://localhost:8080/api/admin/audit-log?limit
 
 ---
 
-## Admin — RBAC (API keys summary)
+## Admin — tenant quotas
 
 ```bash
-curl -sS -u api_manager:your-password http://localhost:8080/api/admin/api-keys
+curl -sS -u admin:your-password "http://localhost:8080/api/admin/quotas?tenant_id=default"
 ```
 
 ---

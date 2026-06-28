@@ -250,6 +250,7 @@ baseline      + positioning        connectors start        template catalog     
 8. ~~`pack.yaml` spec + `init-pack` CLI~~ ✅ → [packs/README.md](../../packs/README.md)
 9. ~~Minimal audit log~~ ✅
 10. ~~RBAC~~ ✅ → [config/RBAC.md](../../config/RBAC.md)
+11. ~~Per-tenant quotas~~ ✅ → [config/QUOTAS.md](../../config/QUOTAS.md)
 
 The previous list (Helm, SaaS, vision pack, dashboard) is **split across Phases B–D** and tied to platform maturity.
 

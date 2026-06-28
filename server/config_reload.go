@@ -18,8 +18,9 @@ func reloadRuntimeConfig() error {
 	}
 	loadAPIKeys(config)
 	loadAdminUsers(config)
-	log.Printf("Config reloaded: domains=%d api_keys=%d admin_users=%d",
-		len(domainCatalog.Domains), len(apiKeyRegistry), len(adminUserRegistry))
+	loadTenantQuotas()
+	log.Printf("Config reloaded: domains=%d api_keys=%d admin_users=%d tenant_quotas=%d",
+		len(domainCatalog.Domains), len(apiKeyRegistry), len(adminUserRegistry), len(tenantQuotaRegistry))
 	return nil
 }
 

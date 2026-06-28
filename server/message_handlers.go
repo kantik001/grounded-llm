@@ -81,6 +81,11 @@ func handleMessage(c *gin.Context) {
 		return
 	}
 
+	if err := checkMessageQuota(c.Request.Context(), tenantID); err != nil {
+		quotaErrorResponse(c, err)
+		return
+	}
+
 	ctx := c.Request.Context()
 	sid, sessionDomain, err := chatStore.GetOrCreateSession(ctx, sessionID, tgUser, tenantID, requestDomainID)
 	if err != nil {

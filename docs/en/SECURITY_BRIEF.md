@@ -103,6 +103,7 @@ Embeddings model (`intfloat/multilingual-e5-small`) runs **inside the Python con
 - Prometheus metrics at `GET /metrics` (protect in production)
 - **Admin audit log** (Postgres `audit_log`): failed admin login, successful admin verify (`GET /admin/status`), KB upload/delete/reindex — query via `GET /admin/audit-log` or Admin UI
 - **RBAC** (file-based): roles `chat_only`, `kb_editor`, `admin`, `api_manager` — see [config/RBAC.md](../../config/RBAC.md)
+- **Per-tenant quotas** (optional): messages/day, KB storage, domains — see [config/QUOTAS.md](../../config/QUOTAS.md)
 
 ---
 

@@ -1,6 +1,6 @@
 ﻿# Admin and UX API
 
-**Files:** `admin.go`, `audit.go`, `audit_store.go`, `admin_feedback.go`, `domains.go`, `onboarding.go`, `branding.go`, `feedback.go`, `analytics_store.go`, `locale.go`  
+**Files:** `admin.go`, `admin_quotas.go`, `quota_usage.go`, `tenant_quotas.go`, `audit.go`, `audit_store.go`, `admin_feedback.go`, `domains.go`, `onboarding.go`, `branding.go`, `feedback.go`, `analytics_store.go`, `locale.go`  
 **Client:** [webapp-overview.md](./webapp-overview.md)
 
 ---
@@ -22,6 +22,7 @@ HTTP Basic: `ADMIN_USER` / `ADMIN_PASSWORD`. Empty password → **503**.
 | POST | `handleAdminReindex` | reindex via Python |
 | GET | `handleAdminFeedbackSummary` | aggregated thumbs up/down |
 | GET | `handleAdminAuditLog` | admin audit trail (`?limit=&offset=&action=`) |
+| GET | `handleAdminQuotas` | tenant quota limits + usage (`?tenant_id=`) |
 | GET | `handleAdminAPIKeys` | API key labels + roles, admin user list (no secrets) |
 
 ### `GET /admin/articles`

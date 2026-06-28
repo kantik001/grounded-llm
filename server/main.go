@@ -14,6 +14,7 @@ func main() {
 	config = loadConfig()
 	loadAPIKeys(config)
 	loadAdminUsers(config)
+	loadTenantQuotas()
 	initTenantConfig(config)
 	logStartup(config)
 

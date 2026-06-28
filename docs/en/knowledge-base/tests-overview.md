@@ -32,7 +32,7 @@ Env: `DOMAINS_CONFIG_PATH=config/domains.json`
 | `rag_chat_test.go` | verify, disclaimer, clean answer |
 | `admin_test.go` | safe filename (txt/pdf/docx) |
 | `audit_test.go` | audit log query parsing, client IP, status check |
-| `rbac_test.go` | role normalization, admin/API permission checks |
+| `quota_test.go` | tenant storage/domain/message quota helpers |
 | `auth_telegram_test.go` | initData HMAC |
 | `locale_test.go` | locale normalization, header resolution |
 
