@@ -1,0 +1,16 @@
+{"domain_id": "it_support", "question": "How long is a self-service password reset link valid?", "expect_contains": ["24"], "expect_context": true, "category": "policy"}
+{"domain_id": "it_support", "question": "How long is an account locked after failed login attempts?", "expect_contains": ["30"], "expect_context": true, "category": "policy"}
+{"domain_id": "it_support", "question": "Which VPN client is approved for remote access?", "expect_contains": ["GlobalProtect"], "expect_context": true, "category": "policy"}
+{"domain_id": "it_support", "question": "How quickly is VPN access provisioned after manager approval?", "expect_contains": ["1"], "expect_context": true, "category": "policy"}
+{"domain_id": "it_support", "question": "When are loaner laptops available during hardware repairs?", "expect_contains": ["2"], "expect_context": true, "category": "policy"}
+{"domain_id": "it_support", "question": "What is the standard laptop refresh cycle in months?", "expect_contains": ["36"], "expect_context": true, "category": "policy"}
+{"domain_id": "it_support", "question": "Where should I report suspected phishing emails?", "expect_contains": ["security@"], "expect_context": true, "category": "policy"}
+{"domain_id": "it_support", "question": "What is the standard mailbox storage limit?", "expect_contains": ["50"], "expect_context": true, "category": "policy"}
+{"domain_id": "it_support", "question": "Is MFA required for company email on mobile devices?", "expect_contains": ["required"], "expect_context": true, "category": "policy"}
+{"domain_id": "it_support", "question": "What are IT support hours on weekdays?", "expect_contains": ["08:00", "18:00"], "expect_context": true, "category": "policy"}
+{"domain_id": "it_support", "question": "What is the P1 ticket initial response time?", "expect_contains": ["1"], "expect_context": true, "category": "policy"}
+{"domain_id": "it_support", "question": "What is the P2 ticket initial response time?", "expect_contains": ["4"], "expect_context": true, "category": "policy"}
+{"domain_id": "it_support", "question": "What is the P3 ticket initial response time?", "expect_contains": ["1 business"], "expect_context": true, "category": "policy"}
+{"domain_id": "it_support", "question": "How do I request a new distribution list?", "expect_contains": ["Email", "Groups"], "expect_context": true, "category": "policy"}
+{"domain_id": "it_support", "question": "What is the CEO laptop model used on Mars in 2099?", "expect_out_of_scope": true, "expect_contains": [], "category": "edge"}
+{"domain_id": "it_support", "question": "What is our stock ticker symbol on Neptune?", "expect_out_of_scope": true, "expect_contains": [], "category": "edge"}

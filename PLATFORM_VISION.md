@@ -49,7 +49,7 @@ We win on **trust, deployability, and measured RAG quality**—not on feature co
                             │
          ┌──────────────────┼──────────────────┐
          ▼                  ▼                  ▼
-    HR template       IT support template   Legal FAQ template
+    HR template       IT support template   Legal FAQ (planned)
     config + data     config + data         config + data
     + eval            + eval                + eval
 ```

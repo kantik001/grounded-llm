@@ -1,0 +1,11 @@
+Laptop and hardware support (demo IT knowledge base).
+
+Report hardware issues via the IT Portal (category: Hardware).
+
+Loaner laptops are available when repairs are expected to take longer than 2 business days.
+
+Standard laptop refresh cycle: 36 months from device assignment.
+
+Do not install unauthorized software or disable endpoint protection (EDR).
+
+For lost or stolen devices, contact the IT helpdesk immediately and open a P1 security ticket.

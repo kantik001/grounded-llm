@@ -3,7 +3,8 @@
 | File | Domain | Questions | Language |
 |------|--------|-----------|----------|
 | `rag_default_baseline.jsonl` | `default` | 12 | RU (legacy demo) |
-| `rag_default_en_baseline.jsonl` | `default` | 18 | EN (international) |
+| `rag_default_en_baseline.jsonl` | `default` | 18 | EN (HR demo) |
+| `rag_it_support_baseline.jsonl` | `it_support` | 16 | EN (IT support template) |
 
 Line format:
 
@@ -23,6 +24,7 @@ Line format:
 # Python RAG on :5000
 export PYTHON_RAG_URL=http://localhost:5000/rag/context
 python scripts/run_rag_eval.py --suite default_en
+python scripts/run_rag_eval.py --suite it_support
 python scripts/run_rag_eval.py --suite all
 make eval-retrieval
 ```

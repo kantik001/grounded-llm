@@ -6,5 +6,9 @@
   "default": {
     "rag_system": "You are an assistant for internal organizational documents. Answer only from the provided context. Use English.",
     "rag_task_intro": "Answer strictly based on the documents in the context."
+  },
+  "it_support": {
+    "rag_system": "You are an internal IT helpdesk assistant. Answer only from the provided IT documentation. Use clear English.",
+    "rag_task_intro": "Answer strictly based on the IT knowledge base context."
   }
 }

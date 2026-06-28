@@ -1,0 +1,12 @@
+IT Portal and service levels (demo IT knowledge base).
+
+IT Portal URL: https://it.company.internal (internal network or VPN required).
+
+Support hours: Monday–Friday, 08:00–18:00 local time (excluding public holidays).
+
+Service level targets:
+- P1 (production down / security incident): initial response within 1 hour
+- P2 (major degradation): initial response within 4 hours
+- P3 (general request): initial response within 1 business day
+
+Status updates are posted on the ticket in the IT Portal.

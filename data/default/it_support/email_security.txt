@@ -1,0 +1,11 @@
+Email and security reporting (demo IT knowledge base).
+
+Report suspected phishing to security@company.com (forward the message as an attachment).
+
+Request new distribution lists via IT Portal → Email & Groups.
+
+Standard mailbox storage limit: 50 GB per user.
+
+Multi-factor authentication (MFA) is required for company email on mobile devices.
+
+Never approve MFA prompts you did not initiate.
