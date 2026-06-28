@@ -3,5 +3,10 @@
     "How many paid vacation days do I get?",
     "How do I report sick leave?",
     "Is remote work allowed?"
+  ],
+  "it_support": [
+    "How do I reset my password?",
+    "How do I request VPN access?",
+    "What is the P1 ticket response time?"
   ]
 }

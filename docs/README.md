@@ -19,7 +19,8 @@
 | Template | Description |
 |----------|-------------|
 | [HR domain pack](en/domain-packs/HR.md) | Policy / employee handbook assistant (EN) |
-| [Demo script](en/domain-packs/DEMO_SCRIPT.md) | 30-minute live demo |
+| [IT Support pack](en/domain-packs/IT_SUPPORT.md) | Internal IT helpdesk runbooks (EN) |
+| [Demo script](en/domain-packs/DEMO_SCRIPT.md) | 30-minute live demo (HR) |
 | [domain-pack-template/](../domain-pack-template/) | Scaffold layout for new packs |
 
 Locale bundles and LLM prompts: `config/locales/{en,ru}/`.

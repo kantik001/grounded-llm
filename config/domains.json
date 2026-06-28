@@ -11,6 +11,16 @@
       "emoji": "📚",
       "rag_enabled": true,
       "rag_k": 8
+    },
+    "it_support": {
+      "name": "IT Support",
+      "names": {
+        "ru": "IT поддержка",
+        "en": "IT Support"
+      },
+      "emoji": "🛠️",
+      "rag_enabled": true,
+      "rag_k": 8
     }
   }
 }

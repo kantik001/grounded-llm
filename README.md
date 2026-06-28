@@ -87,7 +87,7 @@ python scripts/reindex_rag.py
 # 4. python scripts/reindex_rag.py
 ```
 
-Reference template: [HR domain pack](docs/en/domain-packs/HR.md) · [domain-pack-template/](domain-pack-template/)
+Reference template: [HR domain pack](docs/en/domain-packs/HR.md) · [IT Support pack](docs/en/domain-packs/IT_SUPPORT.md) · [domain-pack-template/](domain-pack-template/)
 
 ---
 

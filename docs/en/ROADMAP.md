@@ -75,6 +75,7 @@ See also: [PLATFORM_VISION.md](../../PLATFORM_VISION.md) · [HIRING.md](../../HI
 | **English-first UI** | ✅ | `webapp/`, `DEFAULT_LOCALE=en` |
 | **Security brief** | ✅ | [SECURITY_BRIEF.md](./SECURITY_BRIEF.md) |
 | **HR reference template** | ✅ | [domain-packs/HR.md](./domain-packs/HR.md), `data/default/*_en.txt` |
+| **IT support template** | ✅ | [domain-packs/IT_SUPPORT.md](./domain-packs/IT_SUPPORT.md), `data/default/it_support/` |
 | **Platform positioning** | ✅ | [PLATFORM_VISION.md](../../PLATFORM_VISION.md), [HIRING.md](../../HIRING.md) |
 | **Locale extensibility** | ✅ | [LOCALE_GUIDE.md](./LOCALE_GUIDE.md) |
 
@@ -246,8 +247,8 @@ baseline      + positioning        connectors start        template catalog     
 
 6. Minimal audit log
 7. RBAC
-8. ~~Retrieval eval gate in CI (Python + Chroma)~~ ✅
-9. IT support template pack
+8. ~~Retrieval eval gate in CI (Python + Chroma)~~ ✅ (see `feature/eval-retrieval-ci-gate`)
+9. ~~IT support template pack~~ ✅ → [IT_SUPPORT.md](./domain-packs/IT_SUPPORT.md)
 
 ---
 
