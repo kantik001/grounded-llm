@@ -83,7 +83,14 @@ jobs:
       - name: Install RAG dependencies
         run: pip install -r api/requirements.txt requests
 
-      - name: Retrieval eval gate (reindex + RAG HTTP + all suites)
+      - name: Prefetch embedding model
+        env:
+          HF_HOME: ${{ github.workspace }}/.cache/huggingface
+          TRANSFORMERS_CACHE: ${{ github.workspace }}/.cache/huggingface
+        run: |
+          python -c "from langchain_huggingface import HuggingFaceEmbeddings; HuggingFaceEmbeddings(model_name='intfloat/multilingual-e5-small')"
+
+      - name: Reindex Chroma
         env:
           DOMAINS_CONFIG_PATH: ${{ github.workspace }}/config/domains.json
           LOCALES_ROOT: ${{ github.workspace }}/config/locales
@@ -91,8 +98,17 @@ jobs:
           FORCE_RAG_REINDEX: "true"
           HF_HOME: ${{ github.workspace }}/.cache/huggingface
           TRANSFORMERS_CACHE: ${{ github.workspace }}/.cache/huggingface
+        run: python scripts/reindex_rag.py
+
+      - name: Retrieval eval gate (RAG HTTP + all suites)
+        env:
+          DOMAINS_CONFIG_PATH: ${{ github.workspace }}/config/domains.json
+          LOCALES_ROOT: ${{ github.workspace }}/config/locales
+          DEFAULT_LOCALE: en
+          HF_HOME: ${{ github.workspace }}/.cache/huggingface
+          TRANSFORMERS_CACHE: ${{ github.workspace }}/.cache/huggingface
           PYTHON_SERVICE_PORT: "5000"
-        run: bash scripts/ci_eval_retrieval.sh
+        run: bash scripts/ci_eval_retrieval.sh --skip-reindex
 
   smoke-api:
     runs-on: ubuntu-latest
