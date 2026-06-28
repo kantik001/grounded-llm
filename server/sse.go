@@ -32,6 +32,11 @@ func sseMessageHandler(c *gin.Context, sid, domainID, tenantID string, telegramI
 		return
 	}
 	if prepared.SoftFail || !prepared.OK {
+		recordRAGAnalytics(ctx, telegramID, tenantID, domainID, text, RAGAnswerResult{
+			ErrMsg:        prepared.ErrMsg,
+			SoftFail:      prepared.SoftFail,
+			FragmentCount: len(prepared.Fragments),
+		})
 		writeSSE(c, "error", mustJSON(gin.H{"error": prepared.ErrMsg, "soft_fail": prepared.SoftFail}))
 		return
 	}
@@ -51,6 +56,7 @@ func sseMessageHandler(c *gin.Context, sid, domainID, tenantID string, telegramI
 	}
 
 	result := finalizeRAGAnswer(raw, prepared)
+	recordRAGAnalytics(ctx, telegramID, tenantID, domainID, text, result)
 	if _, err := chatStore.AppendMessage(ctx, sid, ChatMessage{
 		Role: "assistant", Content: result.Answer, Kind: "assistant", Citations: result.Citations,
 	}); err != nil {

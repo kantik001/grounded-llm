@@ -78,14 +78,23 @@ func finalizeRAGAnswer(raw string, p ragPrepared) RAGAnswerResult {
 	passed, reason := verifyRAGAnswer(answer, p.Fragments, p.Locale)
 	logRAGOutcome(p.DomainID, "", len(p.Fragments), passed, reason, "", !passed)
 	citations := publicCitations(p.Fragments)
+	fragmentCount := len(p.Fragments)
 	if !passed {
 		return RAGAnswerResult{
-			Answer:    fmt.Sprintf("⚠️ Could not verify the answer against sources. %s\n\n%s", reason, verifyFailHintForLocale(p.Locale)),
-			Citations: citations,
-			OK:        true,
+			Answer:        fmt.Sprintf("⚠️ Could not verify the answer against sources. %s\n\n%s", reason, verifyFailHintForLocale(p.Locale)),
+			Citations:     citations,
+			OK:            true,
+			VerifyPass:    false,
+			FragmentCount: fragmentCount,
 		}
 	}
-	return RAGAnswerResult{Answer: answer, Citations: citations, OK: true}
+	return RAGAnswerResult{
+		Answer:        answer,
+		Citations:     citations,
+		OK:            true,
+		VerifyPass:    true,
+		FragmentCount: fragmentCount,
+	}
 }
 
 func answerWithRAG(q, tenantID, domainID, locale string, history []Message, sessionID string) RAGAnswerResult {
@@ -94,7 +103,11 @@ func answerWithRAG(q, tenantID, domainID, locale string, history []Message, sess
 		return RAGAnswerResult{ErrMsg: publicAPIError(err)}
 	}
 	if !prepared.OK {
-		return RAGAnswerResult{ErrMsg: prepared.ErrMsg, SoftFail: prepared.SoftFail}
+		return RAGAnswerResult{
+			ErrMsg:        prepared.ErrMsg,
+			SoftFail:      prepared.SoftFail,
+			FragmentCount: len(prepared.Fragments),
+		}
 	}
 	raw, err := callLLMCompletion(prepared.LLMMessages)
 	if err != nil {

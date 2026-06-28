@@ -139,6 +139,8 @@ func handleTextMessage(c *gin.Context, sid, domainID, tenantID, locale string, t
 		return
 	}
 
+	recordRAGAnalytics(ctx, telegramID, tenantID, domainID, text, ragResult)
+
 	if ragResult.SoftFail {
 		_, _ = chatStore.AppendMessage(ctx, sid, ChatMessage{Role: "assistant", Content: ragResult.ErrMsg, Kind: "assistant"})
 		logRequest(c, "rag_answer", map[string]any{"domain_id": domainID, "soft_fail": true})
