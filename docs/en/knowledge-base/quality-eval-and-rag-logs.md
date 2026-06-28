@@ -33,7 +33,7 @@ make eval-retrieval
 
 Reports: `eval/results/YYYYMMDD_HHMMSS.json`.
 
-CI may run `eval-baseline-validate` on baseline JSONL files.
+CI runs `eval-baseline-validate` (JSONL structure) and `eval-retrieval-gate` (reindex + live RAG HTTP + all suites).
 
 ---
 

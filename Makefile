@@ -1,4 +1,4 @@
-.PHONY: build up down restart logs clean ps help test test-go test-py smoke eval-retrieval reindex
+.PHONY: build up down restart logs clean ps help test test-go test-py smoke eval-retrieval eval-retrieval-ci reindex
 
 # Имя проекта Docker Compose
 PROJECT_NAME := grounded_llm
@@ -85,6 +85,10 @@ eval-retrieval:
 	pip install requests
 	python scripts/run_rag_eval.py --suite default_en
 
+## Full retrieval gate (reindex + start Python + all suites) — same as CI job eval-retrieval-gate
+eval-retrieval-ci:
+	bash scripts/ci_eval_retrieval.sh
+
 ## Помощь по доступным командам
 help:
 	@echo "Доступные команды:"
@@ -105,5 +109,7 @@ help:
 	@echo "  make test-go        - Unit-тесты Go (server/)"
 	@echo "  make test-py        - Unit-тесты Python (tests/)"
 	@echo "  make test           - test-go + test-py"
+	@echo "  make eval-retrieval   - RAG eval (needs Python on :5000)"
+	@echo "  make eval-retrieval-ci - Reindex + RAG + all eval suites (local CI gate)"
 	@echo "  make smoke          - Smoke API (localhost:8080)"
 	@echo "  make help           - Эта справка"

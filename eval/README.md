@@ -3,7 +3,7 @@
 | File | Domain | Questions | Language |
 |------|--------|-----------|----------|
 | `rag_default_baseline.jsonl` | `default` | 12 | RU (legacy demo) |
-| `rag_default_en_baseline.jsonl` | `default` | 18 | EN (Phase A international) |
+| `rag_default_en_baseline.jsonl` | `default` | 18 | EN (international) |
 
 Line format:
 
@@ -17,7 +17,7 @@ Line format:
 }
 ```
 
-## Run
+## Run locally
 
 ```bash
 # Python RAG on :5000
@@ -27,6 +27,19 @@ python scripts/run_rag_eval.py --suite all
 make eval-retrieval
 ```
 
-Reports: `eval/results/`.
+## CI gates
 
-CI validates JSONL structure via `tests/test_eval_baseline.py` (EN suite requires ≥15 cases).
+| Job | What it checks |
+|-----|----------------|
+| `eval-baseline-validate` | JSONL structure (fast, no RAG) |
+| `eval-retrieval-gate` | Reindex Chroma → start Python → **all suites must pass** |
+
+Local equivalent of the retrieval gate:
+
+```bash
+pip install -r api/requirements.txt requests
+make eval-retrieval-ci
+# or: bash scripts/ci_eval_retrieval.sh
+```
+
+Reports: `eval/results/`.

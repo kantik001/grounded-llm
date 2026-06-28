@@ -95,7 +95,7 @@ We win on **trust, deployability, and measured RAG quality**—not on feature co
 - Platform core: RAG pipeline, citations, verify, admin, migrations
 - Multi-tenant API, streaming, OpenAPI, observability
 - English-first UI, locale packs, HR reference template
-- Eval baselines (EN + RU), smoke API in CI
+- Eval baselines (EN + RU), smoke API in CI, **retrieval eval gate in CI**
 
 ### Next — enterprise hardening (Phase B)
 
