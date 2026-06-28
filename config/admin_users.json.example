@@ -1,0 +1,17 @@
+[
+  {
+    "username": "admin",
+    "password_bcrypt": "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy",
+    "roles": ["admin"]
+  },
+  {
+    "username": "kb_editor",
+    "password": "changeme",
+    "roles": ["kb_editor"]
+  },
+  {
+    "username": "api_manager",
+    "password": "changeme",
+    "roles": ["api_manager"]
+  }
+]

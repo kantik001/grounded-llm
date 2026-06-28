@@ -13,7 +13,7 @@ func combinedAuthMiddleware(cfg *Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		key := strings.TrimSpace(c.GetHeader(headerAPIKey))
 		if key != "" {
-			label, ok := lookupAPIKey(key)
+			rec, ok := lookupAPIKey(key)
 			if !ok {
 				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 					"success": false,
@@ -21,11 +21,27 @@ func combinedAuthMiddleware(cfg *Config) gin.HandlerFunc {
 				})
 				return
 			}
+			roles := rec.Roles
+			if len(roles) == 0 {
+				roles = defaultAPIKeyRoles()
+			}
+			if !canUseChatAPI(roles) {
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+					"success": false,
+					"error":   "Forbidden: API key cannot access chat",
+				})
+				return
+			}
+			label := rec.Label
+			if label == "" {
+				label = "api"
+			}
 			actorID := apiKeyActorID(key)
 			c.Set(ctxKeyAPIActorID, actorID)
 			c.Set(ctxKeyTelegramUserID, actorID)
 			c.Set(ctxKeyTelegramUser, &TelegramUser{ID: actorID, Username: "api:" + label})
 			c.Set(ctxKeyAPIKeyLabel, label)
+			c.Set(ctxKeyAPIRoles, roles)
 			c.Next()
 			return
 		}

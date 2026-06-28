@@ -13,6 +13,7 @@ import (
 func main() {
 	config = loadConfig()
 	loadAPIKeys(config)
+	loadAdminUsers(config)
 	initTenantConfig(config)
 	logStartup(config)
 

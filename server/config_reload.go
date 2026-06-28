@@ -16,7 +16,10 @@ func reloadRuntimeConfig() error {
 	if err := loadAllLocaleBundles(); err != nil {
 		return err
 	}
-	log.Printf("Config reloaded: domains=%d", len(domainCatalog.Domains))
+	loadAPIKeys(config)
+	loadAdminUsers(config)
+	log.Printf("Config reloaded: domains=%d api_keys=%d admin_users=%d",
+		len(domainCatalog.Domains), len(apiKeyRegistry), len(adminUserRegistry))
 	return nil
 }
 
