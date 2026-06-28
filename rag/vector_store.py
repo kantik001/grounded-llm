@@ -33,7 +33,15 @@ def _has_kb_files(path: str) -> bool:
 
 
 def discover_kb_directories() -> Iterator[Tuple[str, str, str]]:
-    """Yield (tenant_id, domain_id, directory_path). Supports legacy data/{domain_id}/ layout."""
+    """Yield (tenant_id, domain_id, directory_path).
+
+  Layouts:
+  - Legacy: data/{domain_id}/*.{txt,pdf,docx}
+  - Multi-tenant: data/{tenant_id}/{domain_id}/*.{txt,pdf,docx}
+
+  When a folder name is both a legacy domain (e.g. ``default``) and a tenant
+  with nested domains (e.g. ``default/it_support/``), both are indexed.
+    """
     if not os.path.isdir(DATA_DIR):
         return
     domain_ids = set(list_domains().get("domains", {}).keys())
@@ -44,8 +52,9 @@ def discover_kb_directories() -> Iterator[Tuple[str, str, str]]:
             continue
         if name in domain_ids and _has_kb_files(path):
             yield DEFAULT_TENANT, name, path
-            continue
         for domain_id in sorted(os.listdir(path)):
+            if domain_id not in domain_ids:
+                continue
             dpath = os.path.join(path, domain_id)
             if os.path.isdir(dpath) and _has_kb_files(dpath):
                 yield name, domain_id, dpath
