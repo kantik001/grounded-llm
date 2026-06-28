@@ -24,6 +24,7 @@ HTTP Basic: `ADMIN_USER` / `ADMIN_PASSWORD`. Empty password → **503**.
 | GET | `handleAdminAuditLog` | admin audit trail (`?limit=&offset=&action=`) |
 | GET | `handleAdminQuotas` | tenant quota limits + usage (`?tenant_id=`) |
 | GET | `handleAdminAPIKeys` | API key labels + roles, admin user list (no secrets) |
+| GET | `/admin/auth/*` | OIDC SSO login/callback/logout (public) |
 
 ### `GET /admin/articles`
 

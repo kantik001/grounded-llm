@@ -29,53 +29,11 @@ func isKnowledgeFile(name string) bool {
 	return knowledgeFileExtensions[strings.ToLower(filepath.Ext(name))]
 }
 
-// Basic Auth для маршрутов /admin (ADMIN_USER / ADMIN_PASSWORD).
-func adminBasicAuth(cfg *Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if cfg.AdminPassword == "" && len(adminUserRegistry) == 0 {
-			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{
-				"success": false,
-				"error":   "Admin UI disabled: set ADMIN_PASSWORD or ADMIN_USERS_FILE",
-			})
-			return
-		}
-		user, pass, ok := c.Request.BasicAuth()
-		if !ok {
-			recordAdminAudit(c, auditOpts{
-				Action:  auditActionLoginFailed,
-				Success: false,
-			})
-			c.Header("WWW-Authenticate", `Basic realm="Grounded LLM Admin"`)
-			c.AbortWithStatus(http.StatusUnauthorized)
-			return
-		}
-		roles, authed := authenticateAdminUser(user, pass)
-		if !authed {
-			recordAdminAudit(c, auditOpts{
-				Action:  auditActionLoginFailed,
-				Actor:   user,
-				Success: false,
-			})
-			c.Header("WWW-Authenticate", `Basic realm="Grounded LLM Admin"`)
-			c.AbortWithStatus(http.StatusUnauthorized)
-			return
-		}
-		c.Set(ctxKeyAdminActor, user)
-		c.Set(ctxKeyAdminRoles, roles)
-		if isAdminStatusCheck(c) {
-			recordAdminAudit(c, auditOpts{
-				Action:  auditActionLogin,
-				Actor:   user,
-				Success: true,
-			})
-		}
-		c.Next()
-	}
-}
-
-// Регистрирует админские маршруты: upload, reindex RAG.
+// Admin auth: OIDC session cookie and/or HTTP Basic (ADMIN_USER / ADMIN_PASSWORD).
 func registerAdminRoutes(router *gin.Engine, cfg *Config) {
-	auth := adminBasicAuth(cfg)
+	registerOIDCAuthRoutes(router.Group("/admin/auth"))
+	registerOIDCAuthRoutes(router.Group("/api/admin/auth"))
+	auth := adminAuthMiddleware(cfg)
 	registerAdminRouteGroup(router.Group("/admin"), auth)
 	registerAdminRouteGroup(router.Group("/api/admin"), auth)
 }

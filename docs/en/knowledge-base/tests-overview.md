@@ -33,6 +33,7 @@ Env: `DOMAINS_CONFIG_PATH=config/domains.json`
 | `admin_test.go` | safe filename (txt/pdf/docx) |
 | `audit_test.go` | audit log query parsing, client IP, status check |
 | `quota_test.go` | tenant storage/domain/message quota helpers |
+| `oidc_test.go` | OIDC session signing, role mapping from claims |
 | `auth_telegram_test.go` | initData HMAC |
 | `locale_test.go` | locale normalization, header resolution |
 

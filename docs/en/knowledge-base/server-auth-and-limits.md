@@ -11,7 +11,7 @@
 |------|-----|-----|
 | **End user** | Telegram Web App | `X-Telegram-Init-Data` → HMAC validation |
 | **Integrator** | HTTP clients, bots | `X-API-Key` (env `API_KEYS` or `API_KEYS_FILE`) |
-| **Admin** | Browser `/admin.html` | HTTP Basic — legacy `ADMIN_USER`/`ADMIN_PASSWORD` or `ADMIN_USERS_FILE` (RBAC) |
+| **Admin** | Browser `/admin.html` | HTTP Basic, **OIDC SSO**, or `ADMIN_USERS_FILE` (RBAC) |
 
 This article covers **Telegram + API keys + CORS + rate limit**.
 
@@ -61,6 +61,17 @@ Tests: `auth_telegram_test.go`.
 `admin` is superuser on admin routes. Route guards in `admin.go`; chat API checks API key roles.
 
 Full guide: [config/RBAC.md](../../../config/RBAC.md).
+
+---
+
+## OIDC SSO (`oidc_*.go`, `admin_session.go`)
+
+Optional **OpenID Connect** for admin panel (`OIDC_ENABLED=true`). Chat API still uses Telegram / API keys.
+
+- Login: `GET /api/admin/auth/login`
+- Callback: `GET /api/admin/auth/callback`
+- Logout: `POST /api/admin/auth/logout`
+- Roles from IdP groups/emails → [config/SSO.md](../../../config/SSO.md)
 
 ---
 

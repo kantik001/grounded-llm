@@ -1,0 +1,12 @@
+{
+  "default_roles": ["kb_editor"],
+  "claim": "groups",
+  "groups": {
+    "grounded-admins": ["admin"],
+    "grounded-editors": ["kb_editor"],
+    "grounded-api-managers": ["api_manager"]
+  },
+  "emails": {
+    "admin@example.com": ["admin"]
+  }
+}
