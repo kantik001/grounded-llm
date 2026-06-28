@@ -108,6 +108,9 @@ func logStartup(cfg *Config) {
 	} else if cfg.AdminPassword != "" {
 		log.Printf("Admin auth: legacy single user %q (role: admin)", cfg.AdminUser)
 	}
+	if len(tenantQuotaRegistry) > 0 {
+		log.Printf("Tenant quotas: %d tenant(s)", len(tenantQuotaRegistry))
+	}
 	log.Printf("Default tenant: %s", cfg.DefaultTenantID)
 	log.Printf("Default locale: %s", cfg.DefaultLocale)
 	log.Printf("CORS origins: %v", cfg.CORSAllowedOrigins)

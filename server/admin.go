@@ -91,6 +91,7 @@ func registerAdminRouteGroup(g *gin.RouterGroup, auth gin.HandlerFunc) {
 	kb.DELETE("/articles", handleAdminDeleteArticle)
 	kb.POST("/upload", handleAdminUpload)
 	kb.POST("/reindex", handleAdminReindex)
+	kb.GET("/quotas", handleAdminQuotas)
 
 	adminOnly := g.Group("")
 	adminOnly.Use(requireAdminRoles(RoleAdmin))
@@ -210,6 +211,14 @@ func handleAdminUpload(c *gin.Context) {
 		return
 	}
 	dir := kbDataDir(adminTenantID(c), domainID)
+	if err := checkDomainQuota(adminTenantID(c), domainID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error(), "code": "quota_exceeded"})
+		return
+	}
+	if err := checkStorageQuota(adminTenantID(c), fh.Size); err != nil {
+		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"success": false, "error": err.Error(), "code": "quota_exceeded"})
+		return
+	}
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
 		return

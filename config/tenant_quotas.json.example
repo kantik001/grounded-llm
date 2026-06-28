@@ -1,0 +1,8 @@
+[
+  {
+    "tenant_id": "default",
+    "messages_per_day": 10000,
+    "storage_mb": 512,
+    "max_domains": 20
+  }
+]
