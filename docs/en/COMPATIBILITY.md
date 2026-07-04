@@ -22,8 +22,9 @@ Last updated: Phase 4 prep (2026-07)
 | Component | Pin | Location |
 |-----------|-----|----------|
 | **Embedding model** | `intfloat/multilingual-e5-small` | `rag/vector_store.py` |
-| **Vector store** | Chroma (local persist) | `chroma_db/` volume |
+| **Vector store** | Chroma (default) or Qdrant (optional) | `VECTOR_STORE`, see [VECTOR_STORE.md](./docs/en/VECTOR_STORE.md) |
 | **Chunking** | 500 / overlap 50 | `RecursiveCharacterTextSplitter` |
+| **Hybrid rerank** | Keyword overlap (optional) | `RAG_RETRIEVAL_MODE=hybrid` |
 
 Changing the embedding model requires **full reindex** and eval gate re-run. Document the change in CHANGELOG and bump compatibility table.
 

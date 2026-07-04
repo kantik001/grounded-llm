@@ -21,6 +21,16 @@
       "emoji": "🛠️",
       "rag_enabled": true,
       "rag_k": 12
+    },
+    "legal_faq": {
+      "name": "Legal FAQ",
+      "names": {
+        "en": "Legal FAQ",
+        "ru": "Юридический FAQ"
+      },
+      "emoji": "⚖️",
+      "rag_enabled": true,
+      "rag_k": 8
     }
   }
 }

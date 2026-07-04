@@ -1,0 +1,13 @@
+Intellectual Property and Work Product Policy
+
+Ownership: All work product created by employees in the scope of employment belongs to the company, including code, designs, documentation, and inventions.
+
+Prior inventions: Employees must disclose prior inventions on the IP disclosure form at onboarding.
+
+Open source: Use of open-source software in products requires approval through the OSS review process; copyleft licenses need Legal sign-off.
+
+Third-party materials: Do not incorporate third-party content (images, fonts, datasets) without a verified license on file.
+
+Patents and trademarks: Contact Legal before filing or registering IP on behalf of the company.
+
+Contractors: All contractor agreements must include IP assignment clauses using the standard contractor addendum.

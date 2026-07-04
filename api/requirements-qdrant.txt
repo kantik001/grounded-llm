@@ -1,0 +1,4 @@
+# Optional Qdrant vector store backend (VECTOR_STORE=qdrant)
+-r requirements.txt
+langchain-qdrant>=0.2.0
+qdrant-client>=1.9.0

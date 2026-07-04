@@ -1,0 +1,13 @@
+Contract Signing and Legal Review Policy
+
+Legal review required: All vendor contracts with a total value exceeding USD 10,000 per year require Legal review before signature.
+
+Signature authority: Only employees with delegated signing authority listed in the Corporate Authority Matrix may execute binding agreements.
+
+Prohibited terms: Business units may not agree to unlimited liability, automatic renewal beyond 12 months, or exclusive jurisdiction outside approved regions without Legal approval.
+
+Standard templates: Use pre-approved templates from the Legal portal for NDAs, MSAs, and DPAs whenever possible.
+
+Turnaround: Standard contract review SLA is five (5) business days; expedited review requires VP approval.
+
+Record keeping: Signed contracts must be uploaded to the Contract Repository within two (2) business days of execution.

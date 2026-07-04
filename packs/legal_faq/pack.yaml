@@ -1,0 +1,36 @@
+# Grounded LLM official template pack manifest (v1)
+pack: legal_faq
+version: "1.0.0"
+description: Legal and compliance FAQ assistant (NDA, privacy, contracts, IP, reporting)
+
+domain:
+  id: legal_faq
+  emoji: "⚖️"
+  name: Legal FAQ
+  names:
+    en: Legal FAQ
+    ru: Юридический FAQ
+  rag_enabled: true
+  rag_k: 8
+
+locale: en
+
+prompts:
+  rag_system: >-
+    You are an internal legal and compliance assistant.
+    Answer only from the provided policy documents. Use clear English.
+    Do not provide legal advice — cite internal policies only.
+  rag_task_intro: Answer strictly based on the legal/compliance knowledge base context.
+
+onboarding:
+  - How long does our standard NDA last?
+  - Who is our Data Protection Officer?
+  - When is legal review required for contracts?
+
+few_shot:
+  general: |
+    Sample question: "How long does our standard NDA last?"
+    Sample answer: The standard mutual NDA remains in effect for two years after the disclosure date unless terminated earlier in writing.
+
+eval:
+  suite: legal_faq

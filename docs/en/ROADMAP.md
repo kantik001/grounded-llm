@@ -271,21 +271,21 @@ The previous list (Helm, SaaS, vision pack, dashboard) is **split across Phases 
 
 | Pillar | Status | Phase |
 |--------|--------|-------|
-| 1 Spec & conformance | Policy + tests; **Spec v1 + CLI → Phase 5** | 4 → 5 |
-| 2 Quality science | Eval + adversarial; **public bench → Phase 5** | 4 → 5 |
-| 3 Reference deploy | Docker, Helm, compatibility matrix | 4 ✅ |
-| 4 Template marketplace | HR, IT packs; legal pack → Phase 6 | 2 → 6 |
-| 5 Governance & community | CONTRIBUTING; **RFC → Phase 5** | 5 |
+| 1 Spec & conformance | Spec v1, conformance CLI, policies | 4 → 5 ✅ |
+| 2 Quality science | Eval, adversarial, benchmark, **hybrid rerank** | 4 → 6 |
+| 3 Reference deploy | Docker, Helm, **Terraform AWS**, vector adapters | 4 → 6 ✅ |
+| 4 Template marketplace | HR, IT, **Legal FAQ** packs | 2 → 6 ✅ |
+| 5 Governance & community | CONTRIBUTING, RFC, Spec v1 | 5 ✅ |
 
 Strategy: [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md)
 
 ---
 
-## Phase 5 — Standard publication (in progress)
+## Phase 5 — Standard publication ✅
 
 **Goal:** Publish checkable standard — spec v1, conformance CLI, benchmark, RFC.
 
-**Plan:** [PHASE_5.md](./PHASE_5.md)
+**Plan:** [PHASE_5.md](./PHASE_5.md) — **complete**
 
 | Item | Artifact |
 |------|----------|
@@ -293,9 +293,24 @@ Strategy: [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md)
 | Conformance CLI | `python -m conformance check` |
 | RFC process | [RFC.md](./RFC.md), [RFC-0001](./rfcs/RFC-0001-grounded-compatible.md) |
 | Benchmark | [BENCHMARK.md](./BENCHMARK.md) |
-| Strategy | [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md) |
+| Public site | [site/](../../site/) (GitHub Pages) |
 
-**Branch:** `feature/phase-5-standard-publication`
+---
+
+## Phase 6 — Ecosystem scale (in progress)
+
+**Goal:** Template growth, retrieval options, cloud deploy reference.
+
+**Plan:** [PHASE_6.md](./PHASE_6.md)
+
+| Item | Artifact |
+|------|----------|
+| Legal FAQ pack | [domain-packs/LEGAL_FAQ.md](./domain-packs/LEGAL_FAQ.md) |
+| Vector adapter | [VECTOR_STORE.md](./VECTOR_STORE.md) |
+| Hybrid retrieval | `RAG_RETRIEVAL_MODE=hybrid` |
+| AWS Terraform | [TERRAFORM.md](./TERRAFORM.md) |
+
+**Branch:** `feature/phase-6-ecosystem-scale`
 
 ---
 

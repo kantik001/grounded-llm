@@ -4,5 +4,8 @@
   },
   "it_support": {
     "general": "Sample question: \"How do I request VPN access?\"\nSample answer: Submit the VPN Access form in the IT Portal. Manager approval is required; access is provisioned within one business day."
+  },
+  "legal_faq": {
+    "general": "Sample question: \"How long does our standard NDA last?\"\nSample answer: The standard mutual NDA remains in effect for two years after the disclosure date unless terminated earlier in writing.\n"
   }
 }

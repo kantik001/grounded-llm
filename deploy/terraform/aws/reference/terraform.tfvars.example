@@ -1,0 +1,18 @@
+# Copy to terraform.tfvars and customize before apply.
+# Never commit terraform.tfvars with real secrets.
+
+name_prefix = "grounded-llm"
+aws_region  = "eu-west-1"
+
+db_password = "CHANGE_ME_STRONG_PASSWORD"
+
+# Secrets Manager ARNs (create these before apply)
+llm_api_key_secret_arn       = "arn:aws:secretsmanager:eu-west-1:123456789012:secret:grounded/llm-api-key"
+admin_secret_arn             = "arn:aws:secretsmanager:eu-west-1:123456789012:secret:grounded/admin-secret"
+rag_service_token_secret_arn = "arn:aws:secretsmanager:eu-west-1:123456789012:secret:grounded/rag-token"
+
+server_image = "ghcr.io/kantik001/grounded-llm-server:latest"
+python_image = "ghcr.io/kantik001/grounded-llm-python:latest"
+webapp_image = "ghcr.io/kantik001/grounded-llm-webapp:latest"
+
+vector_store = "chroma"

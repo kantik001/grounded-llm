@@ -1,0 +1,11 @@
+Mutual Non-Disclosure Agreement (Standard Template)
+
+Duration: The standard mutual NDA remains in effect for two (2) years after the date of last disclosure unless terminated earlier in writing by either party.
+
+Confidential Information: Includes business plans, customer lists, pricing, source code, and any material marked "Confidential" or reasonably understood to be confidential.
+
+Permitted disclosures: Information already public, independently developed, or required by law (with prompt notice to the disclosing party).
+
+Return or destroy: Upon request or termination, recipients must return or certify destruction of confidential materials within 30 calendar days.
+
+Governing law: Internal policy references the jurisdiction selected in the master services agreement for the relevant vendor relationship.
