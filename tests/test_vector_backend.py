@@ -3,7 +3,6 @@
 import os
 
 import pytest
-
 from rag.vector_backend import get_vector_backend, reset_vector_backend
 
 
