@@ -155,6 +155,9 @@ make eval-retrieval            # RAG baseline only (needs Python already on :500
 | [docs/en/QUICKSTART_SDK.md](docs/en/QUICKSTART_SDK.md) | SDK + CLI in 5 minutes |
 | [docs/en/COMPARISON.md](docs/en/COMPARISON.md) | vs alternatives (honest) |
 | [docs/en/CASE_STUDY_HR_PILOT.md](docs/en/CASE_STUDY_HR_PILOT.md) | HR pilot KPI template |
+| [docs/en/K8S_DEPLOY.md](docs/en/K8S_DEPLOY.md) | Helm / Kubernetes deploy |
+| [docs/en/TRUST_CENTER.md](docs/en/TRUST_CENTER.md) | Security review summary |
+| [docs/en/BACKUP_RESTORE.md](docs/en/BACKUP_RESTORE.md) | Postgres, Chroma, data backup |
 | [docs/en/](docs/en/) | Architecture, deploy, roadmap, templates |
 | [docs/ru/](docs/ru/) | Russian docs (legacy locale) |
 | [GOOD_FIRST_ISSUES.md](GOOD_FIRST_ISSUES.md) | Starter contributions |

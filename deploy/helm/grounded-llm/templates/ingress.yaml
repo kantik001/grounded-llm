@@ -1,0 +1,28 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "grounded-llm.fullname" . }}
+  labels:
+    {{- include "grounded-llm.labels" . | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "grounded-llm.fullname" . }}-webapp
+                port:
+                  number: {{ .Values.webapp.port }}
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "grounded-llm.fullname" . }}-server
+                port:
+                  number: {{ .Values.server.port }}
+{{- end }}

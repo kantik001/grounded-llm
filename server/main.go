@@ -77,6 +77,7 @@ func main() {
 	registerAdminRoutes(router, config)
 	registerProtectedRoutes(router, config, rl)
 	startConfigReloadWatcher()
+	startRetentionWorker(config)
 
 	serverAddr := fmt.Sprintf(":%s", config.ServerPort)
 	log.Printf("Server starting on port %s", config.ServerPort)

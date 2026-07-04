@@ -30,6 +30,7 @@ services:
       - DOMAINS_CONFIG_PATH=/config/domains.json
       - FORCE_RAG_REINDEX=${FORCE_RAG_REINDEX:-false}
       - ADMIN_SECRET=${ADMIN_SECRET:-}
+      - RAG_SERVICE_TOKEN=${RAG_SERVICE_TOKEN:-}
       - DEFAULT_LOCALE=${DEFAULT_LOCALE:-en}
     volumes:
       - chroma_data:/app/chroma_db
@@ -74,6 +75,10 @@ services:
       - ADMIN_USER=${ADMIN_USER:-admin}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
       - ADMIN_SECRET=${ADMIN_SECRET:-}
+      - RAG_SERVICE_TOKEN=${RAG_SERVICE_TOKEN:-}
+      - MESSAGE_RETENTION_DAYS=${MESSAGE_RETENTION_DAYS:-0}
+      - SESSION_RETENTION_DAYS=${SESSION_RETENTION_DAYS:-0}
+      - RETENTION_INTERVAL_HOURS=${RETENTION_INTERVAL_HOURS:-24}
     volumes:
       - uploads_data:/data/uploads
       - ./data:/app/data
@@ -85,7 +90,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/health"]
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080/ready"]
       interval: 30s
       timeout: 10s
       retries: 3

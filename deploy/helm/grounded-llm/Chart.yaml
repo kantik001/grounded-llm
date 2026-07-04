@@ -1,0 +1,12 @@
+apiVersion: v2
+name: grounded-llm
+description: Document-grounded LLM assistant platform (Go API + Python RAG + web UI)
+type: application
+version: 0.3.0
+appVersion: "0.3.0"
+keywords:
+  - rag
+  - llm
+  - on-prem
+maintainers:
+  - name: Grounded LLM contributors

@@ -1,0 +1,56 @@
+{{- if .Values.webapp.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "grounded-llm.fullname" . }}-webapp
+  labels:
+    {{- include "grounded-llm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: webapp
+spec:
+  ports:
+    - port: {{ .Values.webapp.port }}
+      targetPort: http
+      name: http
+  selector:
+    {{- include "grounded-llm.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: webapp
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "grounded-llm.fullname" . }}-webapp
+  labels:
+    {{- include "grounded-llm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: webapp
+spec:
+  replicas: {{ .Values.webapp.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "grounded-llm.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: webapp
+  template:
+    metadata:
+      labels:
+        {{- include "grounded-llm.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: webapp
+    spec:
+      containers:
+        - name: webapp
+          image: "{{ .Values.webapp.image.repository }}:{{ .Values.webapp.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.webapp.port }}
+              name: http
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+{{- end }}

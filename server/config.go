@@ -34,6 +34,10 @@ type Config struct {
 	DefaultLocale          string
 	LLMMock                bool
 	RAGMock                bool
+	RAGServiceToken        string
+	MessageRetentionDays   int
+	SessionRetentionDays   int
+	RetentionIntervalHours int
 }
 
 var config *Config
@@ -51,6 +55,18 @@ func loadConfig() *Config {
 	rateLimit, _ := strconv.Atoi(getEnv("RATE_LIMIT_REQUESTS_PER_MINUTE", "30"))
 	if rateLimit < 0 {
 		rateLimit = 0
+	}
+	msgRetention, _ := strconv.Atoi(getEnv("MESSAGE_RETENTION_DAYS", "0"))
+	if msgRetention < 0 {
+		msgRetention = 0
+	}
+	sessRetention, _ := strconv.Atoi(getEnv("SESSION_RETENTION_DAYS", "0"))
+	if sessRetention < 0 {
+		sessRetention = 0
+	}
+	retentionHours, _ := strconv.Atoi(getEnv("RETENTION_INTERVAL_HOURS", "24"))
+	if retentionHours < 1 {
+		retentionHours = 24
 	}
 
 	return &Config{
@@ -76,6 +92,10 @@ func loadConfig() *Config {
 		DefaultLocale:          getEnv("DEFAULT_LOCALE", "en"),
 		LLMMock:                isTruthyEnv("LLM_MOCK"),
 		RAGMock:                isTruthyEnv("RAG_MOCK"),
+		RAGServiceToken:        getEnv("RAG_SERVICE_TOKEN", ""),
+		MessageRetentionDays:   msgRetention,
+		SessionRetentionDays:   sessRetention,
+		RetentionIntervalHours: retentionHours,
 	}
 }
 
@@ -101,6 +121,13 @@ func logStartup(cfg *Config) {
 	}
 	if cfg.RAGMock {
 		log.Printf("RAG: MOCK mode (skips Python retrieval service)")
+	}
+	if cfg.RAGServiceToken != "" {
+		log.Printf("RAG service token: configured (Python internal auth enabled)")
+	}
+	if cfg.MessageRetentionDays > 0 || cfg.SessionRetentionDays > 0 {
+		log.Printf("Retention: messages=%d days, sessions=%d days, interval=%dh",
+			cfg.MessageRetentionDays, cfg.SessionRetentionDays, cfg.RetentionIntervalHours)
 	}
 	if cfg.TelegramAuthDisabled {
 		log.Printf("Telegram auth: DISABLED (dev mode only)")
