@@ -1,5 +1,5 @@
 # Python ML/RAG service (retrieval only; LLM orchestration in Go)
-python-dotenv==1.2.1
+python-dotenv==1.2.2
 flask>=3.0.0
 flask-cors>=4.0.0
 
