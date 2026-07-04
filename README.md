@@ -158,6 +158,10 @@ make eval-retrieval            # RAG baseline only (needs Python already on :500
 | [docs/en/K8S_DEPLOY.md](docs/en/K8S_DEPLOY.md) | Helm / Kubernetes deploy |
 | [docs/en/TRUST_CENTER.md](docs/en/TRUST_CENTER.md) | Security review summary |
 | [docs/en/BACKUP_RESTORE.md](docs/en/BACKUP_RESTORE.md) | Postgres, Chroma, data backup |
+| [docs/en/PHASE_4.md](docs/en/PHASE_4.md) | Next: spec, conformance, RTBF |
+| [docs/en/API_DEPRECATION_POLICY.md](docs/en/API_DEPRECATION_POLICY.md) | `/api/v1` stability & sunset |
+| [docs/en/COMPATIBILITY.md](docs/en/COMPATIBILITY.md) | Supported stack matrix |
+| [conformance/](conformance/) | API + retrieval conformance tests |
 | [docs/en/](docs/en/) | Architecture, deploy, roadmap, templates |
 | [docs/ru/](docs/ru/) | Russian docs (legacy locale) |
 | [GOOD_FIRST_ISSUES.md](GOOD_FIRST_ISSUES.md) | Starter contributions |

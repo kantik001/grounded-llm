@@ -82,22 +82,36 @@ def check_retrieval(case: Dict[str, Any], ctx: Dict[str, Any]) -> Dict[str, Any]
     context_text = (ctx.get("context") or "").lower()
     fragments = ctx.get("fragments") or []
 
-    if case.get("expect_out_of_scope"):
-        # Допускаем soft fail от RAG или короткий контекст
-        ok = ok or (not context_text.strip()) or _is_out_of_scope_error(ctx.get("error") or "")
-    else:
-        if case.get("expect_context", True) and ok:
-            ok = bool(context_text.strip()) or len(fragments) > 0
-
     missing = []
     for sub in case.get("expect_contains") or []:
         if sub.lower() not in context_text:
             missing.append(sub)
 
+    forbidden = []
+    for sub in case.get("expect_not_contains") or []:
+        if sub.lower() in context_text:
+            forbidden.append(sub)
+
+    if case.get("expect_out_of_scope"):
+        soft = (
+            (not context_text.strip() and len(fragments) == 0)
+            or _is_out_of_scope_error(ctx.get("error") or "")
+        )
+        if case.get("expect_not_contains"):
+            ok = soft or not forbidden
+        else:
+            ok = soft or ok
+    else:
+        if case.get("expect_context", True) and ok:
+            ok = bool(context_text.strip()) or len(fragments) > 0
+
+    passed = ok and not missing and not forbidden
+
     return {
-        "passed": ok and not missing,
+        "passed": passed,
         "retrieval_ok": ctx.get("success"),
         "missing_in_context": missing,
+        "forbidden_in_context": forbidden,
         "fragment_count": len(fragments),
     }
 
@@ -184,7 +198,9 @@ def main() -> int:
             exit_code = 1
             for c in summary["cases"]:
                 if not c["check"]["passed"]:
-                    print(f"  FAIL: {c['question'][:60]}… missing={c['check']['missing_in_context']}")
+                    miss = c["check"]["missing_in_context"]
+                    forbid = c["check"].get("forbidden_in_context") or []
+                    print(f"  FAIL: {c['question'][:60]}… missing={miss} forbidden={forbid}")
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")

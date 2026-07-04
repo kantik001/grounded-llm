@@ -57,6 +57,7 @@ func registerAdminRouteGroup(g *gin.RouterGroup, auth gin.HandlerFunc) {
 	adminOnly.GET("/feedback", handleAdminFeedbackSummary)
 	adminOnly.GET("/analytics", handleAdminAnalytics)
 	adminOnly.GET("/audit-log", handleAdminAuditLog)
+	adminOnly.DELETE("/tenants/:tenant_id", handleAdminPurgeTenant)
 
 	apiMgr := g.Group("")
 	apiMgr.Use(requireAdminRoles(RoleAPIManager))

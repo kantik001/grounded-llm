@@ -51,10 +51,14 @@ grounded-llm chat "How many vacation days?"   # after server is up
 | `eval-retrieval-gate` | Reindex + retrieval eval (all suites) |
 | `smoke-api` | Health, domains, session, **full `/message` path** (with `LLM_MOCK` + `RAG_MOCK`) |
 | `docker-build` | Build all Docker images |
+| `secret-scan` | gitleaks secret detection |
+| `conformance-spec` | OpenAPI conformance (offline spec tests) |
 
 Dependabot opens weekly dependency PRs.
 
 > **CodeQL:** optional manual/weekly workflow (`.github/workflows/codeql.yml`). Not gated on PRs. Turn on [Code scanning](https://docs.github.com/en/code-security/code-scanning) in repo settings, then set `upload: true` and add `pull_request` trigger if desired.
+
+> **Gitleaks:** `.github/workflows/secret-scan.yml` runs the gitleaks CLI with `.gitleaks.toml` (allowlist for documented dev credentials). Do not commit real API keys or production secrets.
 
 **Recommended local checks before a PR:**
 
