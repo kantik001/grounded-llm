@@ -58,17 +58,16 @@ Run gate: `make eval-retrieval-ci`
 
 ---
 
-## Phase 4 (after merge to main)
+## Phase 5 (standard publication)
 
-See [docs/en/PHASE_4.md](docs/en/PHASE_4.md).
+See [docs/en/PHASE_5.md](docs/en/PHASE_5.md).
 
 | # | Task | Skills |
 |---|------|--------|
-| 16 | Implement `expect_not_contains` in `run_rag_eval.py` for adversarial suite | Python |
-| 17 | Wire adversarial suite into CI retrieval gate | CI + eval |
-| 18 | Implement `DELETE /api/admin/tenants/:id` per [TENANT_PURGE.md](docs/en/TENANT_PURGE.md) | Go + SQL |
-| 19 | Add conformance HTTP job to CI (server + mocks) | GitHub Actions |
-| 20 | Add 5 E2E adversarial cases via `/message` (verify + citations) | Go + eval |
+| 21 | Add legal FAQ template pack + eval JSONL | YAML + docs |
+| 22 | Vector store adapter interface (Chroma → Qdrant stub) | Python + Go |
+| 23 | GitHub Pages landing from `docs/en/spec/` | Markdown |
+| 24 | Expand conformance CLI `--json` output for integrators | Python |
 
 ---
 

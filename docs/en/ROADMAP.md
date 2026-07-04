@@ -259,22 +259,43 @@ The previous list (Helm, SaaS, vision pack, dashboard) is **split across Phases 
 
 ---
 
-## Phase 4 — Spec, trust & conformance (next)
+## Phase 4 — Spec, trust & conformance ✅
 
 **Goal:** contract-stable platform for integrators and security reviewers.
 
-**Plan:** [PHASE_4.md](./PHASE_4.md)
+**Plan:** [PHASE_4.md](./PHASE_4.md) — **complete**
+
+---
+
+## Five pillars — status
+
+| Pillar | Status | Phase |
+|--------|--------|-------|
+| 1 Spec & conformance | Policy + tests; **Spec v1 + CLI → Phase 5** | 4 → 5 |
+| 2 Quality science | Eval + adversarial; **public bench → Phase 5** | 4 → 5 |
+| 3 Reference deploy | Docker, Helm, compatibility matrix | 4 ✅ |
+| 4 Template marketplace | HR, IT packs; legal pack → Phase 6 | 2 → 6 |
+| 5 Governance & community | CONTRIBUTING; **RFC → Phase 5** | 5 |
+
+Strategy: [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md)
+
+---
+
+## Phase 5 — Standard publication (in progress)
+
+**Goal:** Publish checkable standard — spec v1, conformance CLI, benchmark, RFC.
+
+**Plan:** [PHASE_5.md](./PHASE_5.md)
 
 | Item | Artifact |
 |------|----------|
-| API deprecation policy | [API_DEPRECATION_POLICY.md](./API_DEPRECATION_POLICY.md) |
-| Compatibility matrix | [COMPATIBILITY.md](./COMPATIBILITY.md) |
-| Conformance suite | [conformance/](../../conformance/) |
-| Secret scanning | `.github/workflows/secret-scan.yml` |
-| Adversarial eval pack | `eval/rag_adversarial_baseline.jsonl` |
-| Tenant purge (RTBF) | [TENANT_PURGE.md](./TENANT_PURGE.md) — implement endpoint |
+| Grounded Spec v1 | [spec/GROUNDED_SPEC_v1.md](./spec/GROUNDED_SPEC_v1.md) |
+| Conformance CLI | `python -m conformance check` |
+| RFC process | [RFC.md](./RFC.md), [RFC-0001](./rfcs/RFC-0001-grounded-compatible.md) |
+| Benchmark | [BENCHMARK.md](./BENCHMARK.md) |
+| Strategy | [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md) |
 
-**Start after:** Phase 3 merge to `main` → branch `feature/phase-4-spec-trust`.
+**Branch:** `feature/phase-5-standard-publication`
 
 ---
 

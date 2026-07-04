@@ -80,7 +80,12 @@ test: test-go test-py
 ## OpenAPI conformance (offline, no server)
 conformance-spec:
 	pip install -r conformance/requirements.txt
-	pytest conformance/test_openapi_spec.py -v --tb=short
+	python -m conformance spec
+
+## spec + HTTP (requires running server)
+conformance-check:
+	pip install -r conformance/requirements.txt
+	python -m conformance check --url $(or $(URL),http://127.0.0.1:8080)
 
 ## Full HTTP conformance (requires running server: CONFORMANCE_BASE_URL)
 conformance-http:

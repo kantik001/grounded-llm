@@ -65,6 +65,16 @@ jobs:
           body: |
             See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CHANGELOG.md) for details.
 
+            ## Conformance (Spec v1)
+
+            Verify this release against [GROUNDED_SPEC_v1.md](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/docs/en/spec/GROUNDED_SPEC_v1.md):
+
+            ```bash
+            pip install -r conformance/requirements.txt
+            python -m conformance spec --json
+            python -m conformance check --url http://YOUR_HOST:8080
+            ```
+
             ## Container images
 
             ```bash

@@ -77,7 +77,7 @@ jobs:
       - name: OpenAPI conformance (offline)
         run: |
           pip install -r conformance/requirements.txt
-          pytest conformance/test_openapi_spec.py -v --tb=short
+          python -m conformance spec
 
   python-test:
     runs-on: ubuntu-latest
@@ -91,6 +91,7 @@ jobs:
           cache-dependency-path: |
             tests/requirements-test.txt
             api/requirements.txt
+            conformance/requirements.txt
 
       - name: Install test dependencies
         run: pip install -r tests/requirements-test.txt
