@@ -8,5 +8,10 @@
     "How do I reset my password?",
     "How do I request VPN access?",
     "What is the P1 ticket response time?"
+  ],
+  "legal_faq": [
+    "How long does our standard NDA last?",
+    "Who is our Data Protection Officer?",
+    "When is legal review required for contracts?"
   ]
 }

@@ -1,0 +1,13 @@
+Data Privacy and GDPR Compliance Policy
+
+Data Protection Officer (DPO): privacy@company.com — contact for subject access requests and data processing questions.
+
+Personal data retention: Employee HR records are retained for seven (7) years after employment ends unless a longer period is required by law.
+
+Lawful bases: Processing is based on contract performance, legal obligation, or legitimate interest as documented in the Records of Processing Activities (ROPA).
+
+Cross-border transfers: Transfers outside the EEA require Standard Contractual Clauses (SCCs) or an adequacy decision approved by Legal.
+
+Breach notification: Suspected personal data breaches must be reported to the DPO within 24 hours of discovery.
+
+Employee training: Mandatory privacy awareness training is required annually for all staff with access to personal data.
