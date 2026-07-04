@@ -34,6 +34,8 @@ See [docs/en/DEPLOY.md](docs/en/DEPLOY.md) and [docs/en/knowledge-base/](docs/en
 make test                 # Go + Python unit tests
 make eval-retrieval-ci    # Full retrieval gate (reindex + eval, same as CI)
 make smoke                # Smoke API against localhost:8080
+pip install -e "sdk/python[dev]"   # Python SDK + CLI
+grounded-llm chat "How many vacation days?"   # after server is up
 ```
 
 **CI runs on every push/PR:**

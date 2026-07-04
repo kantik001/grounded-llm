@@ -70,6 +70,11 @@ test-py:
 	pip install -r tests/requirements-test.txt
 	pytest tests/ -v
 
+## Python SDK tests
+test-sdk:
+	pip install -e "sdk/python[dev]"
+	pytest sdk/python/tests/ -v
+
 test: test-go test-py
 
 ## Smoke API (localhost:8080, TELEGRAM_AUTH_DISABLED=true)

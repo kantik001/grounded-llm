@@ -89,6 +89,15 @@ Legacy scaffold: `./scripts/init_domain.sh hr_policies default` (data dir only).
 
 Reference templates: [HR domain pack](docs/en/domain-packs/HR.md) · [IT Support pack](docs/en/domain-packs/IT_SUPPORT.md) · [packs/](packs/)
 
+**Python SDK (integrators):**
+
+```bash
+pip install -e "sdk/python[dev]"
+grounded-llm chat "How many vacation days?" --domain default
+```
+
+Guide: [docs/en/QUICKSTART_SDK.md](docs/en/QUICKSTART_SDK.md) · Example: [examples/python/chat_basic.py](examples/python/chat_basic.py)
+
 ---
 
 ## API highlights
@@ -123,8 +132,12 @@ make eval-retrieval            # RAG baseline only (needs Python already on :500
 | Doc | Description |
 |-----|-------------|
 | [PLATFORM_VISION.md](PLATFORM_VISION.md) | What we are (and are not) |
+| [docs/en/QUICKSTART_SDK.md](docs/en/QUICKSTART_SDK.md) | SDK + CLI in 5 minutes |
+| [docs/en/COMPARISON.md](docs/en/COMPARISON.md) | vs alternatives (honest) |
+| [docs/en/CASE_STUDY_HR_PILOT.md](docs/en/CASE_STUDY_HR_PILOT.md) | HR pilot KPI template |
 | [docs/en/](docs/en/) | Architecture, deploy, roadmap, templates |
 | [docs/ru/](docs/ru/) | Russian docs (legacy locale) |
+| [GOOD_FIRST_ISSUES.md](GOOD_FIRST_ISSUES.md) | Starter contributions |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute |
 | [SECURITY.md](SECURITY.md) | Security policy and vulnerability reporting |
 | [CHANGELOG.md](CHANGELOG.md) | Release history |

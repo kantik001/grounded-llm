@@ -21,6 +21,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Smoke script covers metrics, branding, and message flow
 - CI jobs: `go-lint`, `python-lint`, `openapi-validate`
 
+### Added (Phase 2 — adoption)
+
+- **Python SDK + CLI:** `sdk/python/` (`pip install -e "sdk/python"`, command `grounded-llm`)
+- Product docs: case study, comparison, analytics guide, SDK quickstart, demo video script
+- Blog: [retrieval eval gate in CI](docs/en/blog/retrieval-eval-gate-in-ci.md)
+- [GOOD_FIRST_ISSUES.md](GOOD_FIRST_ISSUES.md), [examples/python/chat_basic.py](examples/python/chat_basic.py)
+- Nightly LLM E2E workflow + `scripts/llm_e2e_smoke.sh`
+- CI job `sdk-test`
+
+### Changed (Phase 2)
+
+- README: SDK quickstart and product evidence links
+
 ## [0.1.0] - 2026-07-05
 
 Initial open-source release baseline.

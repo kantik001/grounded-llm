@@ -1,0 +1,74 @@
+name: LLM E2E (nightly)
+
+on:
+  schedule:
+    - cron: "0 4 * * 0"
+  workflow_dispatch:
+
+jobs:
+  llm-e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: grounded
+          POSTGRES_PASSWORD: grounded
+          POSTGRES_DB: grounded
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U grounded -d grounded"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          cache-dependency-path: server/go.sum
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Start server (RAG mock, real LLM)
+        env:
+          DATABASE_URL: postgres://grounded:grounded@localhost:5432/grounded?sslmode=disable
+          TELEGRAM_AUTH_DISABLED: "true"
+          RAG_MOCK: "true"
+          LLM_MOCK: "false"
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
+          LLM_MODEL: ${{ vars.LLM_MODEL }}
+          DOMAINS_CONFIG_PATH: ${{ github.workspace }}/config/domains.json
+          LOCALES_ROOT: ${{ github.workspace }}/config/locales
+          MIGRATIONS_DIR: ${{ github.workspace }}/migrations
+          DATA_DIR: ${{ github.workspace }}/data
+          UPLOAD_DIR: /tmp/grounded-uploads
+          SERVER_PORT: "8080"
+        run: |
+          if [ -z "$LLM_API_KEY" ]; then
+            echo "Skip: LLM_API_KEY secret not configured"
+            exit 0
+          fi
+          mkdir -p /tmp/grounded-uploads
+          cd server && go mod tidy && go build -o ../server-bin . && cd ..
+          ./server-bin &
+          echo $! > server.pid
+          for i in $(seq 1 60); do
+            curl -sf http://127.0.0.1:8080/health && break
+            sleep 1
+          done
+
+      - name: LLM E2E smoke
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: bash scripts/llm_e2e_smoke.sh http://127.0.0.1:8080
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f server.pid ]; then kill $(cat server.pid) 2>/dev/null || true; fi

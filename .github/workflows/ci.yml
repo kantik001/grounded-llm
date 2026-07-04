@@ -63,7 +63,7 @@ jobs:
           python-version: "3.11"
 
       - name: Ruff check
-        run: pip install ruff==0.8.4 && ruff check rag api tests scripts
+        run: pip install ruff==0.8.4 && ruff check rag api tests scripts sdk/python
 
   python-test:
     runs-on: ubuntu-latest
@@ -98,6 +98,24 @@ jobs:
           pip install openapi-spec-validator==0.7.1
           python -c "import json; from openapi_spec_validator import validate; validate(json.load(open('server/openapi.v1.json')))"
           echo "OpenAPI spec is valid"
+
+  sdk-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install SDK with dev deps
+        run: pip install -e "sdk/python[dev]"
+
+      - name: SDK unit tests
+        run: pytest sdk/python/tests -v --tb=short
+
+      - name: Ruff SDK
+        run: pip install ruff==0.8.4 && ruff check sdk/python
 
   eval-baseline-validate:
     runs-on: ubuntu-latest

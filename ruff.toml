@@ -1,6 +1,6 @@
 target-version = "py311"
 line-length = 120
-src = ["rag", "api", "tests", "scripts"]
+src = ["rag", "api", "tests", "scripts", "sdk/python"]
 
 [lint]
 select = ["E", "F", "I", "W"]
