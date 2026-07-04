@@ -74,4 +74,4 @@ Before production:
 
 ## Dependencies
 
-We track dependency updates via GitHub Dependabot (planned). Report supply-chain concerns through the same private channels above.
+We track dependency updates via [Dependabot](../.github/dependabot.yml). Report supply-chain concerns through the same private channels above.

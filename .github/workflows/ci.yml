@@ -63,7 +63,21 @@ jobs:
           python-version: "3.11"
 
       - name: Ruff check
-        run: pip install ruff==0.8.4 && ruff check rag api tests scripts sdk/python
+        run: pip install ruff==0.8.4 && ruff check rag api tests scripts sdk/python conformance
+
+  conformance-spec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: OpenAPI conformance (offline)
+        run: |
+          pip install -r conformance/requirements.txt
+          pytest conformance/test_openapi_spec.py -v --tb=short
 
   python-test:
     runs-on: ubuntu-latest
