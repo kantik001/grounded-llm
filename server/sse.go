@@ -8,7 +8,7 @@ import (
 )
 
 func writeSSE(c *gin.Context, event, data string) {
-	fmt.Fprintf(c.Writer, "event: %s\ndata: %s\n\n", event, data)
+	_, _ = fmt.Fprintf(c.Writer, "event: %s\ndata: %s\n\n", event, data)
 	c.Writer.Flush()
 }
 

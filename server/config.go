@@ -41,8 +41,8 @@ var chatStore *ChatStore
 
 // Загружает .env и собирает Config из переменных окружения.
 func loadConfig() *Config {
-	godotenv.Load()
-	godotenv.Load("../.env")
+	_ = godotenv.Load()
+	_ = godotenv.Load("../.env")
 
 	maxAgeSec, _ := strconv.Atoi(getEnv("TELEGRAM_INIT_DATA_MAX_AGE_SEC", "86400"))
 	if maxAgeSec < 0 {

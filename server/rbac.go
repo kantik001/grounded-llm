@@ -92,15 +92,6 @@ func adminRolesFromContext(c *gin.Context) []string {
 	return nil
 }
 
-func apiRolesFromContext(c *gin.Context) []string {
-	if v, ok := c.Get(ctxKeyAPIRoles); ok {
-		if roles, ok := v.([]string); ok {
-			return roles
-		}
-	}
-	return nil
-}
-
 func requireAdminRoles(allowed ...string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		roles := adminRolesFromContext(c)

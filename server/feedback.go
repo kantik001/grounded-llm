@@ -45,13 +45,3 @@ func handleFeedback(c *gin.Context) {
 	})
 	c.JSON(http.StatusOK, gin.H{"success": true, "message_id": req.MessageID, "rating": req.Rating})
 }
-
-func logAnalytics(c *gin.Context, eventType string, payload map[string]any) {
-	tgUser, err := ctxTelegramUser(c)
-	if err != nil || chatStore == nil {
-		return
-	}
-	if err := chatStore.LogEvent(c.Request.Context(), tgUser.ID, eventType, payload); err != nil {
-		log.Printf("LogEvent %s: %v", eventType, err)
-	}
-}
