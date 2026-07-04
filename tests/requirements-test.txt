@@ -1,5 +1,7 @@
 # API deps needed by tests/test_api_ready.py (imports api.app)
 -r ../api/requirements.txt
+# Conformance deps for tests/test_conformance_cli.py (python -m conformance spec)
+-r ../conformance/requirements.txt
 
 pytest>=8.0.0
 pytest-cov>=5.0.0
