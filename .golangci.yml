@@ -1,0 +1,18 @@
+run:
+  timeout: 5m
+  tests: true
+  skip-dirs:
+    - vendor
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - misspell
+  disable-all: true
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0

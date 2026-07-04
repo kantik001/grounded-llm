@@ -27,6 +27,18 @@ type llmStreamDelta struct {
 }
 
 func callLLMCompletionStream(ctx context.Context, messages []Message, onDelta func(string) error) (string, error) {
+	if llmMockEnabled() {
+		full, err := mockLLMCompletion(messages)
+		if err != nil {
+			return "", err
+		}
+		if onDelta != nil && full != "" {
+			if err := onDelta(full); err != nil {
+				return full, err
+			}
+		}
+		return full, nil
+	}
 	if config.LLMAPIKey == "" {
 		return "", fmt.Errorf("LLM API key not configured")
 	}

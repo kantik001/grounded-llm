@@ -9,15 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- OSS governance: `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`
-- GitHub issue and pull request templates
-- This changelog
+- **Phase 1 engineering bar:** golangci-lint, Ruff, CodeQL, Dependabot, OpenAPI validation in CI
+- **Mock modes for CI:** `LLM_MOCK` and `RAG_MOCK` for deterministic smoke/E2E without external APIs
+- **Release workflow:** GitHub Release + GHCR images on `v*.*.*` tags
+- **Expanded OpenAPI:** public endpoints (health, metrics, domains, branding, onboarding) + chat schemas
+- Go coverage reporting and Python `pytest-cov` in CI
+- Full `/message` smoke test path (session → cited answer with verify)
 
 ### Changed
 
-- README: community-focused layout; maintainer section condensed
-- Root files: English-first comments in `Makefile` and `.env.example`
-- `PROJECT_STRUCTURE.md`: updated paths and documentation links
+- Smoke script covers metrics, branding, and message flow
+- CI jobs: `go-lint`, `python-lint`, `openapi-validate`
 
 ## [0.1.0] - 2026-07-05
 

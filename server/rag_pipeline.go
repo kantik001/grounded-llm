@@ -51,7 +51,7 @@ func prepareRAGMessages(q, domainID, tenantID, locale string, history []Message,
 		fail.SoftFail = true
 		return fail, nil
 	}
-	if config.LLMAPIKey == "" {
+	if config.LLMAPIKey == "" && !config.LLMMock {
 		fail.ErrMsg = "Set LLM_API_KEY for text chat (OpenRouter / OpenAI-compatible API)."
 		return fail, nil
 	}

@@ -33,6 +33,9 @@ type Choice struct {
 
 // callLLMCompletion отправляет запрос в LLM API (OpenAI-совместимый).
 func callLLMCompletion(messages []Message) (string, error) {
+	if llmMockEnabled() {
+		return mockLLMCompletion(messages)
+	}
 	if config.LLMAPIKey == "" {
 		return "", fmt.Errorf("LLM API key not configured")
 	}

@@ -3,7 +3,6 @@
 import os
 
 import pytest
-
 from rag.document_loaders import is_supported_filename, load_file, supported_extensions
 
 
