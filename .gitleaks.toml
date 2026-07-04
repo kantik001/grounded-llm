@@ -13,9 +13,12 @@ paths = [
   '''(?:^|/)conformance/''',
   '''(?:^|/)tests/''',
   '''(?:^|/)scripts/''',
+  '''(?:^|/)server/''',
+  '''(?:^|/)sdk/''',
   '''(?:^|/)\.github/workflows/''',
   '''(?:^|/)Makefile$''',
   '''(?:^|/)CONTRIBUTING\.md$''',
+  '''(?:^|/)\.gitleaks\.toml$''',
 ]
 regexes = [
   '''postgres://grounded:grounded@''',
@@ -23,4 +26,12 @@ regexes = [
   '''password:\s*grounded''',
   '''secret-token''',
   '''ADMIN_PASSWORD=\s*$''',
+  '''Authorization.*Bearer %s''',
+  '''getEnv\("DATABASE_URL"''',
+]
+stopwords = [
+  '''api_key_label''',
+  '''X-API-Key''',
+  '''api-keys''',
+  '''llm_api_key''',
 ]

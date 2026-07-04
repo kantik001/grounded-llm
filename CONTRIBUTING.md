@@ -58,7 +58,7 @@ Dependabot opens weekly dependency PRs.
 
 > **CodeQL:** optional manual/weekly workflow (`.github/workflows/codeql.yml`). Not gated on PRs. Turn on [Code scanning](https://docs.github.com/en/code-security/code-scanning) in repo settings, then set `upload: true` and add `pull_request` trigger if desired.
 
-> **Gitleaks:** `.github/workflows/secret-scan.yml` uses `.gitleaks.toml` allowlist for documented dev credentials (`grounded:grounded`, test tokens). Do not commit real API keys or production secrets.
+> **Gitleaks:** `.github/workflows/secret-scan.yml` runs the gitleaks CLI with `.gitleaks.toml` (allowlist for documented dev credentials). Do not commit real API keys or production secrets.
 
 **Recommended local checks before a PR:**
 
