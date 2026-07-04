@@ -33,6 +33,6 @@ func readImageFromFormFile(c *gin.Context, field string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open image file")
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	return readUploadImage(f, fh.Size)
 }

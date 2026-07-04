@@ -28,6 +28,9 @@ type pythonRAGContextResponse struct {
 }
 
 func fetchRAGContext(question, tenantID, domainID, locale string) (*pythonRAGContextResponse, error) {
+	if ragMockEnabled() {
+		return mockRAGContextResponse(question, domainID), nil
+	}
 	body := map[string]string{
 		"question":  question,
 		"domain_id": domainID,

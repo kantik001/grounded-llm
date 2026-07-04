@@ -1,0 +1,13 @@
+target-version = "py311"
+line-length = 120
+src = ["rag", "api", "tests", "scripts", "sdk/python"]
+
+[lint]
+select = ["E", "F", "I", "W"]
+ignore = ["E501"]
+
+[lint.per-file-ignores]
+"api/app.py" = ["E402"]
+
+[format]
+quote-style = "double"

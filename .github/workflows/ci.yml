@@ -7,6 +7,25 @@ on:
     branches: [master, main]
 
 jobs:
+  go-lint:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          cache-dependency-path: server/go.sum
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.62.2
+          working-directory: server
+
   go-test:
     runs-on: ubuntu-latest
     defaults:
@@ -23,10 +42,28 @@ jobs:
       - name: Go mod tidy
         run: go mod tidy
 
-      - name: Go test
+      - name: Go test with coverage
         env:
           DOMAINS_CONFIG_PATH: ${{ github.workspace }}/config/domains.json
-        run: go test -v -count=1 ./...
+          LOCALES_ROOT: ${{ github.workspace }}/config/locales
+          LLM_MOCK: "true"
+          RAG_MOCK: "true"
+        run: go test -v -count=1 -coverprofile=coverage.out ./...
+
+      - name: Go coverage summary
+        run: go tool cover -func=coverage.out | tail -1
+
+  python-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Ruff check
+        run: pip install ruff==0.8.4 && ruff check rag api tests scripts sdk/python
 
   python-test:
     runs-on: ubuntu-latest
@@ -42,10 +79,43 @@ jobs:
       - name: Install test dependencies
         run: pip install -r tests/requirements-test.txt
 
-      - name: Pytest
+      - name: Pytest with coverage
         env:
           DOMAINS_CONFIG_PATH: config/domains.json
-        run: pytest tests/ -v --tb=short
+        run: pytest tests/ -v --tb=short --cov=rag --cov-report=term-missing
+
+  openapi-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate OpenAPI spec
+        run: |
+          pip install openapi-spec-validator==0.7.1
+          python -c "import json; from openapi_spec_validator import validate; validate(json.load(open('server/openapi.v1.json')))"
+          echo "OpenAPI spec is valid"
+
+  sdk-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install SDK with dev deps
+        run: pip install -e "sdk/python[dev]"
+
+      - name: SDK unit tests
+        run: pytest sdk/python/tests -v --tb=short
+
+      - name: Ruff SDK
+        run: pip install ruff==0.8.4 && ruff check sdk/python
 
   eval-baseline-validate:
     runs-on: ubuntu-latest
@@ -138,6 +208,8 @@ jobs:
         env:
           DATABASE_URL: postgres://grounded:grounded@localhost:5432/grounded?sslmode=disable
           TELEGRAM_AUTH_DISABLED: "true"
+          LLM_MOCK: "true"
+          RAG_MOCK: "true"
           PYTHON_RAG_URL: http://127.0.0.1:59999/rag/context
           PYTHON_BASE_URL: http://127.0.0.1:59999
           DOMAINS_CONFIG_PATH: ${{ github.workspace }}/config/domains.json
@@ -146,7 +218,6 @@ jobs:
           DATA_DIR: ${{ github.workspace }}/data
           UPLOAD_DIR: /tmp/grounded-uploads
           SERVER_PORT: "8080"
-          LLM_API_KEY: ci-smoke-key
         run: |
           mkdir -p /tmp/grounded-uploads
           cd server
@@ -165,7 +236,7 @@ jobs:
           echo "Server failed to start"
           exit 1
 
-      - name: Smoke test
+      - name: Smoke test (health + full /message path)
         run: bash scripts/smoke.sh http://127.0.0.1:8080
 
       - name: Stop server

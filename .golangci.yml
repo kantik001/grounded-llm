@@ -1,0 +1,22 @@
+run:
+  timeout: 5m
+  tests: true
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - misspell
+  disable-all: true
+linters-settings:
+  errcheck:
+    exclude-functions:
+      - (io.Closer).Close
+issues:
+  exclude-use-default: false
+  exclude-dirs:
+    - vendor
+  max-issues-per-linter: 0
+  max-same-issues: 0

@@ -1,0 +1,69 @@
+# Optional security scanning. Not run on PRs (requires Code scanning enabled in repo settings).
+# Enable: Settings → Code security → Code scanning → Advanced
+# To run on every PR, add pull_request back after Code scanning is on.
+
+name: CodeQL
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  analyze-go:
+    name: analyze (go)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          cache-dependency-path: server/go.sum
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: go
+
+      - name: Build Go for CodeQL
+        working-directory: server
+        env:
+          CODEQL_EXTRACTOR_GO_BUILD_TRACING: on
+        run: |
+          go mod tidy
+          go build -v ./...
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:go
+          upload: false
+
+  analyze-python:
+    name: analyze (python)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:python
+          upload: false

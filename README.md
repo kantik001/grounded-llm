@@ -29,28 +29,48 @@ Grounded LLM separates **orchestration** (Go: auth, sessions, LLM, verify) from 
 ```mermaid
 flowchart TB
     subgraph clients [Clients]
-        Web[Web chat]
-        API[REST API / SSE]
-        TG[Telegram optional]
+        Web[Web chat webapp]
+        SDK[Python SDK / REST]
+        TG[Telegram Mini App]
     end
-    subgraph go [Go server]
-        Auth[Auth and sessions]
+
+    subgraph go [Go server :8080]
+        Auth[Auth: Telegram / API key / OIDC admin]
+        API[REST API v1]
         LLM[LLM orchestration]
-        Verify[Answer verify]
+        Verify[Verify numbers vs context]
+        Admin[Admin: upload, reindex, analytics]
     end
-    subgraph py [Python RAG]
-        Retrieve[Retrieval]
-        Chroma[(Chroma index)]
+
+    subgraph py [Python RAG :5000]
+        Flask[Flask api/app.py]
+        RAG[rag/: retrieval, loaders]
+        Chroma[(ChromaDB embeddings)]
     end
-    Docs["data/{tenant}/{domain}/*.txt,pdf,docx"]
+
+    subgraph storage [Storage]
+        PG[(PostgreSQL)]
+        Files["data/{tenant}/{domain}/"]
+    end
+
+    LLMExt[External LLM API]
+
     Web --> Auth
-    API --> Auth
+    SDK --> Auth
     TG --> Auth
-    Auth --> LLM
-    LLM --> Retrieve
-    Retrieve --> Chroma
-    Chroma --> Docs
+    Auth --> API
+    API --> LLM
+    LLM -->|POST /rag/context| Flask
+    Flask --> RAG --> Chroma
+    Chroma --> Files
+    LLM --> LLMExt
+    LLM --> Verify
+    API --> PG
+    Admin --> Files
+    Admin -->|reindex| Flask
 ```
+
+**Message flow:** client → Go auth/session → Python retrieval (Chroma) → Go LLM → verify → citations → Postgres.
 
 | Layer | Path | Purpose |
 |-------|------|---------|
@@ -89,6 +109,15 @@ Legacy scaffold: `./scripts/init_domain.sh hr_policies default` (data dir only).
 
 Reference templates: [HR domain pack](docs/en/domain-packs/HR.md) · [IT Support pack](docs/en/domain-packs/IT_SUPPORT.md) · [packs/](packs/)
 
+**Python SDK (integrators):**
+
+```bash
+pip install -e "sdk/python[dev]"
+grounded-llm chat "How many vacation days?" --domain default
+```
+
+Guide: [docs/en/QUICKSTART_SDK.md](docs/en/QUICKSTART_SDK.md) · Example: [examples/python/chat_basic.py](examples/python/chat_basic.py)
+
 ---
 
 ## API highlights
@@ -123,8 +152,12 @@ make eval-retrieval            # RAG baseline only (needs Python already on :500
 | Doc | Description |
 |-----|-------------|
 | [PLATFORM_VISION.md](PLATFORM_VISION.md) | What we are (and are not) |
+| [docs/en/QUICKSTART_SDK.md](docs/en/QUICKSTART_SDK.md) | SDK + CLI in 5 minutes |
+| [docs/en/COMPARISON.md](docs/en/COMPARISON.md) | vs alternatives (honest) |
+| [docs/en/CASE_STUDY_HR_PILOT.md](docs/en/CASE_STUDY_HR_PILOT.md) | HR pilot KPI template |
 | [docs/en/](docs/en/) | Architecture, deploy, roadmap, templates |
 | [docs/ru/](docs/ru/) | Russian docs (legacy locale) |
+| [GOOD_FIRST_ISSUES.md](GOOD_FIRST_ISSUES.md) | Starter contributions |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute |
 | [SECURITY.md](SECURITY.md) | Security policy and vulnerability reporting |
 | [CHANGELOG.md](CHANGELOG.md) | Release history |

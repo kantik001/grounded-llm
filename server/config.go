@@ -32,6 +32,8 @@ type Config struct {
 	AdminSecret            string
 	DefaultTenantID        string
 	DefaultLocale          string
+	LLMMock                bool
+	RAGMock                bool
 }
 
 var config *Config
@@ -39,8 +41,8 @@ var chatStore *ChatStore
 
 // Загружает .env и собирает Config из переменных окружения.
 func loadConfig() *Config {
-	godotenv.Load()
-	godotenv.Load("../.env")
+	_ = godotenv.Load()
+	_ = godotenv.Load("../.env")
 
 	maxAgeSec, _ := strconv.Atoi(getEnv("TELEGRAM_INIT_DATA_MAX_AGE_SEC", "86400"))
 	if maxAgeSec < 0 {
@@ -72,6 +74,8 @@ func loadConfig() *Config {
 		AdminSecret:            getEnv("ADMIN_SECRET", ""),
 		DefaultTenantID:        getEnv("DEFAULT_TENANT_ID", "default"),
 		DefaultLocale:          getEnv("DEFAULT_LOCALE", "en"),
+		LLMMock:                isTruthyEnv("LLM_MOCK"),
+		RAGMock:                isTruthyEnv("RAG_MOCK"),
 	}
 }
 
@@ -88,10 +92,15 @@ func logStartup(cfg *Config) {
 	log.Printf("Starting Grounded LLM Server...")
 	log.Printf("Python RAG context URL: %s", cfg.PythonRAGURL)
 	log.Printf("LLM Model: %s", cfg.LLMModel)
-	if cfg.LLMAPIKey != "" {
+	if cfg.LLMMock {
+		log.Printf("LLM: MOCK mode (deterministic responses for CI/smoke)")
+	} else if cfg.LLMAPIKey != "" {
 		log.Printf("LLM API Key: configured")
 	} else {
 		log.Printf("LLM API Key: not configured")
+	}
+	if cfg.RAGMock {
+		log.Printf("RAG: MOCK mode (skips Python retrieval service)")
 	}
 	if cfg.TelegramAuthDisabled {
 		log.Printf("Telegram auth: DISABLED (dev mode only)")

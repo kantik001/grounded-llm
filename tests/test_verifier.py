@@ -1,5 +1,4 @@
 from langchain_core.documents import Document
-
 from rag.verifier import RAG_ANSWER_DISCLAIMER, extract_numbers, strip_source_attribution, verify_answer
 
 

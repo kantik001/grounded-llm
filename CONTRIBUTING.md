@@ -34,18 +34,37 @@ See [docs/en/DEPLOY.md](docs/en/DEPLOY.md) and [docs/en/knowledge-base/](docs/en
 make test                 # Go + Python unit tests
 make eval-retrieval-ci    # Full retrieval gate (reindex + eval, same as CI)
 make smoke                # Smoke API against localhost:8080
+pip install -e "sdk/python[dev]"   # Python SDK + CLI
+grounded-llm chat "How many vacation days?"   # after server is up
 ```
 
 **CI runs on every push/PR:**
 
 | Job | Scope |
 |-----|-------|
-| `go-test` | `server/` unit tests |
-| `python-test` | `tests/` pytest |
+| `go-lint` | golangci-lint on `server/` |
+| `go-test` | Go unit tests + coverage |
+| `python-lint` | Ruff on `rag/`, `api/`, `tests/`, `scripts/` |
+| `python-test` | pytest + coverage |
+| `openapi-validate` | OpenAPI 3.0 spec validation |
 | `eval-baseline-validate` | JSONL structure validation |
 | `eval-retrieval-gate` | Reindex + retrieval eval (all suites) |
-| `smoke-api` | Health, domains, session against live Go server |
+| `smoke-api` | Health, domains, session, **full `/message` path** (with `LLM_MOCK` + `RAG_MOCK`) |
 | `docker-build` | Build all Docker images |
+
+Dependabot opens weekly dependency PRs.
+
+> **CodeQL:** optional manual/weekly workflow (`.github/workflows/codeql.yml`). Not gated on PRs. Turn on [Code scanning](https://docs.github.com/en/code-security/code-scanning) in repo settings, then set `upload: true` and add `pull_request` trigger if desired.
+
+**Recommended local checks before a PR:**
+
+```bash
+cd server && golangci-lint run ./...
+ruff check rag api tests scripts
+make test
+make eval-retrieval-ci   # if you changed retrieval, config, eval, or KB data
+bash scripts/smoke.sh http://127.0.0.1:8080   # with server running; set LLM_MOCK=true RAG_MOCK=true
+```
 
 Changes to `rag/`, `config/`, `eval/`, or `data/` that affect retrieval **must pass** `make eval-retrieval-ci` locally before opening a PR.
 

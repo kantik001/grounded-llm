@@ -66,3 +66,5 @@ python scripts/run_rag_eval.py --suite it_support
 | `it_support` | `it_support` | `it_support` |
 
 See [docs/en/domain-packs/](../docs/en/domain-packs/) for deploy guides.
+
+**Contribute a pack:** [domain-pack-template/](../domain-pack-template/) · starter tasks in [GOOD_FIRST_ISSUES.md](../GOOD_FIRST_ISSUES.md).

@@ -12,9 +12,9 @@ from flask_cors import CORS
 
 load_dotenv(os.path.join(_root, ".env"))
 
+from rag import vector_store as vs
 from rag.domains_config import list_domains, normalize_domain_id
 from rag.retrieval import retrieve_rag_context
-from rag import vector_store as vs
 
 app = Flask(__name__)
 CORS(app)

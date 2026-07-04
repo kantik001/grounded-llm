@@ -3,7 +3,6 @@
 import os
 
 import pytest
-
 from rag.domains_config import get_domain, list_domains, normalize_domain_id
 
 

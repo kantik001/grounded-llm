@@ -9,15 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- OSS governance: `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`
-- GitHub issue and pull request templates
-- This changelog
+- **Phase 1 engineering bar:** golangci-lint, Ruff, Dependabot, OpenAPI validation in CI
+- **Mock modes for CI:** `LLM_MOCK` and `RAG_MOCK` for deterministic smoke/E2E without external APIs
+- **Release workflow:** GitHub Release + GHCR images on `v*.*.*` tags
+- **Expanded OpenAPI:** public endpoints (health, metrics, domains, branding, onboarding) + chat schemas
+- Go coverage reporting and Python `pytest-cov` in CI
+- Full `/message` smoke test path (session → cited answer with verify)
 
 ### Changed
 
-- README: community-focused layout; maintainer section condensed
-- Root files: English-first comments in `Makefile` and `.env.example`
-- `PROJECT_STRUCTURE.md`: updated paths and documentation links
+- Smoke script covers metrics, branding, and message flow
+- CI jobs: `go-lint`, `python-lint`, `openapi-validate`
+
+### Added (Phase 2 — adoption)
+
+- **Python SDK + CLI:** `sdk/python/` (`pip install -e "sdk/python"`, command `grounded-llm`)
+- Product docs: case study, comparison, analytics guide, SDK quickstart, demo video script
+- Blog: [retrieval eval gate in CI](docs/en/blog/retrieval-eval-gate-in-ci.md)
+- [GOOD_FIRST_ISSUES.md](GOOD_FIRST_ISSUES.md), [examples/python/chat_basic.py](examples/python/chat_basic.py)
+- Nightly LLM E2E workflow + `scripts/llm_e2e_smoke.sh`
+- CI job `sdk-test`
+
+### Changed (Phase 2)
+
+- README: expanded architecture diagram, SDK quickstart and product evidence links
+- CodeQL moved off PR checks (manual/weekly only; enable upload when Code scanning is on)
 
 ## [0.1.0] - 2026-07-05
 

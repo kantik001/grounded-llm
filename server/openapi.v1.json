@@ -3,9 +3,17 @@
   "info": {
     "title": "Grounded LLM API",
     "version": "1.0.0",
-    "description": "Grounded RAG chat API. Auth: Telegram initData (Web App) or X-API-Key header."
+    "description": "Grounded RAG chat API with citations and numeric verification.\n\nAuth: Telegram initData (Web App) or `X-API-Key` header.\nMulti-tenant: `X-Tenant-ID` header (default `default`).\nLocale: `X-Locale`, `Accept-Language`, or `?locale=` query."
   },
-  "servers": [{ "url": "/api/v1" }],
+  "servers": [
+    { "url": "/", "description": "Root API aliases" },
+    { "url": "/api/v1", "description": "Versioned integrator API" }
+  ],
+  "tags": [
+    { "name": "Public", "description": "No authentication required" },
+    { "name": "Chat", "description": "Protected chat endpoints" },
+    { "name": "Meta", "description": "API metadata" }
+  ],
   "components": {
     "securitySchemes": {
       "ApiKeyAuth": { "type": "apiKey", "in": "header", "name": "X-API-Key" },
@@ -15,82 +23,320 @@
       "TenantId": {
         "name": "X-Tenant-ID",
         "in": "header",
-        "schema": { "type": "string", "default": "default" }
+        "schema": { "type": "string", "default": "default" },
+        "description": "Tenant identifier for multi-tenant isolation"
+      },
+      "LocaleHeader": {
+        "name": "X-Locale",
+        "in": "header",
+        "schema": { "type": "string", "example": "en" }
+      },
+      "LocaleQuery": {
+        "name": "locale",
+        "in": "query",
+        "schema": { "type": "string", "example": "en" }
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "healthy" },
+          "timestamp": { "type": "integer" },
+          "database": { "type": "string", "example": "ok" }
+        }
+      },
+      "DomainsResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "default_domain": { "type": "string" },
+          "domains": { "type": "array", "items": { "type": "object" } }
+        }
+      },
+      "BrandingResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "locale": { "type": "string" },
+          "branding": { "type": "object" }
+        }
+      },
+      "OnboardingResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "locale": { "type": "string" },
+          "domain_id": { "type": "string" },
+          "questions": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "SessionRequest": {
+        "type": "object",
+        "properties": { "domain_id": { "type": "string", "example": "default" } }
+      },
+      "SessionResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "session_id": { "type": "string" },
+          "domain_id": { "type": "string" }
+        }
+      },
+      "MessageRequest": {
+        "type": "object",
+        "required": ["text"],
+        "properties": {
+          "session_id": { "type": "string" },
+          "domain_id": { "type": "string" },
+          "tenant_id": { "type": "string" },
+          "text": { "type": "string" }
+        }
+      },
+      "MessageResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "session_id": { "type": "string" },
+          "domain_id": { "type": "string" },
+          "tenant_id": { "type": "string" },
+          "messages": { "type": "array", "items": { "type": "object" } }
+        }
+      },
+      "FeedbackRequest": {
+        "type": "object",
+        "properties": {
+          "session_id": { "type": "string" },
+          "message_id": { "type": "integer" },
+          "rating": { "type": "integer", "enum": [1, -1] }
+        }
       }
     }
   },
   "security": [{ "ApiKeyAuth": [] }, { "TelegramAuth": [] }],
   "paths": {
-    "/session": {
-      "post": {
-        "summary": "Create chat session",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": { "domain_id": { "type": "string" } }
+    "/health": {
+      "get": {
+        "tags": ["Public"],
+        "summary": "Health check",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Service health",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" }
               }
             }
           }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": ["Public"],
+        "summary": "Health check (API alias)",
+        "security": [],
+        "responses": { "200": { "description": "Service health" } }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "tags": ["Public"],
+        "summary": "Prometheus metrics",
+        "security": [],
+        "responses": {
+          "200": { "description": "text/plain Prometheus counters" }
+        }
+      }
+    },
+    "/api/metrics": {
+      "get": {
+        "tags": ["Public"],
+        "summary": "Prometheus metrics (API alias)",
+        "security": [],
+        "responses": { "200": { "description": "text/plain Prometheus counters" } }
+      }
+    },
+    "/domains": {
+      "get": {
+        "tags": ["Public"],
+        "summary": "Domain catalog",
+        "security": [],
+        "parameters": [
+          { "$ref": "#/components/parameters/LocaleHeader" },
+          { "$ref": "#/components/parameters/LocaleQuery" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Available knowledge domains",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DomainsResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/domains": {
+      "get": {
+        "tags": ["Public"],
+        "summary": "Domain catalog (API alias)",
+        "security": [],
+        "responses": { "200": { "description": "Available knowledge domains" } }
+      }
+    },
+    "/branding": {
+      "get": {
+        "tags": ["Public"],
+        "summary": "UI branding strings",
+        "security": [],
+        "parameters": [
+          { "$ref": "#/components/parameters/LocaleHeader" },
+          { "$ref": "#/components/parameters/LocaleQuery" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Branding bundle",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BrandingResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/branding": {
+      "get": {
+        "tags": ["Public"],
+        "summary": "UI branding strings (API alias)",
+        "security": [],
+        "responses": { "200": { "description": "Branding bundle" } }
+      }
+    },
+    "/onboarding": {
+      "get": {
+        "tags": ["Public"],
+        "summary": "Sample questions for a domain",
+        "security": [],
+        "parameters": [
+          { "name": "domain_id", "in": "query", "schema": { "type": "string" } },
+          { "$ref": "#/components/parameters/LocaleHeader" },
+          { "$ref": "#/components/parameters/LocaleQuery" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Onboarding questions",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OnboardingResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/onboarding": {
+      "get": {
+        "tags": ["Public"],
+        "summary": "Sample questions (API alias)",
+        "security": [],
+        "parameters": [
+          { "name": "domain_id", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Onboarding questions" } }
+      }
+    },
+    "/session": {
+      "post": {
+        "tags": ["Chat"],
+        "summary": "Create chat session",
+        "parameters": [{ "$ref": "#/components/parameters/TenantId" }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SessionRequest" }
+            }
+          }
         },
-        "responses": { "200": { "description": "session_id" } }
+        "responses": {
+          "200": {
+            "description": "New session",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SessionResponse" }
+              }
+            }
+          }
+        }
       }
     },
     "/message": {
       "post": {
+        "tags": ["Chat"],
         "summary": "Send message (JSON or SSE with ?stream=1)",
         "parameters": [
+          { "$ref": "#/components/parameters/TenantId" },
           { "name": "stream", "in": "query", "schema": { "type": "boolean" } }
         ],
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["text"],
-                "properties": {
-                  "session_id": { "type": "string" },
-                  "domain_id": { "type": "string" },
-                  "tenant_id": { "type": "string" },
-                  "text": { "type": "string" }
-                }
-              }
+              "schema": { "$ref": "#/components/schemas/MessageRequest" }
             }
           }
         },
         "responses": {
-          "200": { "description": "messages[] or text/event-stream" }
+          "200": {
+            "description": "Updated messages[] or text/event-stream when stream=1",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MessageResponse" }
+              },
+              "text/event-stream": {
+                "schema": { "type": "string" }
+              }
+            }
+          }
         }
       }
     },
     "/history": {
       "get": {
+        "tags": ["Chat"],
         "summary": "Chat history",
         "parameters": [
+          { "$ref": "#/components/parameters/TenantId" },
           { "name": "session_id", "in": "query", "required": true, "schema": { "type": "string" } }
         ],
-        "responses": { "200": { "description": "messages" } }
+        "responses": { "200": { "description": "Message history" } }
       }
     },
     "/feedback": {
       "post": {
+        "tags": ["Chat"],
         "summary": "Rate assistant message",
+        "parameters": [{ "$ref": "#/components/parameters/TenantId" }],
         "requestBody": {
           "content": {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "session_id": { "type": "string" },
-                  "message_id": { "type": "integer" },
-                  "rating": { "type": "integer", "enum": [1, -1] }
-                }
-              }
+              "schema": { "$ref": "#/components/schemas/FeedbackRequest" }
             }
           }
         },
-        "responses": { "200": { "description": "ok" } }
+        "responses": { "200": { "description": "Feedback recorded" } }
+      }
+    },
+    "/openapi.json": {
+      "get": {
+        "tags": ["Meta"],
+        "summary": "OpenAPI specification",
+        "security": [],
+        "responses": {
+          "200": { "description": "This OpenAPI document (application/json)" }
+        }
       }
     }
   }

@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: echo "tag=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push server image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.server
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/grounded-llm-server:${{ steps.version.outputs.tag }}
+            ghcr.io/${{ github.repository_owner }}/grounded-llm-server:latest
+
+      - name: Build and push python image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.python
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/grounded-llm-python:${{ steps.version.outputs.tag }}
+            ghcr.io/${{ github.repository_owner }}/grounded-llm-python:latest
+
+      - name: Build and push webapp image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.webapp
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/grounded-llm-webapp:${{ steps.version.outputs.tag }}
+            ghcr.io/${{ github.repository_owner }}/grounded-llm-webapp:latest
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          body: |
+            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CHANGELOG.md) for details.
+
+            ## Container images
+
+            ```bash
+            docker pull ghcr.io/${{ github.repository_owner }}/grounded-llm-server:${{ steps.version.outputs.tag }}
+            docker pull ghcr.io/${{ github.repository_owner }}/grounded-llm-python:${{ steps.version.outputs.tag }}
+            docker pull ghcr.io/${{ github.repository_owner }}/grounded-llm-webapp:${{ steps.version.outputs.tag }}
+            ```
