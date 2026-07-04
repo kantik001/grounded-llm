@@ -123,20 +123,27 @@ make eval-retrieval            # RAG baseline only (needs Python already on :500
 | Doc | Description |
 |-----|-------------|
 | [PLATFORM_VISION.md](PLATFORM_VISION.md) | What we are (and are not) |
-| [HIRING.md](HIRING.md) | Design decisions and interview talking points |
 | [docs/en/](docs/en/) | Architecture, deploy, roadmap, templates |
 | [docs/ru/](docs/ru/) | Russian docs (legacy locale) |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute |
+| [SECURITY.md](SECURITY.md) | Security policy and vulnerability reporting |
+| [CHANGELOG.md](CHANGELOG.md) | Release history |
+
+Design decisions and architecture trade-offs: [HIRING.md](HIRING.md)
 
 ---
 
-## Author
+## Contributing
 
-Built by **Kantemir Satibalov** — platform engineer focused on production RAG systems.
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
-Open to **LLM / RAG / Platform Engineer** roles worldwide (remote and relocation to Canada, USA, Australia, New Zealand).
+Report security issues privately via [SECURITY.md](SECURITY.md) — not public issues.
 
-- Portfolio narrative: [HIRING.md](HIRING.md)
-- LinkedIn: *(add your profile URL)*
+---
+
+## Maintainer
+
+**Kantemir Satibalov** — [GitHub @kantik001](https://github.com/kantik001)
 
 ---
 

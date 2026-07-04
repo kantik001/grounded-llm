@@ -1,0 +1,84 @@
+name: Bug report
+description: Report something that is broken or not working as documented
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please search [existing issues](https://github.com/kantik001/grounded-llm/issues) first.
+        For security vulnerabilities, use [Security Advisories](https://github.com/kantik001/grounded-llm/security/advisories/new) instead.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug
+      placeholder: When I POST /message with domain_id=hr, I get HTTP 500...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      placeholder: A cited answer from the knowledge base
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Commands, curl examples, or UI steps
+      placeholder: |
+        1. docker compose up -d
+        2. python scripts/reindex_rag.py
+        3. curl -X POST http://localhost:8080/message ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Go server (auth, API, admin)
+        - Python RAG (retrieval, Chroma)
+        - Webapp (UI)
+        - Docker / deploy
+        - Template pack / config
+        - Eval / CI
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: main @ abc1234 or v0.1.0
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Server logs, stack traces, or CI output (redact secrets)
+      render: shell
+    validations:
+      required: false
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - Docker Compose (local)
+        - Kubernetes
+        - Bare metal / custom
+        - CI only
+    validations:
+      required: true
