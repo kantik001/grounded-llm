@@ -52,7 +52,9 @@ grounded-llm chat "How many vacation days?"   # after server is up
 | `smoke-api` | Health, domains, session, **full `/message` path** (with `LLM_MOCK` + `RAG_MOCK`) |
 | `docker-build` | Build all Docker images |
 
-CodeQL runs on `main` PRs and on a weekly schedule. Dependabot opens weekly dependency PRs.
+Dependabot opens weekly dependency PRs.
+
+> **CodeQL:** optional manual/weekly workflow (`.github/workflows/codeql.yml`). Not gated on PRs. Turn on [Code scanning](https://docs.github.com/en/code-security/code-scanning) in repo settings, then set `upload: true` and add `pull_request` trigger if desired.
 
 **Recommended local checks before a PR:**
 

@@ -1,10 +1,11 @@
+# Optional security scanning. Not run on PRs (requires Code scanning enabled in repo settings).
+# Enable: Settings → Code security → Code scanning → Advanced
+# To run on every PR, add pull_request back after Code scanning is on.
+
 name: CodeQL
 
 on:
-  push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
+  workflow_dispatch:
   schedule:
     - cron: "0 6 * * 1"
 
@@ -43,6 +44,7 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: /language:go
+          upload: false
 
   analyze-python:
     name: analyze (python)
@@ -64,3 +66,4 @@ jobs:
         uses: github/codeql-action/analyze@v3
         with:
           category: /language:python
+          upload: false

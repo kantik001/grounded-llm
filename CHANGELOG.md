@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Phase 1 engineering bar:** golangci-lint, Ruff, CodeQL, Dependabot, OpenAPI validation in CI
+- **Phase 1 engineering bar:** golangci-lint, Ruff, Dependabot, OpenAPI validation in CI
 - **Mock modes for CI:** `LLM_MOCK` and `RAG_MOCK` for deterministic smoke/E2E without external APIs
 - **Release workflow:** GitHub Release + GHCR images on `v*.*.*` tags
 - **Expanded OpenAPI:** public endpoints (health, metrics, domains, branding, onboarding) + chat schemas
@@ -32,7 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed (Phase 2)
 
-- README: SDK quickstart and product evidence links
+- README: expanded architecture diagram, SDK quickstart and product evidence links
+- CodeQL moved off PR checks (manual/weekly only; enable upload when Code scanning is on)
 
 ## [0.1.0] - 2026-07-05
 

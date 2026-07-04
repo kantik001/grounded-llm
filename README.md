@@ -29,28 +29,48 @@ Grounded LLM separates **orchestration** (Go: auth, sessions, LLM, verify) from 
 ```mermaid
 flowchart TB
     subgraph clients [Clients]
-        Web[Web chat]
-        API[REST API / SSE]
-        TG[Telegram optional]
+        Web[Web chat webapp]
+        SDK[Python SDK / REST]
+        TG[Telegram Mini App]
     end
-    subgraph go [Go server]
-        Auth[Auth and sessions]
+
+    subgraph go [Go server :8080]
+        Auth[Auth: Telegram / API key / OIDC admin]
+        API[REST API v1]
         LLM[LLM orchestration]
-        Verify[Answer verify]
+        Verify[Verify numbers vs context]
+        Admin[Admin: upload, reindex, analytics]
     end
-    subgraph py [Python RAG]
-        Retrieve[Retrieval]
-        Chroma[(Chroma index)]
+
+    subgraph py [Python RAG :5000]
+        Flask[Flask api/app.py]
+        RAG[rag/: retrieval, loaders]
+        Chroma[(ChromaDB embeddings)]
     end
-    Docs["data/{tenant}/{domain}/*.txt,pdf,docx"]
+
+    subgraph storage [Storage]
+        PG[(PostgreSQL)]
+        Files["data/{tenant}/{domain}/"]
+    end
+
+    LLMExt[External LLM API]
+
     Web --> Auth
-    API --> Auth
+    SDK --> Auth
     TG --> Auth
-    Auth --> LLM
-    LLM --> Retrieve
-    Retrieve --> Chroma
-    Chroma --> Docs
+    Auth --> API
+    API --> LLM
+    LLM -->|POST /rag/context| Flask
+    Flask --> RAG --> Chroma
+    Chroma --> Files
+    LLM --> LLMExt
+    LLM --> Verify
+    API --> PG
+    Admin --> Files
+    Admin -->|reindex| Flask
 ```
+
+**Message flow:** client → Go auth/session → Python retrieval (Chroma) → Go LLM → verify → citations → Postgres.
 
 | Layer | Path | Purpose |
 |-------|------|---------|
