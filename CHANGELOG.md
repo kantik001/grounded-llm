@@ -49,6 +49,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Docker Compose server healthcheck uses `/ready` instead of `/health`
 - Smoke script checks `/ready`
 
+### Planned (Phase 4 — spec & trust, prep on `docs/phase-4-prep`)
+
+- [PHASE_4.md](docs/en/PHASE_4.md) implementation plan
+- [API_DEPRECATION_POLICY.md](docs/en/API_DEPRECATION_POLICY.md)
+- [COMPATIBILITY.md](docs/en/COMPATIBILITY.md)
+- Conformance suite scaffold: [conformance/](conformance/)
+- Adversarial eval pack: `eval/rag_adversarial_baseline.jsonl` (25 cases)
+- Secret scanning workflow: `.github/workflows/secret-scan.yml`
+- Tenant purge spec: [TENANT_PURGE.md](docs/en/TENANT_PURGE.md)
+
 ## [0.1.0] - 2026-07-05
 
 Initial open-source release baseline.

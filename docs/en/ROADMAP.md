@@ -259,4 +259,23 @@ The previous list (Helm, SaaS, vision pack, dashboard) is **split across Phases 
 
 ---
 
+## Phase 4 — Spec, trust & conformance (next)
+
+**Goal:** contract-stable platform for integrators and security reviewers.
+
+**Plan:** [PHASE_4.md](./PHASE_4.md)
+
+| Item | Artifact |
+|------|----------|
+| API deprecation policy | [API_DEPRECATION_POLICY.md](./API_DEPRECATION_POLICY.md) |
+| Compatibility matrix | [COMPATIBILITY.md](./COMPATIBILITY.md) |
+| Conformance suite | [conformance/](../../conformance/) |
+| Secret scanning | `.github/workflows/secret-scan.yml` |
+| Adversarial eval pack | `eval/rag_adversarial_baseline.jsonl` |
+| Tenant purge (RTBF) | [TENANT_PURGE.md](./TENANT_PURGE.md) — implement endpoint |
+
+**Start after:** Phase 3 merge to `main` → branch `feature/phase-4-spec-trust`.
+
+---
+
 See also: [ARCHITECTURE.md](./ARCHITECTURE.md), [DEPLOY.md](./DEPLOY.md), [Russian ROADMAP](../ru/ROADMAP.md).

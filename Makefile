@@ -1,4 +1,4 @@
-.PHONY: build up down restart logs clean ps help test test-go test-py smoke eval-retrieval eval-retrieval-ci reindex
+.PHONY: build up down restart logs clean ps help test test-go test-py smoke eval-retrieval eval-retrieval-ci reindex conformance-spec conformance-http
 
 # Docker Compose project name
 PROJECT_NAME := grounded_llm
@@ -76,6 +76,16 @@ test-sdk:
 	pytest sdk/python/tests/ -v
 
 test: test-go test-py
+
+## OpenAPI conformance (offline, no server)
+conformance-spec:
+	pip install -r conformance/requirements.txt
+	pytest conformance/test_openapi_spec.py -v --tb=short
+
+## Full HTTP conformance (requires running server: CONFORMANCE_BASE_URL)
+conformance-http:
+	pip install -r conformance/requirements.txt
+	pytest conformance/test_openapi_http.py -v --tb=short
 
 ## Smoke API (localhost:8080, TELEGRAM_AUTH_DISABLED=true)
 smoke:

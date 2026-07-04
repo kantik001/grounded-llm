@@ -51,6 +51,8 @@ grounded-llm chat "How many vacation days?"   # after server is up
 | `eval-retrieval-gate` | Reindex + retrieval eval (all suites) |
 | `smoke-api` | Health, domains, session, **full `/message` path** (with `LLM_MOCK` + `RAG_MOCK`) |
 | `docker-build` | Build all Docker images |
+| `secret-scan` | gitleaks secret detection |
+| `conformance-spec` | OpenAPI conformance (offline spec tests) |
 
 Dependabot opens weekly dependency PRs.
 
