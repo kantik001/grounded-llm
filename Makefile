@@ -1,71 +1,71 @@
 .PHONY: build up down restart logs clean ps help test test-go test-py smoke eval-retrieval eval-retrieval-ci reindex
 
-# Имя проекта Docker Compose
+# Docker Compose project name
 PROJECT_NAME := grounded_llm
 
-# Основные команды
+# Main commands
 
-## Сборка всех образов
+## Build all images
 build:
 	docker compose -p $(PROJECT_NAME) build --no-cache
 
-## Сборка без кэша (полная пересборка)
+## Full rebuild without cache
 build-no-cache:
 	docker compose -p $(PROJECT_NAME) build --no-cache --pull
 
-## Запуск всех сервисов в фоновом режиме
+## Start all services in background
 up:
 	docker compose -p $(PROJECT_NAME) up -d
 
-## Запуск с пересборкой изменённых сервисов
+## Start with rebuild of changed services
 up-build:
 	docker compose -p $(PROJECT_NAME) up -d --build
 
-## Запуск в режиме foreground (для отладки)
+## Start in foreground (debug)
 up-dev:
 	docker compose -p $(PROJECT_NAME) up
 
-## Остановка всех сервисов
+## Stop all services
 down:
 	docker compose -p $(PROJECT_NAME) down
 
-## Остановка с удалением томов
+## Stop and remove volumes
 down-volumes:
 	docker compose -p $(PROJECT_NAME) down -v
 
-## Перезапуск всех сервисов
+## Restart all services
 restart:
 	docker compose -p $(PROJECT_NAME) restart
 
-## Просмотр логов всех сервисов
+## Tail logs for all services
 logs:
 	docker compose -p $(PROJECT_NAME) logs -f
 
-## Просмотр логов конкретного сервиса (пример: make logs-service SERVICE=webapp)
+## Tail logs for one service (e.g. make logs-service SERVICE=webapp)
 logs-service:
 	docker compose -p $(PROJECT_NAME) logs -f $(SERVICE)
 
-## Показать статус сервисов
+## Show service status
 ps:
 	docker compose -p $(PROJECT_NAME) ps
 
-## Очистка: остановка, удаление контейнеров, образов и томов
+## Full cleanup: containers, images, volumes
 clean:
 	docker compose -p $(PROJECT_NAME) down -v --rmi all --remove-orphans
 
-## Пересборка и запуск одного сервиса (пример: make rebuild SERVICE=webapp)
+## Rebuild and restart one service (e.g. make rebuild SERVICE=webapp)
 rebuild:
 	docker compose -p $(PROJECT_NAME) up -d --build --force-recreate $(SERVICE)
 
-## Проверка здоровья сервисов
+## Health check (service status)
 health:
 	docker compose -p $(PROJECT_NAME) ps
 
-## Unit-тесты Go
+## Go unit tests
 test-go:
 	cd server && go test -v -count=1 ./...
 
-## Unit-тесты Python
+## Python unit tests
 test-py:
 	pip install -r tests/requirements-test.txt
 	pytest tests/ -v
@@ -76,7 +76,7 @@ test: test-go test-py
 smoke:
 	powershell -ExecutionPolicy Bypass -File scripts/smoke.ps1
 
-## Переиндексация Chroma (нужен Python-сервис / локальное окружение)
+## Reindex Chroma (requires Python service or local env)
 reindex:
 	python scripts/reindex_rag.py
 
@@ -96,29 +96,29 @@ init-pack-list:
 init-pack-install:
 	python scripts/init_pack.py install $(PACK)
 
-## Помощь по доступным командам
+## Show available commands
 help:
-	@echo "Доступные команды:"
-	@echo "  make build          - Сборка всех образов"
-	@echo "  make build-no-cache - Полная пересборка без кэша"
-	@echo "  make up             - Запуск сервисов в фоне"
-	@echo "  make up-build       - Запуск с пересборкой"
-	@echo "  make up-dev         - Запуск в режиме отладки (foreground)"
-	@echo "  make down           - Остановка сервисов"
-	@echo "  make down-volumes   - Остановка с удалением томов"
-	@echo "  make restart        - Перезапуск сервисов"
-	@echo "  make logs           - Просмотр логов всех сервисов"
-	@echo "  make logs-service SERVICE=<name> - Логи конкретного сервиса"
-	@echo "  make ps             - Статус сервисов"
-	@echo "  make clean          - Полная очистка (контейнеры, образы, тома)"
-	@echo "  make rebuild SERVICE=<name> - Пересборка и запуск одного сервиса"
-	@echo "  make health         - Проверка статуса сервисов"
-	@echo "  make test-go        - Unit-тесты Go (server/)"
-	@echo "  make test-py        - Unit-тесты Python (tests/)"
+	@echo "Available commands:"
+	@echo "  make build          - Build all Docker images"
+	@echo "  make build-no-cache - Full rebuild without cache"
+	@echo "  make up             - Start services in background"
+	@echo "  make up-build       - Start with rebuild"
+	@echo "  make up-dev         - Start in foreground (debug)"
+	@echo "  make down           - Stop services"
+	@echo "  make down-volumes   - Stop and remove volumes"
+	@echo "  make restart        - Restart services"
+	@echo "  make logs           - Tail logs for all services"
+	@echo "  make logs-service SERVICE=<name> - Tail logs for one service"
+	@echo "  make ps             - Show service status"
+	@echo "  make clean          - Full cleanup (containers, images, volumes)"
+	@echo "  make rebuild SERVICE=<name> - Rebuild and restart one service"
+	@echo "  make health         - Health check (service status)"
+	@echo "  make test-go        - Go unit tests (server/)"
+	@echo "  make test-py        - Python unit tests (tests/)"
 	@echo "  make test           - test-go + test-py"
 	@echo "  make eval-retrieval   - RAG eval (needs Python on :5000)"
 	@echo "  make eval-retrieval-ci - Reindex + RAG + all eval suites (local CI gate)"
 	@echo "  make init-pack-list    - List official template packs"
 	@echo "  make init-pack-install PACK=it_support - Install a template pack"
 	@echo "  make smoke          - Smoke API (localhost:8080)"
-	@echo "  make help           - Эта справка"
+	@echo "  make help           - This help"

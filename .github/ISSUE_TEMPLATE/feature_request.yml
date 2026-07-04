@@ -1,0 +1,58 @@
+name: Feature request
+description: Suggest an enhancement aligned with the platform vision
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please read [PLATFORM_VISION.md](https://github.com/kantik001/grounded-llm/blob/main/PLATFORM_VISION.md) and [ROADMAP](https://github.com/kantik001/grounded-llm/blob/main/docs/en/ROADMAP.md) before submitting.
+        Grounded LLM focuses on **document-grounded assistants** — not generic chatbot builders.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What problem does this solve? Who is the user?
+      placeholder: HR teams need to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How would you solve it? API change, new pack, config option?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches you thought about
+    validations:
+      required: false
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - Platform core (server, rag, api)
+        - Template pack only
+        - Documentation
+        - DevOps / deploy
+        - Community / governance
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: alignment
+    attributes:
+      label: Vision alignment
+      options:
+        - label: This stays within document-grounded assistants (not a universal AI builder)
+          required: true
+        - label: I am willing to contribute a PR if the approach is accepted
+          required: false

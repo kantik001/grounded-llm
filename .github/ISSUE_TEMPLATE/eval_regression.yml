@@ -1,0 +1,72 @@
+name: Eval regression
+description: Retrieval eval baseline failure or quality regression
+title: "[Eval]: "
+labels: ["eval", "bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template when `make eval-retrieval-ci` or CI job `eval-retrieval-gate` fails,
+        or when retrieval quality regresses for a domain pack.
+
+  - type: dropdown
+    id: suite
+    attributes:
+      label: Eval suite
+      options:
+        - eval/rag_default_en_baseline.jsonl
+        - eval/rag_default_baseline.jsonl (RU)
+        - eval/rag_it_support_baseline.jsonl
+        - Custom / new suite
+    validations:
+      required: true
+
+  - type: input
+    id: case_id
+    attributes:
+      label: Failing case ID or question (if known)
+      placeholder: e.g. line 12 or "How many vacation days..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: failure
+    attributes:
+      label: Failure details
+      description: Expected vs actual (expect_contains, expect_context, expect_out_of_scope)
+      placeholder: |
+        Expected context to contain "28 days"
+        Got: empty context / wrong chunk / HTTP 500
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduce locally
+      render: shell
+      placeholder: |
+        make eval-retrieval-ci
+        # or
+        python scripts/run_rag_eval.py --suite default_en
+    validations:
+      required: true
+
+  - type: dropdown
+    id: domain
+    attributes:
+      label: Domain pack
+      options:
+        - default / HR
+        - it_support
+        - Custom tenant/domain
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Recent changes
+      description: Commits, config changes, or new documents that might have caused regression
+    validations:
+      required: false

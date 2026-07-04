@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/kantik001/grounded-llm/security/advisories/new
+    about: Report security issues privately — do not use public issues
+  - name: Documentation
+    url: https://github.com/kantik001/grounded-llm/tree/main/docs/en
+    about: Browse the documentation before opening a question issue
