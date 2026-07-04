@@ -158,7 +158,12 @@ make eval-retrieval            # RAG baseline only (needs Python already on :500
 | [docs/en/K8S_DEPLOY.md](docs/en/K8S_DEPLOY.md) | Helm / Kubernetes deploy |
 | [docs/en/TRUST_CENTER.md](docs/en/TRUST_CENTER.md) | Security review summary |
 | [docs/en/BACKUP_RESTORE.md](docs/en/BACKUP_RESTORE.md) | Postgres, Chroma, data backup |
-| [docs/en/PHASE_4.md](docs/en/PHASE_4.md) | Next: spec, conformance, RTBF |
+| [docs/en/PHASE_4.md](docs/en/PHASE_4.md) | Spec, conformance, RTBF (done) |
+| [docs/en/PHASE_5.md](docs/en/PHASE_5.md) | Standard publication (in progress) |
+| [docs/en/STANDARD_STRATEGY.md](docs/en/STANDARD_STRATEGY.md) | Horizons, pillars, path A→B |
+| [docs/en/spec/GROUNDED_SPEC_v1.md](docs/en/spec/GROUNDED_SPEC_v1.md) | Normative API v1 spec |
+| [docs/en/RFC.md](docs/en/RFC.md) | RFC process · [RFC-0001](docs/en/rfcs/RFC-0001-grounded-compatible.md) |
+| [docs/en/BENCHMARK.md](docs/en/BENCHMARK.md) | Public eval metrics |
 | [docs/en/API_DEPRECATION_POLICY.md](docs/en/API_DEPRECATION_POLICY.md) | `/api/v1` stability & sunset |
 | [docs/en/COMPATIBILITY.md](docs/en/COMPATIBILITY.md) | Supported stack matrix |
 | [conformance/](conformance/) | API + retrieval conformance tests |

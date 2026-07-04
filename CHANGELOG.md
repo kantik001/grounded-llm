@@ -68,6 +68,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Smarter RAG mock** for out-of-scope adversarial cases in CI
 - Unit tests: `tests/test_rag_eval_check.py`, `admin_tenant_purge_test.go`
 
+### Added (Phase 5 — standard publication)
+
+- [GROUNDED_SPEC_v1.md](docs/en/spec/GROUNDED_SPEC_v1.md) — normative Spec v1
+- Conformance CLI: `python -m conformance` (`spec`, `http`, `retrieval`, `check`, `all`)
+- [RFC.md](docs/en/RFC.md) + [RFC-0001 Grounded-compatible](docs/en/rfcs/RFC-0001-grounded-compatible.md)
+- [STANDARD_STRATEGY.md](docs/en/STANDARD_STRATEGY.md) — five pillars, three horizons
+- [BENCHMARK.md](docs/en/BENCHMARK.md) + `scripts/bench_report.py`
+- [PHASE_5.md](docs/en/PHASE_5.md) — phase plan mapped to pillars
+
 ## [0.1.0] - 2026-07-05
 
 Initial open-source release baseline.

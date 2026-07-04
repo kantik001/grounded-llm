@@ -2,9 +2,9 @@
 
 **Goal:** Move from «enterprise-ready deploy» to **contract-stable platform** — API policy, reproducible conformance, adversarial quality gates, and GDPR-style tenant purge.
 
-**Branch:** `feature/phase-4-spec-trust` (create from `main` after Phase 3 merge)
+**Status:** ✅ Complete (merged to `main`)
 
-**Prerequisite:** Phase 3 merged (`readiness`, `RAG_SERVICE_TOKEN`, retention, Helm, trust docs).
+**Branch:** `feature/phase-4-spec-trust`
 
 ---
 
