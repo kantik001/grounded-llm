@@ -87,6 +87,11 @@ conformance-http:
 	pip install -r conformance/requirements.txt
 	pytest conformance/test_openapi_http.py -v --tb=short
 
+## Adversarial E2E (mock server)
+adversarial-e2e:
+	pip install requests
+	python scripts/run_adversarial_e2e.py --base-url http://127.0.0.1:8080
+
 ## Smoke API (localhost:8080, TELEGRAM_AUTH_DISABLED=true)
 smoke:
 	powershell -ExecutionPolicy Bypass -File scripts/smoke.ps1

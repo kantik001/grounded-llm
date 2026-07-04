@@ -255,6 +255,16 @@ jobs:
       - name: Smoke test (health + full /message path)
         run: bash scripts/smoke.sh http://127.0.0.1:8080
 
+      - name: Adversarial E2E (mock LLM + RAG)
+        run: pip install requests && python scripts/run_adversarial_e2e.py --base-url http://127.0.0.1:8080
+
+      - name: OpenAPI HTTP conformance
+        env:
+          CONFORMANCE_BASE_URL: http://127.0.0.1:8080
+        run: |
+          pip install -r conformance/requirements.txt
+          pytest conformance/test_openapi_http.py -v --tb=short
+
       - name: Stop server
         if: always()
         run: |

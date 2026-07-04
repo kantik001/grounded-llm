@@ -1,6 +1,6 @@
 # Tenant data purge (RTBF)
 
-**Status:** specified in Phase 4 — **not yet implemented**  
+**Status:** implemented — `DELETE /api/admin/tenants/:tenant_id`  
 **Goal:** GDPR / right-to-be-forgotten story for [TRUST_CENTER.md](./TRUST_CENTER.md)
 
 ---
@@ -78,13 +78,13 @@ Before deletion, append audit row:
 
 ## Implementation checklist (Phase 4)
 
-- [ ] `server/admin_tenant_purge.go` — handler + transaction
-- [ ] `ChatStore.PurgeTenant(ctx, tenantID)` — SQL + file cleanup
-- [ ] Python `POST /admin/purge-tenant` — Chroma filter delete (optional)
-- [ ] RBAC: `RoleAdmin` only
-- [ ] Tests: `admin_tenant_purge_test.go`
-- [ ] OpenAPI admin paths (separate spec or extension)
-- [ ] Update TRUST_CENTER.md — mark RTBF as supported
+- [x] `server/admin_tenant_purge.go` — handler + validation
+- [x] `ChatStore.PurgeTenant` — SQL + file cleanup
+- [ ] Python `POST /admin/purge-tenant` — Chroma filter delete (optional follow-up)
+- [x] RBAC: `RoleAdmin` only
+- [x] Tests: `admin_tenant_purge_test.go`
+- [ ] OpenAPI admin paths extension (follow-up)
+- [x] Trust Center updated
 
 ---
 

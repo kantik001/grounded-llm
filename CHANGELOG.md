@@ -59,6 +59,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Secret scanning workflow: `.github/workflows/secret-scan.yml`
 - Tenant purge spec: [TENANT_PURGE.md](docs/en/TENANT_PURGE.md)
 
+### Added (Phase 4 — spec & trust)
+
+- **`expect_not_contains`** in RAG eval runner + adversarial retrieval gate
+- **Tenant purge:** `DELETE /api/admin/tenants/:tenant_id?confirm=true` (admin RBAC, audit)
+- **Adversarial E2E:** `eval/rag_adversarial_e2e.jsonl` + `scripts/run_adversarial_e2e.py` in CI smoke
+- **Conformance HTTP** tests against running server (smoke job)
+- **Smarter RAG mock** for out-of-scope adversarial cases in CI
+- Unit tests: `tests/test_rag_eval_check.py`, `admin_tenant_purge_test.go`
+
 ## [0.1.0] - 2026-07-05
 
 Initial open-source release baseline.

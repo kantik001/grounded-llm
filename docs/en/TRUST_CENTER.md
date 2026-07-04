@@ -12,7 +12,7 @@ Summary for security reviewers and procurement questionnaires. Detailed controls
 |-----------|--------------|-------------------|-----------|
 | Chat messages | Postgres | Operator responsibility (disk/DB encryption) | Configurable via `MESSAGE_RETENTION_DAYS` |
 | Chat sessions | Postgres | Same | `SESSION_RETENTION_DAYS` |
-| Full tenant delete (RTBF) | Postgres + `data/` + Chroma | Operator responsibility | **Phase 4:** `DELETE /api/admin/tenants/:id` — see [TENANT_PURGE.md](./TENANT_PURGE.md) |
+| Full tenant delete (RTBF) | Postgres + `data/` + uploads | Operator responsibility | `DELETE /api/admin/tenants/:id?confirm=true` — see [TENANT_PURGE.md](./TENANT_PURGE.md) |
 | Documents (KB) | `data/` volume | Operator responsibility | Until admin delete |
 | Embeddings | Chroma volume | Operator responsibility | Rebuilt from KB |
 | User images | `UPLOAD_DIR` | File permissions `0600` | With session/message retention |

@@ -14,10 +14,11 @@
 |---|------|----------|-----------------|
 | 1 | API deprecation policy | [API_DEPRECATION_POLICY.md](./API_DEPRECATION_POLICY.md) | docs review |
 | 2 | Compatibility matrix | [COMPATIBILITY.md](./COMPATIBILITY.md) | pinned in Docker/CI |
-| 3 | Conformance test suite | [conformance/](../../conformance/) | `conformance` |
+| 3 | Conformance test suite | [conformance/](../../conformance/) | `conformance-spec` + HTTP in `smoke-api` |
 | 4 | Secret scanning | [.github/workflows/secret-scan.yml](../../.github/workflows/secret-scan.yml) | `secret-scan` |
-| 5 | Adversarial eval pack | [eval/rag_adversarial_baseline.jsonl](../../eval/rag_adversarial_baseline.jsonl) | extend `eval-retrieval-gate` + new E2E job |
-| 6 | Tenant data purge | [TENANT_PURGE.md](./TENANT_PURGE.md) + `DELETE /api/admin/tenants/:id` | `go-test` + audit |
+| 5 | Adversarial eval pack | [eval/rag_adversarial_baseline.jsonl](../../eval/rag_adversarial_baseline.jsonl) | `eval-retrieval-gate` |
+| 5b | Adversarial E2E | [eval/rag_adversarial_e2e.jsonl](../../eval/rag_adversarial_e2e.jsonl) | `smoke-api` |
+| 6 | Tenant data purge | `DELETE /api/admin/tenants/:id` | `go-test` + audit |
 
 ---
 
