@@ -20,8 +20,25 @@ app = Flask(__name__)
 CORS(app)
 
 
+def _admin_authorized() -> bool:
+    expected = os.environ.get("ADMIN_SECRET", "")
+    secret = request.headers.get("X-Admin-Secret", "")
+    return bool(expected) and secret == expected
+
+
+def _rag_service_authorized() -> bool:
+    """Internal auth for Go server → Python RAG calls. Open when RAG_SERVICE_TOKEN is unset."""
+    expected = os.environ.get("RAG_SERVICE_TOKEN", "")
+    if not expected:
+        return True
+    token = request.headers.get("X-RAG-Service-Token", "")
+    return token == expected
+
+
 @app.route("/rag/context", methods=["POST"])
 def rag_context():
+    if not _rag_service_authorized():
+        return jsonify({"success": False, "error": "forbidden"}), 403
     try:
         data = request.get_json(silent=True) or {}
         question = (data.get("question") or "").strip()
@@ -51,10 +68,23 @@ def health_check():
     return jsonify({"status": "healthy", "service": "grounded-llm-python"}), 200
 
 
-def _admin_authorized() -> bool:
-    expected = os.environ.get("ADMIN_SECRET", "")
-    secret = request.headers.get("X-Admin-Secret", "")
-    return bool(expected) and secret == expected
+@app.route("/ready", methods=["GET"])
+def readiness_check():
+    if not _rag_service_authorized():
+        return jsonify({"status": "not_ready", "checks": {"auth": "forbidden"}}), 403
+    checks = {"process": "ok"}
+    chroma_dir = vs.PERSIST_DIR
+    if os.path.isdir(chroma_dir):
+        checks["chroma"] = "ok"
+    else:
+        checks["chroma"] = "pending"
+    data_root = os.path.join(_root, "data")
+    if os.path.isdir(data_root):
+        checks["data"] = "ok"
+    else:
+        checks["data"] = "missing"
+        return jsonify({"status": "not_ready", "checks": checks}), 503
+    return jsonify({"status": "ready", "checks": checks}), 200
 
 
 @app.route("/admin/index-stats", methods=["GET"])

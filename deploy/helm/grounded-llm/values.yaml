@@ -1,0 +1,72 @@
+# Default values for grounded-llm Helm chart.
+# See docs/en/K8S_DEPLOY.md for production guidance.
+
+global:
+  imagePullPolicy: IfNotPresent
+
+postgres:
+  enabled: true
+  image: postgres:16-alpine
+  storage: 10Gi
+  user: grounded
+  password: grounded
+  database: grounded
+
+server:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/your-org/grounded-llm-server
+    tag: latest
+  port: 8080
+  resources: {}
+  env:
+    TELEGRAM_AUTH_DISABLED: "false"
+    RATE_LIMIT_REQUESTS_PER_MINUTE: "30"
+    DEFAULT_LOCALE: en
+  # readinessProbe uses /ready (DB + Python RAG)
+  livenessPath: /health
+  readinessPath: /ready
+
+python:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/your-org/grounded-llm-python
+    tag: latest
+  port: 5000
+  resources: {}
+  persistence:
+    chromaSize: 20Gi
+  env:
+    FORCE_RAG_REINDEX: "false"
+    DEFAULT_LOCALE: en
+
+webapp:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: ghcr.io/your-org/grounded-llm-webapp
+    tag: latest
+  port: 80
+
+ingress:
+  enabled: false
+  className: nginx
+  host: grounded.example.com
+  tls: false
+
+secrets:
+  # Set via --set or external Secrets manager in production
+  llmApiKey: ""
+  telegramBotToken: ""
+  adminPassword: ""
+  adminSecret: ""
+  ragServiceToken: ""
+
+retention:
+  messageRetentionDays: 0
+  sessionRetentionDays: 0
+  intervalHours: 24
+
+serviceAccount:
+  create: false
+  name: ""

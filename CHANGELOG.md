@@ -35,6 +35,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README: expanded architecture diagram, SDK quickstart and product evidence links
 - CodeQL moved off PR checks (manual/weekly only; enable upload when Code scanning is on)
 
+### Added (Phase 3 — enterprise scale)
+
+- **Readiness probes:** `GET /ready` on Go (DB + Python RAG) and Python (`/ready` with chroma/data checks)
+- **`RAG_SERVICE_TOKEN`:** internal auth header `X-RAG-Service-Token` for Go → Python calls
+- **Retention worker:** `MESSAGE_RETENTION_DAYS`, `SESSION_RETENTION_DAYS`, `RETENTION_INTERVAL_HOURS`
+- **Helm chart:** `deploy/helm/grounded-llm/` with probes, secrets, PVCs
+- **Enterprise docs:** [TRUST_CENTER.md](docs/en/TRUST_CENTER.md), [BACKUP_RESTORE.md](docs/en/BACKUP_RESTORE.md), [K8S_DEPLOY.md](docs/en/K8S_DEPLOY.md), [NETWORK_SECURITY.md](docs/en/NETWORK_SECURITY.md)
+- **nginx CSP** headers on webapp shell
+
+### Changed (Phase 3)
+
+- Docker Compose server healthcheck uses `/ready` instead of `/health`
+- Smoke script checks `/ready`
+
 ## [0.1.0] - 2026-07-05
 
 Initial open-source release baseline.

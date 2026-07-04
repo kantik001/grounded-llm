@@ -1,0 +1,22 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Release: {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+
+Components:
+  - Go API:     {{ include "grounded-llm.fullname" . }}-server:{{ .Values.server.port }}
+  - Python RAG: {{ include "grounded-llm.fullname" . }}-python:{{ .Values.python.port }}
+  {{- if .Values.webapp.enabled }}
+  - Web UI:     {{ include "grounded-llm.fullname" . }}-webapp:{{ .Values.webapp.port }}
+  {{- end }}
+
+Health checks:
+  - Liveness:  GET /health  (Go), GET /health (Python)
+  - Readiness: GET /ready   (Go probes DB + Python; Python probes data/chroma)
+
+Before production:
+  1. Set secrets via values or external Secret manager (LLM_API_KEY, ADMIN_SECRET, RAG_SERVICE_TOKEN)
+  2. Mount knowledge-base data and config (see docs/en/K8S_DEPLOY.md)
+  3. Configure ingress TLS and backup schedule (docs/en/BACKUP_RESTORE.md)
+
+Documentation: docs/en/K8S_DEPLOY.md · docs/en/TRUST_CENTER.md

@@ -40,6 +40,7 @@ check_body_contains() {
 echo "Smoke test: $BASE_URL"
 
 check health GET /health
+check ready GET /ready
 check metrics GET /api/metrics
 check domains GET /api/domains
 check branding GET "/api/branding?locale=en"

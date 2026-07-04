@@ -1,0 +1,105 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "grounded-llm.fullname" . }}-server
+  labels:
+    {{- include "grounded-llm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: server
+spec:
+  ports:
+    - port: {{ .Values.server.port }}
+      targetPort: http
+      name: http
+  selector:
+    {{- include "grounded-llm.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: server
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "grounded-llm.fullname" . }}-server
+  labels:
+    {{- include "grounded-llm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: server
+spec:
+  replicas: {{ .Values.server.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "grounded-llm.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: server
+  template:
+    metadata:
+      labels:
+        {{- include "grounded-llm.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: server
+    spec:
+      containers:
+        - name: server
+          image: "{{ .Values.server.image.repository }}:{{ .Values.server.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.server.port }}
+              name: http
+          env:
+            - name: SERVER_PORT
+              value: {{ .Values.server.port | quote }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "grounded-llm.fullname" . }}-secrets
+                  key: POSTGRES_PASSWORD
+            - name: PYTHON_RAG_URL
+              value: http://{{ include "grounded-llm.fullname" . }}-python:{{ .Values.python.port }}/rag/context
+            - name: PYTHON_BASE_URL
+              value: http://{{ include "grounded-llm.fullname" . }}-python:{{ .Values.python.port }}
+            - name: LLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "grounded-llm.fullname" . }}-secrets
+                  key: LLM_API_KEY
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "grounded-llm.fullname" . }}-secrets
+                  key: TELEGRAM_BOT_TOKEN
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "grounded-llm.fullname" . }}-secrets
+                  key: ADMIN_PASSWORD
+            - name: ADMIN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "grounded-llm.fullname" . }}-secrets
+                  key: ADMIN_SECRET
+            - name: RAG_SERVICE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "grounded-llm.fullname" . }}-secrets
+                  key: RAG_SERVICE_TOKEN
+            - name: MESSAGE_RETENTION_DAYS
+              value: {{ .Values.retention.messageRetentionDays | quote }}
+            - name: SESSION_RETENTION_DAYS
+              value: {{ .Values.retention.sessionRetentionDays | quote }}
+            - name: RETENTION_INTERVAL_HOURS
+              value: {{ .Values.retention.intervalHours | quote }}
+            - name: DATABASE_URL
+              value: postgres://{{ .Values.postgres.user }}:$(POSTGRES_PASSWORD)@{{ include "grounded-llm.postgresHost" . }}:5432/{{ .Values.postgres.database }}?sslmode=disable
+            {{- range $k, $v := .Values.server.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.server.livenessPath }}
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.server.readinessPath }}
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.server.resources | nindent 12 }}

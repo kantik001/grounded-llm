@@ -446,6 +446,34 @@ func (st *ChatStore) FeedbackSummary(ctx context.Context) ([]FeedbackSummaryRow,
 	return out, rows.Err()
 }
 
+// PurgeMessagesOlderThan deletes messages older than the given number of days.
+func (st *ChatStore) PurgeMessagesOlderThan(ctx context.Context, days int) (int64, error) {
+	if days <= 0 {
+		return 0, nil
+	}
+	tag, err := st.pool.Exec(ctx, `
+		DELETE FROM messages
+		WHERE created_at < NOW() - ($1 || ' days')::interval`, days)
+	if err != nil {
+		return 0, err
+	}
+	return tag.RowsAffected(), nil
+}
+
+// PurgeSessionsOlderThan deletes idle chat sessions (and cascaded messages) older than days.
+func (st *ChatStore) PurgeSessionsOlderThan(ctx context.Context, days int) (int64, error) {
+	if days <= 0 {
+		return 0, nil
+	}
+	tag, err := st.pool.Exec(ctx, `
+		DELETE FROM chat_sessions
+		WHERE updated_at < NOW() - ($1 || ' days')::interval`, days)
+	if err != nil {
+		return 0, err
+	}
+	return tag.RowsAffected(), nil
+}
+
 // Ждёт готовности Postgres при старте (docker compose).
 func waitForPostgres(ctx context.Context, databaseURL string, attempts int) (*pgxpool.Pool, error) {
 	var lastErr error

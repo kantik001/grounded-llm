@@ -46,6 +46,7 @@ func fetchRAGContext(question, tenantID, domainID, locale string) (*pythonRAGCon
 		return nil, fmt.Errorf("create RAG request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+	setPythonServiceHeaders(req)
 	client := &http.Client{Timeout: 120 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
