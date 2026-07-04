@@ -1,0 +1,13 @@
+{"domain_id": "legal_faq", "question": "How long does the standard mutual NDA remain in effect?", "expect_contains": ["2"], "expect_context": true, "category": "policy"}
+{"domain_id": "legal_faq", "question": "How many days do recipients have to return confidential materials after termination?", "expect_contains": ["30"], "expect_context": true, "category": "policy"}
+{"domain_id": "legal_faq", "question": "Who is the Data Protection Officer contact email?", "expect_contains": ["privacy@"], "expect_context": true, "category": "policy"}
+{"domain_id": "legal_faq", "question": "How long are employee HR records retained after employment ends?", "expect_contains": ["7"], "expect_context": true, "category": "policy"}
+{"domain_id": "legal_faq", "question": "Within how many hours must personal data breaches be reported to the DPO?", "expect_contains": ["24"], "expect_context": true, "category": "policy"}
+{"domain_id": "legal_faq", "question": "At what contract value is legal review required per year?", "expect_contains": ["10,000"], "expect_context": true, "category": "policy"}
+{"domain_id": "legal_faq", "question": "What is the standard legal contract review SLA in business days?", "expect_contains": ["5"], "expect_context": true, "category": "policy"}
+{"domain_id": "legal_faq", "question": "Who owns work product created by employees in scope of employment?", "expect_contains": ["company"], "expect_context": true, "category": "policy"}
+{"domain_id": "legal_faq", "question": "What is the whistleblower hotline email?", "expect_contains": ["ethics-hotline@"], "expect_context": true, "category": "policy"}
+{"domain_id": "legal_faq", "question": "By what date must employees complete annual compliance training?", "expect_contains": ["31 March"], "expect_context": true, "category": "policy"}
+{"domain_id": "legal_faq", "question": "What gift value from vendors requires Compliance approval per year?", "expect_contains": ["100"], "expect_context": true, "category": "policy"}
+{"domain_id": "legal_faq", "question": "What is the stock ticker symbol on Neptune?", "expect_out_of_scope": true, "expect_contains": [], "category": "edge"}
+{"domain_id": "legal_faq", "question": "How many vacation days does IT support offer on Mars?", "expect_out_of_scope": true, "expect_contains": [], "category": "edge"}

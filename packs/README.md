@@ -64,6 +64,7 @@ python scripts/run_rag_eval.py --suite it_support
 |------|--------|------------|
 | `hr` | `default` | `default_en` |
 | `it_support` | `it_support` | `it_support` |
+| `legal_faq` | `legal_faq` | `legal_faq` |
 
 See [docs/en/domain-packs/](../docs/en/domain-packs/) for deploy guides.
 

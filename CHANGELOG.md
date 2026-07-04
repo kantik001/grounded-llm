@@ -84,6 +84,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [RELEASE.md](docs/en/RELEASE.md) — v0.3.0 tag checklist
 - Release workflow includes conformance verification steps
 
+### Added (Phase 6 — ecosystem scale)
+
+- **Legal FAQ template pack:** `packs/legal_faq/` + [LEGAL_FAQ.md](docs/en/domain-packs/LEGAL_FAQ.md)
+- **Vector store adapter:** `rag/vector_backend/` — Chroma default, Qdrant optional (`api/requirements-qdrant.txt`)
+- **Hybrid retrieval:** `RAG_RETRIEVAL_MODE=hybrid` keyword rerank via `rag/hybrid_rank.py`
+- **AWS Terraform reference:** `deploy/terraform/aws/reference/` + [TERRAFORM.md](docs/en/TERRAFORM.md)
+- [VECTOR_STORE.md](docs/en/VECTOR_STORE.md), [PHASE_6.md](docs/en/PHASE_6.md)
+
 ## [0.3.0] - TBD
 
 Standard publication release: Spec v1, conformance CLI, adversarial eval, tenant purge, Helm, SDK adoption docs.

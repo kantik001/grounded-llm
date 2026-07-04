@@ -1,112 +1,61 @@
-# Chroma vector store: documents under data/{tenant_id}/{domain_id}/*.{txt,pdf,docx}
-import glob
+# Vector store facade — delegates to pluggable backend (Chroma default, Qdrant optional).
 import os
 
-from langchain_chroma import Chroma
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-
-from rag.document_loaders import load_file, supported_extensions
 from rag.domains_config import normalize_domain_id
-from rag.kb_discovery import DEFAULT_TENANT, discover_kb_directories
+from rag.hybrid_rank import rerank_documents
+from rag.kb_discovery import DEFAULT_TENANT
+from rag.vector_backend import get_vector_backend, reset_vector_backend
+from rag.vector_backend.chroma_backend import DEFAULT_PERSIST_DIR
 
-_PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-PERSIST_DIR = os.path.join(_PROJECT_ROOT, "chroma_db")
-
-_vector_store = None
+PERSIST_DIR = DEFAULT_PERSIST_DIR
 
 
 def reset_vector_store():
-    global _vector_store
-    _vector_store = None
+    reset_vector_backend()
 
 
 def load_all_documents():
-    all_docs = []
-    for tenant_id, domain_id, domain_dir in discover_kb_directories():
-        for ext in supported_extensions():
-            for file_path in glob.glob(os.path.join(domain_dir, f"*{ext}")):
-                all_docs.extend(load_file(domain_id, file_path, tenant_id=tenant_id))
-    return all_docs
+    from rag.vector_backend.chroma_backend import _load_all_documents
+
+    return _load_all_documents()
 
 
 def create_vector_store():
-    print("Creating vector store...")
-    documents = load_all_documents()
-    if not documents:
-        print("No documents to index.")
-        return None
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-    docs = text_splitter.split_documents(documents)
-    print(f"Chunks: {len(docs)}")
-    embeddings = HuggingFaceEmbeddings(model_name="intfloat/multilingual-e5-small")
-    store = Chroma.from_documents(docs, embeddings, persist_directory=PERSIST_DIR)
-    print(f"Vector store saved to {PERSIST_DIR}")
-    return store
+    backend = get_vector_backend()
+    backend.load(force_reindex=True)
+    return backend
 
 
 def load_vector_store(force_reindex: bool = False):
-    global _vector_store
-    if _vector_store is not None and not force_reindex:
-        return _vector_store
+    backend = get_vector_backend()
+    backend.load(force_reindex=force_reindex)
+    return backend
 
-    force = force_reindex or os.environ.get("FORCE_RAG_REINDEX", "").lower() in (
-        "1",
-        "true",
-        "yes",
-    )
-    embeddings = HuggingFaceEmbeddings(model_name="intfloat/multilingual-e5-small")
 
-    if force and os.path.isdir(PERSIST_DIR):
-        import shutil
-
-        print("FORCE_RAG_REINDEX: removing old chroma_db")
-        shutil.rmtree(PERSIST_DIR, ignore_errors=True)
-
-    if os.path.exists(PERSIST_DIR) and os.listdir(PERSIST_DIR):
-        _vector_store = Chroma(persist_directory=PERSIST_DIR, embedding_function=embeddings)
-    else:
-        _vector_store = create_vector_store()
-    return _vector_store
+def _retrieval_mode() -> str:
+    return (os.environ.get("RAG_RETRIEVAL_MODE") or "vector").strip().lower()
 
 
 def search(query: str, domain_id: str, tenant_id: str = DEFAULT_TENANT, k: int = 8):
     domain_id = normalize_domain_id(domain_id)
     tenant_id = (tenant_id or DEFAULT_TENANT).strip().lower() or DEFAULT_TENANT
-    store = load_vector_store()
-    if store is None:
-        return []
-    return store.similarity_search(
+    backend = get_vector_backend()
+    mode = _retrieval_mode()
+    fetch_k = min(max(k * 2, k), 20) if mode == "hybrid" else k
+    results = backend.similarity_search(
         query,
-        k=k,
-        filter={"$and": [{"domain_id": domain_id}, {"tenant_id": tenant_id}]},
+        k=fetch_k,
+        domain_id=domain_id,
+        tenant_id=tenant_id,
     )
+    if mode == "hybrid" and len(results) > k:
+        return rerank_documents(query, results, k)
+    return results[:k]
 
 
 def index_stats_for_domain(domain_id: str, tenant_id: str = DEFAULT_TENANT) -> list[dict]:
     """Chunk counts per source file for a domain (admin index status)."""
     domain_id = normalize_domain_id(domain_id)
     tenant_id = (tenant_id or DEFAULT_TENANT).strip().lower() or DEFAULT_TENANT
-    store = load_vector_store()
-    if store is None:
-        return []
-    try:
-        data = store._collection.get(  # noqa: SLF001
-            where={"$and": [{"domain_id": domain_id}, {"tenant_id": tenant_id}]},
-            include=["metadatas"],
-        )
-    except Exception:
-        try:
-            data = store._collection.get(
-                where={"domain_id": domain_id, "tenant_id": tenant_id},
-                include=["metadatas"],
-            )
-        except Exception:
-            return []
-    counts: dict[str, int] = {}
-    for meta in data.get("metadatas") or []:
-        if not meta:
-            continue
-        fn = meta.get("filename") or meta.get("source_file") or "unknown"
-        counts[fn] = counts.get(fn, 0) + 1
-    return [{"filename": name, "chunks": n} for name, n in sorted(counts.items())]
+    backend = get_vector_backend()
+    return backend.index_stats_for_domain(domain_id, tenant_id)

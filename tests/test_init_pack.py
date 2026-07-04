@@ -25,6 +25,7 @@ def test_list_official_packs():
     names = pack_installer.list_packs()
     assert "hr" in names
     assert "it_support" in names
+    assert "legal_faq" in names
 
 
 def test_load_hr_manifest_domain_id():
