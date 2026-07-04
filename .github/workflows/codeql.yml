@@ -9,42 +9,55 @@ on:
     - cron: "0 6 * * 1"
 
 jobs:
-  analyze:
+  analyze-go:
+    name: analyze (go)
     runs-on: ubuntu-latest
     permissions:
       actions: read
       contents: read
       security-events: write
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [go, python]
     steps:
       - uses: actions/checkout@v4
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: ${{ matrix.language }}
+          languages: go
+          build-mode: manual
+          config-file: ./.github/codeql/codeql-config.yml
 
       - uses: actions/setup-go@v5
-        if: matrix.language == 'go'
         with:
           go-version: "1.23"
           cache-dependency-path: server/go.sum
 
-      - name: Autobuild Go
-        if: matrix.language == 'go'
-        uses: github/codeql-action/autobuild@v3
+      - name: Build Go for CodeQL
+        working-directory: server
+        env:
+          CODEQL_EXTRACTOR_GO_BUILD_TRACING: on
+        run: |
+          go mod tidy
+          go build -v ./...
 
-      - uses: actions/setup-python@v5
-        if: matrix.language == 'python'
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+  analyze-python:
+    name: analyze (python)
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
         with:
-          python-version: "3.11"
-
-      - name: Autobuild Python
-        if: matrix.language == 'python'
-        run: pip install -r api/requirements.txt -r tests/requirements-test.txt
+          languages: python
+          build-mode: none
+          config-file: ./.github/codeql/codeql-config.yml
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
