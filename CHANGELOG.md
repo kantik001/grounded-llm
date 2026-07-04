@@ -77,6 +77,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [BENCHMARK.md](docs/en/BENCHMARK.md) + `scripts/bench_report.py`
 - [PHASE_5.md](docs/en/PHASE_5.md) — phase plan mapped to pillars
 
+### Added (Phase 5b — site & release prep)
+
+- GitHub Pages landing: [site/](../../site/) + `Deploy site` workflow
+- Conformance CLI `--json` output for integrator pipelines
+- [RELEASE.md](docs/en/RELEASE.md) — v0.3.0 tag checklist
+- Release workflow includes conformance verification steps
+
+## [0.3.0] - TBD
+
+Standard publication release: Spec v1, conformance CLI, adversarial eval, tenant purge, Helm, SDK adoption docs.
+
+See `[Unreleased]` section above for full list (Phases 2–5b).
+
 ## [0.1.0] - 2026-07-05
 
 Initial open-source release baseline.
@@ -93,5 +106,6 @@ Initial open-source release baseline.
 - **Reference UI:** Telegram Web App + admin (`webapp/`)
 - **Documentation:** architecture, deploy, security brief, knowledge base (`docs/en/`, `docs/ru/`)
 
-[Unreleased]: https://github.com/kantik001/grounded-llm/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/kantik001/grounded-llm/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/kantik001/grounded-llm/compare/v0.1.0...v0.3.0
 [0.1.0]: https://github.com/kantik001/grounded-llm/releases/tag/v0.1.0

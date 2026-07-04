@@ -30,8 +30,16 @@
 | 4 | RFC-0001 Grounded-compatible | `docs/en/rfcs/RFC-0001-grounded-compatible.md` | ✅ |
 | 5 | Standard strategy doc | `STANDARD_STRATEGY.md` | ✅ |
 | 6 | Benchmark report script | `scripts/bench_report.py` | ✅ |
-| 7 | Release tag v0.3.0 | GitHub Release (manual) | pending |
-| 8 | Public site grounded.dev | GitHub Pages | Phase 5b / 6 |
+| 7 | Release guide v0.3.0 | [RELEASE.md](./RELEASE.md) | ✅ |
+| 8 | Public site (GitHub Pages) | [site/](../../site/) + `.github/workflows/pages.yml` | ✅ |
+
+---
+
+## Phase 5b (this step)
+
+- Landing page at `site/` (deployed via GitHub Pages on push to `main`)
+- Conformance CLI `--json` for integrator CI
+- Release workflow notes + [RELEASE.md](./RELEASE.md) checklist
 
 ---
 
@@ -43,7 +51,8 @@ pip install -r conformance/requirements.txt
 python -m conformance spec          # offline OpenAPI
 python -m conformance http --url http://127.0.0.1:8080
 python -m conformance retrieval --rag-url http://127.0.0.1:5000/rag/context  # optional
-python -m conformance check --url http://127.0.0.1:8080   # spec + http
+# JSON output for CI
+python -m conformance spec --json
 ```
 
 ### Benchmark

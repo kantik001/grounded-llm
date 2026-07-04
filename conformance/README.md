@@ -16,6 +16,9 @@ python -m conformance http --url http://127.0.0.1:8080
 python -m conformance retrieval --rag-url http://127.0.0.1:5000/rag/context
 python -m conformance check --url http://127.0.0.1:8080
 python -m conformance all --url http://127.0.0.1:8080 --rag-url http://127.0.0.1:5000/rag/context
+
+# JSON for integrator CI (stdout is JSON only)
+python -m conformance spec --json
 ```
 
 Makefile shortcuts: `make conformance-spec`, `make conformance-check URL=...`

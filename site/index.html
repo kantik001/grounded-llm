@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grounded LLM — Open standard for verified document assistants</title>
+  <meta name="description" content="Cited, verified, on-prem document assistants with conformance tests and public eval benchmarks.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <p class="eyebrow">Open platform · Spec v1</p>
+    <h1>Grounded LLM</h1>
+    <p class="lead">Deploy document-grounded assistants with <strong>citations</strong>, <strong>numeric verify</strong>, and <strong>measurable retrieval quality</strong> — on your infrastructure.</p>
+    <div class="actions">
+      <a class="btn primary" href="https://github.com/kantik001/grounded-llm">GitHub</a>
+      <a class="btn" href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/spec/GROUNDED_SPEC_v1.md">Read Spec v1</a>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <h2>What makes it a standard</h2>
+      <ul>
+        <li><a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/spec/GROUNDED_SPEC_v1.md">Grounded Spec v1</a> — normative API contract</li>
+        <li><a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/rfcs/RFC-0001-grounded-compatible.md">RFC-0001</a> — «Grounded-compatible» definition</li>
+        <li><a href="https://github.com/kantik001/grounded-llm/tree/main/conformance">Conformance suite</a> — run against any deployment</li>
+        <li><a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/BENCHMARK.md">Public benchmark</a> — retrieval + adversarial eval</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Quick start</h2>
+      <pre><code>git clone https://github.com/kantik001/grounded-llm.git
+cd grounded-llm
+cp .env.example .env
+docker compose up -d --build
+
+pip install -r conformance/requirements.txt
+python -m conformance spec</code></pre>
+      <p>Full guide: <a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/DEPLOY.md">Deploy</a> · <a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/QUICKSTART_SDK.md">SDK</a></p>
+    </section>
+
+    <section>
+      <h2>Check compatibility</h2>
+      <pre><code># Offline (OpenAPI)
+python -m conformance spec
+
+# Live server
+python -m conformance check --url http://localhost:8080
+
+# JSON output for CI
+python -m conformance spec --json</code></pre>
+    </section>
+
+    <section>
+      <h2>Strategy &amp; roadmap</h2>
+      <p>
+        <a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/STANDARD_STRATEGY.md">Standard strategy</a> ·
+        <a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/ROADMAP.md">Roadmap</a> ·
+        <a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/RFC.md">RFC process</a>
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <p>MIT License · <a href="https://github.com/kantik001/grounded-llm">kantik001/grounded-llm</a></p>
+  </footer>
+</body>
+</html>
