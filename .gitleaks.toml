@@ -1,0 +1,26 @@
+title = "Grounded LLM gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Documented local-dev credentials, CI fixtures, and test tokens"
+paths = [
+  '''(?:^|/)\.env\.example$''',
+  '''(?:^|/)docker-compose\.yml$''',
+  '''(?:^|/)deploy/helm/''',
+  '''(?:^|/)docs/''',
+  '''(?:^|/)conformance/''',
+  '''(?:^|/)tests/''',
+  '''(?:^|/)scripts/''',
+  '''(?:^|/)\.github/workflows/''',
+  '''(?:^|/)Makefile$''',
+  '''(?:^|/)CONTRIBUTING\.md$''',
+]
+regexes = [
+  '''postgres://grounded:grounded@''',
+  '''POSTGRES_PASSWORD[=:]["']?grounded''',
+  '''password:\s*grounded''',
+  '''secret-token''',
+  '''ADMIN_PASSWORD=\s*$''',
+]
