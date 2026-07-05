@@ -81,3 +81,16 @@ footer {
   font-size: 0.9rem;
   padding-bottom: 3rem;
 }
+
+.pack-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.pack-list li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #30363d;
+}
+
+.pack-list li:last-child { border-bottom: 0; }

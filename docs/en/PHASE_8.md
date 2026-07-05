@@ -2,7 +2,7 @@
 
 **Goal:** Enterprise ingest connectors, Azure deploy reference, intranet embed widget.
 
-**Branch:** `feature/phase-8-connectors-cloud`  
+**Branch:** `feature/phase-8-connectors-cloud` — **merged to `main`**  
 **Horizon:** 2 (Platform standard)  
 **Prerequisite:** Phase 7 merged to `main` ✅
 

@@ -1,0 +1,28 @@
+# Plan tiers scaffold (Phase 9 — billing prep, not wired to Stripe yet)
+# Used by docs/en/BILLING.md and future hosted SaaS (Phase C).
+
+version: 1
+currency: USD
+plans:
+  starter:
+    label: Starter
+    price_monthly: 0
+    quotas:
+      messages_per_day: 200
+      storage_mb: 512
+      domains: 1
+  business:
+    label: Business
+    price_monthly: 299
+    quotas:
+      messages_per_day: 5000
+      storage_mb: 10240
+      domains: 10
+  enterprise:
+    label: Enterprise
+    price_monthly: null
+    contact_sales: true
+    quotas:
+      messages_per_day: null
+      storage_mb: null
+      domains: null

@@ -1,6 +1,6 @@
-# Connectors (Phase 7–8)
+# Ingest connectors
 
-Pluggable **ingest connectors** copy documents into `data/{tenant}/{domain}/` before reindex.
+Connectors sync documents from external systems into `data/{tenant}/{domain}/` before RAG reindex.
 
 ## Connectors
 
@@ -11,9 +11,9 @@ Pluggable **ingest connectors** copy documents into `data/{tenant}/{domain}/` be
 | `google_drive_export` | `google_drive_export.py` | Drive Takeout folder |
 | `confluence_export` | `confluence_export.py` | Confluence space export |
 | `sharepoint` | `sharepoint.py` | Live Microsoft Graph |
+| `google_drive` | `google_drive.py` | Live Google Drive API |
+| `confluence` | `confluence.py` | Live Confluence REST |
 
-```bash
-python scripts/sync_connector.py sharepoint_export --source /path --domain it_support --dry-run
-```
+Optional deps for Google Drive: `pip install -r api/requirements-connectors.txt`
 
 See [docs/en/CONNECTORS.md](../docs/en/CONNECTORS.md).
