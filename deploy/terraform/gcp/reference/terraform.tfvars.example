@@ -1,0 +1,6 @@
+project_id  = "your-gcp-project"
+region      = "europe-west1"
+db_password = "CHANGE_ME_STRONG_PASSWORD"
+
+server_image = "ghcr.io/kantik001/grounded-llm-server:latest"
+python_image = "ghcr.io/kantik001/grounded-llm-python:latest"

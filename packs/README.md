@@ -37,6 +37,8 @@ packs/
 pip install pyyaml   # or: pip install -r api/requirements.txt
 
 python scripts/init_pack.py list
+python scripts/init_pack.py registry --validate
+python scripts/init_pack.py registry --json
 python scripts/init_pack.py install it_support
 python scripts/init_pack.py install hr --tenant default
 
@@ -65,6 +67,8 @@ python scripts/run_rag_eval.py --suite it_support
 | `hr` | `default` | `default_en` |
 | `it_support` | `it_support` | `it_support` |
 | `legal_faq` | `legal_faq` | `legal_faq` |
+
+Official registry: [registry.yaml](./registry.yaml) — validated in CI.
 
 See [docs/en/domain-packs/](../docs/en/domain-packs/) for deploy guides.
 

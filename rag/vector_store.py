@@ -1,9 +1,8 @@
 # Vector store facade — delegates to pluggable backend (Chroma default, Qdrant optional).
-import os
 
 from rag.domains_config import normalize_domain_id
-from rag.hybrid_rank import rerank_documents
 from rag.kb_discovery import DEFAULT_TENANT
+from rag.rerank import rerank_documents, reranker_mode
 from rag.vector_backend import get_vector_backend, reset_vector_backend
 from rag.vector_backend.chroma_backend import DEFAULT_PERSIST_DIR
 
@@ -32,24 +31,26 @@ def load_vector_store(force_reindex: bool = False):
     return backend
 
 
-def _retrieval_mode() -> str:
-    return (os.environ.get("RAG_RETRIEVAL_MODE") or "vector").strip().lower()
+def _fetch_multiplier(k: int, rerank: str) -> int:
+    if rerank != "none":
+        return min(max(k * 2, k), 20)
+    return k
 
 
 def search(query: str, domain_id: str, tenant_id: str = DEFAULT_TENANT, k: int = 8):
     domain_id = normalize_domain_id(domain_id)
     tenant_id = (tenant_id or DEFAULT_TENANT).strip().lower() or DEFAULT_TENANT
     backend = get_vector_backend()
-    mode = _retrieval_mode()
-    fetch_k = min(max(k * 2, k), 20) if mode == "hybrid" else k
+    rerank = reranker_mode()
+    fetch_k = _fetch_multiplier(k, rerank)
     results = backend.similarity_search(
         query,
         k=fetch_k,
         domain_id=domain_id,
         tenant_id=tenant_id,
     )
-    if mode == "hybrid" and len(results) > k:
-        return rerank_documents(query, results, k)
+    if rerank != "none" and len(results) > k:
+        return rerank_documents(query, results, k, mode=rerank)
     return results[:k]
 
 

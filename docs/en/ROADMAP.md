@@ -272,10 +272,10 @@ The previous list (Helm, SaaS, vision pack, dashboard) is **split across Phases 
 | Pillar | Status | Phase |
 |--------|--------|-------|
 | 1 Spec & conformance | Spec v1, conformance CLI, policies | 4 → 5 ✅ |
-| 2 Quality science | Eval, adversarial, benchmark, **hybrid rerank** | 4 → 6 |
-| 3 Reference deploy | Docker, Helm, **Terraform AWS**, vector adapters | 4 → 6 ✅ |
-| 4 Template marketplace | HR, IT, **Legal FAQ** packs | 2 → 6 ✅ |
-| 5 Governance & community | CONTRIBUTING, RFC, Spec v1 | 5 ✅ |
+| 2 Quality science | Eval, adversarial, benchmark, hybrid + **cross-encoder** | 4 → 7 |
+| 3 Reference deploy | Docker, Helm, Terraform **AWS+GCP**, vector adapters | 4 → 6 ✅ |
+| 4 Template marketplace | HR, IT, Legal FAQ + **registry.yaml** | 2 → 7 |
+| 5 Governance & community | CONTRIBUTING, RFC; **GOVERNANCE, partner cert** | 5 → 7 |
 
 Strategy: [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md)
 
@@ -297,11 +297,11 @@ Strategy: [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md)
 
 ---
 
-## Phase 6 — Ecosystem scale (in progress)
+## Phase 6 — Ecosystem scale ✅
 
 **Goal:** Template growth, retrieval options, cloud deploy reference.
 
-**Plan:** [PHASE_6.md](./PHASE_6.md)
+**Plan:** [PHASE_6.md](./PHASE_6.md) — **complete**
 
 | Item | Artifact |
 |------|----------|
@@ -310,7 +310,23 @@ Strategy: [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md)
 | Hybrid retrieval | `RAG_RETRIEVAL_MODE=hybrid` |
 | AWS Terraform | [TERRAFORM.md](./TERRAFORM.md) |
 
-**Branch:** `feature/phase-6-ecosystem-scale`
+---
+
+## Phase 7 — Platform ecosystem (in progress)
+
+**Goal:** Pack registry, cross-encoder rerank, connectors, GCP deploy, governance.
+
+**Plan:** [PHASE_7.md](./PHASE_7.md)
+
+| Item | Artifact |
+|------|----------|
+| Pack registry | `packs/registry.yaml` |
+| Cross-encoder rerank | `RAG_RERANKER=cross_encoder` |
+| Ingest connectors | [CONNECTORS.md](./CONNECTORS.md) |
+| GCP Terraform | `deploy/terraform/gcp/reference/` |
+| Governance | [GOVERNANCE.md](./GOVERNANCE.md) |
+
+**Branch:** `feature/phase-7-platform-ecosystem`
 
 ---
 
