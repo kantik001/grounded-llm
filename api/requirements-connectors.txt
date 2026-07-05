@@ -1,0 +1,4 @@
+# Optional connector dependencies (Google Drive API)
+-r requirements.txt
+google-api-python-client>=2.100.0
+google-auth>=2.0.0

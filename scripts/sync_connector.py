@@ -14,7 +14,9 @@ for _p in (_ROOT, _SCRIPTS):
         sys.path.insert(0, _p)
 
 from connectors.base import Connector  # noqa: E402
+from connectors.confluence import ConfluenceConnector  # noqa: E402
 from connectors.confluence_export import ConfluenceExportConnector  # noqa: E402
+from connectors.google_drive import GoogleDriveConnector  # noqa: E402
 from connectors.google_drive_export import GoogleDriveExportConnector  # noqa: E402
 from connectors.local_folder import LocalFolderConnector  # noqa: E402
 from connectors.sharepoint import SharePointGraphConnector  # noqa: E402
@@ -22,44 +24,52 @@ from connectors.sharepoint_export import SharePointExportConnector  # noqa: E402
 
 from pack_installer import data_target_dir  # noqa: E402
 
-CONNECTORS = {
+FOLDER_CONNECTORS = {
     "local_folder": LocalFolderConnector,
     "sharepoint_export": SharePointExportConnector,
     "google_drive_export": GoogleDriveExportConnector,
     "confluence_export": ConfluenceExportConnector,
-    "sharepoint": SharePointGraphConnector,
 }
+
+API_CONNECTORS = {
+    "sharepoint": lambda source: SharePointGraphConnector(folder_path=source or ""),
+    "google_drive": lambda _source: GoogleDriveConnector(),
+    "confluence": lambda _source: ConfluenceConnector(),
+}
+
+ALL_CONNECTORS = sorted({**FOLDER_CONNECTORS, **API_CONNECTORS})
 
 
 def build_connector(name: str, source: str) -> Connector:
-    if name in ("local_folder", "sharepoint_export", "google_drive_export", "confluence_export"):
-        return CONNECTORS[name](source)
-    if name == "sharepoint":
-        return SharePointGraphConnector(folder_path=source or "")
+    if name in FOLDER_CONNECTORS:
+        return FOLDER_CONNECTORS[name](source)
+    if name in API_CONNECTORS:
+        return API_CONNECTORS[name](source)
     raise ValueError(f"Unknown connector: {name}")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Sync KB documents via connector")
-    parser.add_argument("connector", choices=sorted(CONNECTORS), help="Connector name")
+    parser.add_argument("connector", choices=ALL_CONNECTORS, help="Connector name")
     parser.add_argument(
         "--source",
         default="",
-        help="Source path (folder connectors) or SharePoint subfolder path",
+        help="Folder path (export connectors) or SharePoint subfolder",
     )
     parser.add_argument("--tenant", default="default")
     parser.add_argument("--domain", required=True, help="Domain id")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
-    if args.connector != "sharepoint" and not args.source:
-        print("--source is required for folder connectors", file=sys.stderr)
+    needs_source = args.connector in FOLDER_CONNECTORS
+    if needs_source and not args.source:
+        print("--source is required for folder/export connectors", file=sys.stderr)
         return 1
 
     target = data_target_dir(args.tenant, args.domain)
     try:
         conn = build_connector(args.connector, args.source)
-    except (FileNotFoundError, ValueError) as exc:
+    except (FileNotFoundError, ValueError, RuntimeError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 

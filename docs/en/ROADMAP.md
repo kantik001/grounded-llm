@@ -328,11 +328,11 @@ Strategy: [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md)
 
 ---
 
-## Phase 8 — Connectors & multi-cloud (in progress)
+## Phase 8 — Connectors & multi-cloud ✅
 
 **Goal:** Enterprise connectors, Azure deploy, embed widget.
 
-**Plan:** [PHASE_8.md](./PHASE_8.md)
+**Plan:** [PHASE_8.md](./PHASE_8.md) — **complete**
 
 | Item | Artifact |
 |------|----------|
@@ -341,7 +341,22 @@ Strategy: [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md)
 | Azure Terraform | `deploy/terraform/azure/reference/` |
 | Embed widget | [EMBED.md](./EMBED.md) |
 
-**Branch:** `feature/phase-8-connectors-cloud`
+---
+
+## Phase 9 — Launch & live connectors (in progress)
+
+**Goal:** Live Drive + Confluence, billing prep, launch playbook.
+
+**Plan:** [PHASE_9.md](./PHASE_9.md)
+
+| Item | Artifact |
+|------|----------|
+| Google Drive API | `connectors/google_drive.py` |
+| Confluence REST | `connectors/confluence.py` |
+| Billing scaffold | [BILLING.md](./BILLING.md), `config/plans.yaml` |
+| Launch playbook | [LAUNCH.md](./LAUNCH.md) |
+
+**Branch:** `feature/phase-9-launch-scale`
 
 ---
 

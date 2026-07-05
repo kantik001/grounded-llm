@@ -111,6 +111,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Pages workflow:** manual `workflow_dispatch` only (private repo on GitHub Free)
 - [PHASE_8.md](docs/en/PHASE_8.md)
 
+### Added (Phase 9 — launch & live connectors)
+
+- **Google Drive API connector:** `connectors/google_drive.py`
+- **Confluence REST connector:** `connectors/confluence.py`
+- **Connector optional deps:** `api/requirements-connectors.txt`
+- **Billing scaffold:** `config/plans.yaml`, [BILLING.md](docs/en/BILLING.md), [SAAS.md](docs/en/SAAS.md)
+- **Launch playbook:** [LAUNCH.md](docs/en/LAUNCH.md)
+- **Site packs section:** dynamic load from `packs.json`
+- [PHASE_9.md](docs/en/PHASE_9.md)
+
 ## [0.3.0] - TBD
 
 Standard publication release: Spec v1, conformance CLI, adversarial eval, tenant purge, Helm, SDK adoption docs.
