@@ -63,7 +63,7 @@ jobs:
           python-version: "3.11"
 
       - name: Ruff check
-        run: pip install ruff==0.8.4 && ruff check rag api tests scripts sdk/python conformance
+        run: pip install ruff==0.8.4 && ruff check rag api tests scripts sdk/python conformance connectors
 
   conformance-spec:
     runs-on: ubuntu-latest

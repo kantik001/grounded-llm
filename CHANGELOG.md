@@ -92,6 +92,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **AWS Terraform reference:** `deploy/terraform/aws/reference/` + [TERRAFORM.md](docs/en/TERRAFORM.md)
 - [VECTOR_STORE.md](docs/en/VECTOR_STORE.md), [PHASE_6.md](docs/en/PHASE_6.md)
 
+### Added (Phase 7 — platform ecosystem)
+
+- **Pack registry:** `packs/registry.yaml` + `init_pack.py registry --validate`
+- **Cross-encoder rerank:** `rag/rerank.py`, `RAG_RERANKER=cross_encoder`
+- **Ingest connectors:** `connectors/` + [CONNECTORS.md](docs/en/CONNECTORS.md), `scripts/sync_connector.py`
+- **GCP Terraform reference:** `deploy/terraform/gcp/reference/`
+- **Governance docs:** [GOVERNANCE.md](docs/en/GOVERNANCE.md), [PARTNER_CERTIFICATION.md](docs/en/PARTNER_CERTIFICATION.md)
+- [PHASE_7.md](docs/en/PHASE_7.md)
+
 ## [0.3.0] - TBD
 
 Standard publication release: Spec v1, conformance CLI, adversarial eval, tenant purge, Helm, SDK adoption docs.

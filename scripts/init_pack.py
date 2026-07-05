@@ -57,6 +57,28 @@ def cmd_install(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_registry(args: argparse.Namespace) -> int:
+    from pack_registry import export_registry_json, load_registry, validate_registry
+
+    if args.validate:
+        errors = validate_registry()
+        if errors:
+            for err in errors:
+                print(f"  ERROR: {err}", file=sys.stderr)
+            return 1
+        print("Registry OK")
+        return 0
+
+    if args.json:
+        print(export_registry_json())
+        return 0
+
+    registry = load_registry()
+    for entry in registry.get("packs", []):
+        print(f"  {entry.get('id'):16} domain={entry.get('domain_id'):12} {entry.get('guide', '')}")
+    return 0
+
+
 def cmd_new(args: argparse.Namespace) -> int:
     pack_dir = scaffold_new_pack(
         args.name,
@@ -95,6 +117,11 @@ def main() -> int:
     p_install.add_argument("--force", action="store_true", help="Overwrite locale/domain entries")
     p_install.add_argument("--dry-run", action="store_true", help="Show plan only")
     p_install.set_defaults(func=cmd_install)
+
+    p_registry = sub.add_parser("registry", help="Show or validate packs/registry.yaml")
+    p_registry.add_argument("--validate", action="store_true", help="Validate registry and pack files")
+    p_registry.add_argument("--json", action="store_true", help="Print registry as JSON")
+    p_registry.set_defaults(func=cmd_registry)
 
     p_new = sub.add_parser("new", help="Scaffold a new pack under packs/")
     p_new.add_argument("name", help="New pack folder name (slug)")

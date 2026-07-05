@@ -12,7 +12,9 @@ Grounded LLM supports pluggable vector indexes for the Python RAG service. The r
 | `CHROMA_PERSIST_DIR` | `./chroma_db` | Chroma on-disk path |
 | `QDRANT_URL` | `http://127.0.0.1:6333` | Qdrant HTTP endpoint |
 | `QDRANT_COLLECTION` | `grounded_llm` | Qdrant collection name |
-| `RAG_RETRIEVAL_MODE` | `vector` | `vector` or `hybrid` (keyword rerank) |
+| `RAG_RETRIEVAL_MODE` | `vector` | Legacy: `hybrid` enables keyword rerank |
+| `RAG_RERANKER` | `none` | `none`, `keyword`, or `cross_encoder` |
+| `RAG_CROSS_ENCODER_MODEL` | `cross-encoder/ms-marco-MiniLM-L-6-v2` | Cross-encoder model name |
 | `FORCE_RAG_REINDEX` | `false` | Rebuild index on startup |
 
 ---
@@ -53,15 +55,21 @@ Changing backend or embedding model requires **full reindex** and eval gate re-r
 
 ---
 
-## Hybrid retrieval
+## Reranking
 
-When `RAG_RETRIEVAL_MODE=hybrid`, the service:
+| Mode | Env | Notes |
+|------|-----|-------|
+| Vector only | default | Top-k from embedding search |
+| Keyword | `RAG_RERANKER=keyword` or `RAG_RETRIEVAL_MODE=hybrid` | Overlap on query tokens |
+| Cross-encoder | `RAG_RERANKER=cross_encoder` | `sentence-transformers` CrossEncoder; slower, often better on policy Q&A |
 
-1. Fetches `2× rag_k` vector hits  
-2. Reranks by keyword overlap with the query  
-3. Returns top `rag_k` fragments  
+Flow when reranker is enabled:
 
-No extra ML model — useful for policy docs with distinctive numbers and terms. Measure impact with `scripts/run_rag_eval.py` before enabling in production.
+1. Fetch `2× rag_k` vector hits  
+2. Rerank with selected scorer  
+3. Return top `rag_k` fragments  
+
+Measure impact with `scripts/run_rag_eval.py` before production. CI uses default (`none`).
 
 ---
 
@@ -71,7 +79,8 @@ No extra ML model — useful for policy docs with distinctive numbers and terms.
 |--------|------|
 | `rag/vector_backend/` | Backend interface + Chroma/Qdrant |
 | `rag/vector_store.py` | Public API (`search`, `index_stats_for_domain`) |
-| `rag/hybrid_rank.py` | Keyword reranking |
+| `rag/rerank.py` | Keyword + cross-encoder reranking |
+| `rag/hybrid_rank.py` | Back-compat re-export |
 
 ---
 

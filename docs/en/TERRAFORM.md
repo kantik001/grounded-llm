@@ -1,12 +1,14 @@
-# Terraform — AWS reference
+# Terraform — cloud reference modules
 
-Reference Terraform for deploying Grounded LLM on **AWS ECS Fargate** with **RDS PostgreSQL 16** and an **Application Load Balancer**.
+Reference Terraform for deploying Grounded LLM on **AWS** or **GCP**.
 
-This is a **starting point**, not a production-complete module. Extend with ECS services, EFS for `chroma_db`/`data/`, Secrets Manager entries, TLS, and WAF before production.
+These are **starting points**, not production-complete. Extend with secrets, TLS, persistent volumes, and WAF before production.
+
+For Kubernetes, use the Helm chart: [K8S_DEPLOY.md](./K8S_DEPLOY.md).
 
 ---
 
-## Layout
+## AWS (ECS Fargate + RDS)
 
 ```text
 deploy/terraform/aws/reference/
@@ -15,8 +17,6 @@ deploy/terraform/aws/reference/
   outputs.tf
   terraform.tfvars.example
 ```
-
-For Kubernetes, use the Helm chart instead: [K8S_DEPLOY.md](./K8S_DEPLOY.md).
 
 ---
 
@@ -72,6 +72,31 @@ Task definitions reference GHCR image variables. Wire **ECS services**, **EFS vo
 | Qdrant | Run Qdrant Cloud or self-hosted; set `VECTOR_STORE=qdrant` |
 
 See [VECTOR_STORE.md](./VECTOR_STORE.md).
+
+---
+
+## GCP (Cloud Run + Cloud SQL)
+
+```text
+deploy/terraform/gcp/reference/
+  main.tf
+  variables.tf
+  outputs.tf
+  terraform.tfvars.example
+```
+
+```bash
+cd deploy/terraform/gcp/reference
+cp terraform.tfvars.example terraform.tfvars
+# Set project_id and db_password
+
+terraform init
+terraform validate
+```
+
+Outputs: `server_url`, `python_url`, `postgres_connection_name`.
+
+Extend with VPC connector, Secret Manager, and GCS for `data/` + Chroma before production.
 
 ---
 

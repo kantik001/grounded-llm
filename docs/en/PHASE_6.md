@@ -2,7 +2,7 @@
 
 **Goal:** Extend the reference platform with **template growth**, **retrieval options**, and **cloud deploy** primitives.
 
-**Branch:** `feature/phase-6-ecosystem-scale`  
+**Branch:** `feature/phase-6-ecosystem-scale` — **merged to `main`**  
 **Horizon:** 2 (Platform standard)  
 **Prerequisite:** Phase 5 merged to `main` ✅
 
