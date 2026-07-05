@@ -1,4 +1,4 @@
-"""Reference connector: mirror a local folder into the KB data directory."""
+"""Sync from Google Drive export / Takeout folder."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from connectors.base import Connector, SyncResult
 from connectors.file_sync import sync_file_tree
 
 
-class LocalFolderConnector(Connector):
-    name = "local_folder"
+class GoogleDriveExportConnector(Connector):
+    name = "google_drive_export"
 
     def __init__(self, source_dir: str | Path) -> None:
         self.source_dir = Path(source_dir)

@@ -273,8 +273,8 @@ The previous list (Helm, SaaS, vision pack, dashboard) is **split across Phases 
 |--------|--------|-------|
 | 1 Spec & conformance | Spec v1, conformance CLI, policies | 4 → 5 ✅ |
 | 2 Quality science | Eval, adversarial, benchmark, hybrid + **cross-encoder** | 4 → 7 |
-| 3 Reference deploy | Docker, Helm, Terraform **AWS+GCP**, vector adapters | 4 → 6 ✅ |
-| 4 Template marketplace | HR, IT, Legal FAQ + **registry.yaml** | 2 → 7 |
+| 3 Reference deploy | Docker, Helm, Terraform **AWS+GCP+Azure**, vector adapters | 4 → 8 |
+| 4 Template marketplace | HR, IT, Legal FAQ, registry, **connectors** | 2 → 8 |
 | 5 Governance & community | CONTRIBUTING, RFC; **GOVERNANCE, partner cert** | 5 → 7 |
 
 Strategy: [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md)
@@ -312,11 +312,11 @@ Strategy: [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md)
 
 ---
 
-## Phase 7 — Platform ecosystem (in progress)
+## Phase 7 — Platform ecosystem ✅
 
 **Goal:** Pack registry, cross-encoder rerank, connectors, GCP deploy, governance.
 
-**Plan:** [PHASE_7.md](./PHASE_7.md)
+**Plan:** [PHASE_7.md](./PHASE_7.md) — **complete**
 
 | Item | Artifact |
 |------|----------|
@@ -326,7 +326,22 @@ Strategy: [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md)
 | GCP Terraform | `deploy/terraform/gcp/reference/` |
 | Governance | [GOVERNANCE.md](./GOVERNANCE.md) |
 
-**Branch:** `feature/phase-7-platform-ecosystem`
+---
+
+## Phase 8 — Connectors & multi-cloud (in progress)
+
+**Goal:** Enterprise connectors, Azure deploy, embed widget.
+
+**Plan:** [PHASE_8.md](./PHASE_8.md)
+
+| Item | Artifact |
+|------|----------|
+| Export connectors | SharePoint / Drive / Confluence export |
+| SharePoint Graph | `connectors/sharepoint.py` |
+| Azure Terraform | `deploy/terraform/azure/reference/` |
+| Embed widget | [EMBED.md](./EMBED.md) |
+
+**Branch:** `feature/phase-8-connectors-cloud`
 
 ---
 

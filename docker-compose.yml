@@ -107,6 +107,9 @@ services:
       - ./webapp/app.css:/usr/share/nginx/html/app.css:ro
       - ./webapp/app.js:/usr/share/nginx/html/app.js:ro
       - ./webapp/admin.html:/usr/share/nginx/html/admin.html:ro
+      - ./webapp/embed.html:/usr/share/nginx/html/embed.html:ro
+      - ./webapp/embed.css:/usr/share/nginx/html/embed.css:ro
+      - ./webapp/embed.js:/usr/share/nginx/html/embed.js:ro
       - ./webapp/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       server:

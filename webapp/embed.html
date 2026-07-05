@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grounded LLM — Embed</title>
+  <link rel="stylesheet" href="embed.css">
+</head>
+<body>
+  <div class="embed-shell">
+    <header>
+      <strong id="title">Grounded assistant</strong>
+      <label class="domain-label">
+        Domain
+        <select id="domain"></select>
+      </label>
+    </header>
+    <div id="messages" class="messages"></div>
+    <form id="form" class="composer">
+      <input id="input" type="text" placeholder="Ask a question…" autocomplete="off">
+      <button type="submit">Send</button>
+    </form>
+  </div>
+  <script src="embed.js"></script>
+</body>
+</html>

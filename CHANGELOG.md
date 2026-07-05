@@ -101,6 +101,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Governance docs:** [GOVERNANCE.md](docs/en/GOVERNANCE.md), [PARTNER_CERTIFICATION.md](docs/en/PARTNER_CERTIFICATION.md)
 - [PHASE_7.md](docs/en/PHASE_7.md)
 
+### Added (Phase 8 — connectors & multi-cloud)
+
+- **Export connectors:** `sharepoint_export`, `google_drive_export`, `confluence_export`
+- **SharePoint Graph connector:** `connectors/sharepoint.py` (Microsoft Graph app-only)
+- **Azure Terraform reference:** `deploy/terraform/azure/reference/`
+- **Embeddable widget:** `webapp/embed.html` + [EMBED.md](docs/en/EMBED.md)
+- **Site pack index:** `site/packs.json`, `scripts/build_site_data.py`
+- **Pages workflow:** manual `workflow_dispatch` only (private repo on GitHub Free)
+- [PHASE_8.md](docs/en/PHASE_8.md)
+
 ## [0.3.0] - TBD
 
 Standard publication release: Spec v1, conformance CLI, adversarial eval, tenant purge, Helm, SDK adoption docs.
