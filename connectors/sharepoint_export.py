@@ -1,4 +1,4 @@
-"""Reference connector: mirror a local folder into the KB data directory."""
+"""Sync from a SharePoint document library export folder (offline export)."""
 
 from __future__ import annotations
 
@@ -8,8 +8,10 @@ from connectors.base import Connector, SyncResult
 from connectors.file_sync import sync_file_tree
 
 
-class LocalFolderConnector(Connector):
-    name = "local_folder"
+class SharePointExportConnector(Connector):
+    """Use after exporting a SharePoint library to disk (or OneDrive sync folder)."""
+
+    name = "sharepoint_export"
 
     def __init__(self, source_dir: str | Path) -> None:
         self.source_dir = Path(source_dir)

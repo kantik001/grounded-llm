@@ -2,8 +2,6 @@
 
 Connectors sync documents from external systems into `data/{tenant}/{domain}/` before RAG reindex.
 
-Phase 7 ships a **reference interface** and one production-shaped connector. Enterprise connectors (SharePoint, Google Drive, Confluence) follow the same pattern in Phase 8+.
-
 ---
 
 ## Architecture
@@ -14,56 +12,66 @@ External source  →  Connector.sync()  →  data/{tenant}/{domain}/
                                     python scripts/reindex_rag.py
 ```
 
-All connectors implement `connectors.base.Connector`:
-
-| Method | Purpose |
-|--------|---------|
-| `sync(target_dir, dry_run=False)` | Copy supported files into KB directory |
-
-Supported file types: `.txt`, `.pdf`, `.docx` (same as core pipeline).
+Supported file types: `.txt`, `.pdf`, `.docx`.
 
 ---
 
-## Reference: local_folder
-
-Mirror a directory (e.g. SharePoint export, git checkout):
+## CLI
 
 ```bash
-python scripts/sync_connector.py local_folder \
-  --source /path/to/export \
-  --tenant default \
-  --domain it_support
+python scripts/sync_connector.py <connector> --domain <domain_id> [options]
+```
 
+| Connector | `--source` | Notes |
+|-----------|------------|-------|
+| `local_folder` | Required path | Generic folder mirror |
+| `sharepoint_export` | Export folder | SharePoint / OneDrive synced folder |
+| `google_drive_export` | Takeout folder | Google Drive export |
+| `confluence_export` | Space export | Confluence PDF/attachments tree |
+| `sharepoint` | Optional subfolder | **Live** Microsoft Graph (env vars) |
+
+Examples:
+
+```bash
+python scripts/sync_connector.py local_folder --source ./packs/hr/data --domain default
+python scripts/sync_connector.py sharepoint_export --source /data/sp-export --domain legal_faq
+python scripts/sync_connector.py sharepoint --domain it_support --dry-run
+```
+
+Then:
+
+```bash
 python scripts/reindex_rag.py
 python scripts/run_rag_eval.py --suite it_support
 ```
 
-Dry run:
+---
 
-```bash
-python scripts/sync_connector.py local_folder --source ./packs/hr/data --domain default --dry-run
-```
+## SharePoint Graph (live)
+
+Set environment variables (never commit secrets):
+
+| Variable | Description |
+|----------|-------------|
+| `SHAREPOINT_TENANT_ID` | Azure AD tenant |
+| `SHAREPOINT_CLIENT_ID` | App registration client id |
+| `SHAREPOINT_CLIENT_SECRET` | Client secret |
+| `SHAREPOINT_DRIVE_ID` | Graph drive id |
+| `SHAREPOINT_FOLDER_PATH` | Optional subfolder inside drive |
+
+App registration needs `Sites.Read.All` / `Files.Read.All` application permissions.
 
 ---
 
-## Planned connectors (Phase 8+)
+## Planned (Phase 9+)
 
-| Connector | Source |
-|-----------|--------|
-| `sharepoint` | Microsoft Graph / SharePoint Online |
-| `google_drive` | Google Drive API |
-| `confluence` | Atlassian REST API |
-
-Each connector should:
-
-1. Authenticate via env / secret (never commit tokens)
-2. Write into tenant/domain data path
-3. Log sync summary (`SyncResult`)
-4. Trigger async reindex via admin API or `reindex_rag.py`
+- Google Drive API connector (service account)
+- Confluence REST API connector
+- Scheduled sync via admin job / cron
 
 ---
 
 ## Related
 
+- [connectors/README.md](../../connectors/README.md)
 - [packs/README.md](../../packs/README.md)
-- [DEPLOY.md](./DEPLOY.md)

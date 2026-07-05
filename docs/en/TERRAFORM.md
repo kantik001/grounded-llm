@@ -1,6 +1,6 @@
-# Terraform — cloud reference modules
+# Cloud reference modules
 
-Reference Terraform for deploying Grounded LLM on **AWS** or **GCP**.
+Reference Terraform for deploying Grounded LLM on **AWS**, **GCP**, or **Azure**.
 
 These are **starting points**, not production-complete. Extend with secrets, TLS, persistent volumes, and WAF before production.
 
@@ -97,6 +97,28 @@ terraform validate
 Outputs: `server_url`, `python_url`, `postgres_connection_name`.
 
 Extend with VPC connector, Secret Manager, and GCS for `data/` + Chroma before production.
+
+---
+
+## Azure (Container Apps + PostgreSQL Flexible Server)
+
+```text
+deploy/terraform/azure/reference/
+  main.tf
+  variables.tf
+  outputs.tf
+  terraform.tfvars.example
+```
+
+```bash
+cd deploy/terraform/azure/reference
+cp terraform.tfvars.example terraform.tfvars
+terraform init && terraform validate
+```
+
+Outputs: `server_fqdn`, `python_fqdn`, `postgres_fqdn`.
+
+Extend with Key Vault, private networking, and Azure Files for Chroma/data before production.
 
 ---
 

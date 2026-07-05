@@ -2,7 +2,7 @@
 
 **Goal:** Pack registry, retrieval quality (cross-encoder), ingest connectors, GCP deploy, governance.
 
-**Branch:** `feature/phase-7-platform-ecosystem`  
+**Branch:** `feature/phase-7-platform-ecosystem` — **merged to `main`**  
 **Horizon:** 2 (Platform standard)  
 **Prerequisite:** Phase 6 merged to `main` ✅
 

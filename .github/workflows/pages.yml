@@ -1,11 +1,7 @@
 name: Deploy site
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "site/**"
-      - ".github/workflows/pages.yml"
+  # Private repos on GitHub Free cannot use Pages — run manually after making repo public.
   workflow_dispatch:
 
 permissions:

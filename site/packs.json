@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "packs": [
+    {
+      "id": "hr",
+      "status": "official",
+      "domain_id": "default",
+      "eval_suite": "default_en",
+      "locale": "en",
+      "guide": "docs/en/domain-packs/HR.md"
+    },
+    {
+      "id": "it_support",
+      "status": "official",
+      "domain_id": "it_support",
+      "eval_suite": "it_support",
+      "locale": "en",
+      "guide": "docs/en/domain-packs/IT_SUPPORT.md"
+    },
+    {
+      "id": "legal_faq",
+      "status": "official",
+      "domain_id": "legal_faq",
+      "eval_suite": "legal_faq",
+      "locale": "en",
+      "guide": "docs/en/domain-packs/LEGAL_FAQ.md"
+    }
+  ]
+}

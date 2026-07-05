@@ -1,23 +1,19 @@
-# Connectors (Phase 7)
+# Connectors (Phase 7–8)
 
-Pluggable **ingest connectors** copy documents from external systems into `data/{tenant}/{domain}/` before reindex.
+Pluggable **ingest connectors** copy documents into `data/{tenant}/{domain}/` before reindex.
 
-## Reference connector
+## Connectors
 
-| Connector | Module | Use |
-|-----------|--------|-----|
-| `local_folder` | `connectors/local_folder.py` | Mirror a directory (SharePoint export, git checkout, etc.) |
-
-## CLI
+| Name | Module | Mode |
+|------|--------|------|
+| `local_folder` | `local_folder.py` | Folder mirror |
+| `sharepoint_export` | `sharepoint_export.py` | Offline SharePoint export |
+| `google_drive_export` | `google_drive_export.py` | Drive Takeout folder |
+| `confluence_export` | `confluence_export.py` | Confluence space export |
+| `sharepoint` | `sharepoint.py` | Live Microsoft Graph |
 
 ```bash
-python scripts/sync_connector.py local_folder \
-  --source /path/to/docs \
-  --tenant default --domain it_support
-
-python scripts/reindex_rag.py
+python scripts/sync_connector.py sharepoint_export --source /path --domain it_support --dry-run
 ```
-
-Future connectors (Phase 8+): SharePoint, Google Drive, Confluence — same `Connector` interface.
 
 See [docs/en/CONNECTORS.md](../docs/en/CONNECTORS.md).
