@@ -72,17 +72,6 @@ func planByID(planID string) (planDefinition, bool) {
 	return p, ok
 }
 
-func selfServePlanIDs() []string {
-	var ids []string
-	for id, p := range planCatalog.Plans {
-		if p.ContactSales {
-			continue
-		}
-		ids = append(ids, id)
-	}
-	return ids
-}
-
 func publicPlanList() []map[string]any {
 	out := make([]map[string]any, 0, len(planCatalog.Plans))
 	for id, p := range planCatalog.Plans {
