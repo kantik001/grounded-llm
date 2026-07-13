@@ -1,7 +1,15 @@
 name: Deploy site
 
 on:
-  # Private repos on GitHub Free cannot use Pages — run manually after making repo public.
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - ".github/workflows/pages.yml"
+      - "packs/registry.yaml"
+      - "packs/**/pack.yaml"
+      - "scripts/build_site_data.py"
+      - "scripts/pack_registry.py"
   workflow_dispatch:
 
 permissions:
@@ -22,8 +30,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build site data
+        run: |
+          pip install pyyaml
+          python scripts/build_site_data.py
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

@@ -196,6 +196,8 @@ Report security issues privately via [SECURITY.md](SECURITY.md) — not public i
 
 **Kantemir Satibalov** — [GitHub @kantik001](https://github.com/kantik001)
 
+If Grounded LLM saves your team time, [sponsor the project](https://github.com/sponsors/kantik001) (optional — helps fund maintenance and the public standard).
+
 ---
 
 ## License
