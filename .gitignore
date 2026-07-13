@@ -11,6 +11,7 @@
 
 # RAG / logs
 chroma_db/
+models/*.pth
 logs.json
 uploads/
 data/uploads/

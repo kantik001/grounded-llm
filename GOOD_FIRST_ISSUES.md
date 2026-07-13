@@ -2,7 +2,9 @@
 
 Starter tasks for new contributors. Comment on an issue before opening a PR if you want to claim it.
 
-**Setup:** [CONTRIBUTING.md](../CONTRIBUTING.md) · `make test` · `pip install -e "sdk/python[dev]"`
+Phases **1–11** are complete in the repo; this list focuses on docs, eval, packs, SDK, and polish. See [docs/en/ROADMAP.md](docs/en/ROADMAP.md) for strategic tracks after launch.
+
+**Setup:** [CONTRIBUTING.md](CONTRIBUTING.md) · `make test` · `pip install -e "sdk/python[dev]"`
 
 ---
 
@@ -23,7 +25,7 @@ Starter tasks for new contributors. Comment on an issue before opening a PR if y
 |---|------|--------|
 | 5 | Add 3 edge cases to `eval/rag_default_en_baseline.jsonl` (out-of-scope) | JSONL |
 | 6 | Add IT support case for password reset doc | JSONL + IT pack |
-| 7 | Document how to author eval cases in `eval/README.md` | Markdown |
+| 7 | Expand `eval/README.md` with examples for `expect_not_contains` and adversarial types | Markdown |
 
 Run gate: `make eval-retrieval-ci`
 
@@ -33,7 +35,7 @@ Run gate: `make eval-retrieval-ci`
 
 | # | Task | Skills |
 |---|------|--------|
-| 8 | Scaffold **Legal FAQ** pack (`packs/legal_faq/`) from `domain-pack-template/` | YAML + sample TXT |
+| 8 | Add 3 eval cases to `packs/legal_faq/eval.jsonl` | JSONL |
 | 9 | Add German locale stub in `config/locales/de/` (branding only) | JSON |
 | 10 | Improve `packs/README.md` with install troubleshooting | Markdown |
 
@@ -58,16 +60,16 @@ Run gate: `make eval-retrieval-ci`
 
 ---
 
-## Phase 5 (standard publication)
+## Ecosystem & polish
 
-See [docs/en/PHASE_5.md](docs/en/PHASE_5.md).
+See [docs/en/ROADMAP.md](docs/en/ROADMAP.md) (post Phase 11).
 
 | # | Task | Skills |
 |---|------|--------|
-| 21 | Add legal FAQ template pack + eval JSONL | YAML + docs |
-| 22 | Vector store adapter interface (Chroma → Qdrant stub) | Python + Go |
-| 23 | GitHub Pages landing from `docs/en/spec/` | Markdown |
-| 24 | Expand conformance CLI `--json` output for integrators | Python |
+| 16 | Document embed widget setup in `docs/ru/` (summary from [EMBED.md](docs/en/EMBED.md)) | Markdown |
+| 17 | Add connector troubleshooting section to [CONNECTORS.md](docs/en/CONNECTORS.md) | Markdown |
+| 18 | Scaffold a community pack with `python scripts/init_pack.py new` + sample eval | YAML + TXT |
+| 19 | Add `conformance check --json` example to [conformance/README.md](conformance/README.md) | Markdown |
 
 ---
 
