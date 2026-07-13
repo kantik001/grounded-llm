@@ -2,7 +2,8 @@
 
 **Goal:** Publish **Grounded as a checkable standard** — spec v1, conformance CLI, public benchmark, RFC governance.
 
-**Branch:** `feature/phase-5-standard-publication`  
+**Branch:** `feature/phase-5-standard-publication` — **merged to `main`**
+**Status:** ✅ Complete  
 **Horizon:** 1 (Reference implementation)  
 **Prerequisite:** Phase 4 merged to `main` ✅
 

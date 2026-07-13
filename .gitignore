@@ -77,3 +77,8 @@ htmlcov/
 *.tar.bz2
 *.tar.xz
 *.tar.zst
+
+# Private / pre-publish (keep local; do not commit)
+docs/en/blog/from-vertical-rag-to-open-standard.md
+docs/en/blog/DEVTO_PLATFORM_ARTICLE_MEDIA.md
+docs/internal/

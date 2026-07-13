@@ -85,14 +85,22 @@ Handlers: `ctxActorUser(c)` / `ctxTelegramUser(c)`.
 
 ---
 
-## Защищённые маршруты
+## Видимость маршрутов
+
+**Публичные (без chat auth):** `/health`, `/ready`, `/domains`, `/onboarding`, `/branding`, `/metrics`
+
+**SaaS (опц., `SAAS_SIGNUP_ENABLED=true`):** `GET /api/v1/plans`, `POST /api/v1/signup`, `POST /api/v1/billing/stripe/checkout`, webhook — [SAAS.md](../SAAS.md)
+
+**Админка:** `/api/admin/*` — Basic, OIDC или `ADMIN_USERS_FILE`
+
+---
+
+## Защищённые маршруты (chat API)
 
 С **`auth` + rate limit**:
 
 - `/session`, `/history`, `/message`, `/feedback`
 - Дубли: `/api/...`, `/api/v1/...`
-
-**Публичные:** `/health`, `/domains`, `/onboarding`, `/branding`, админка (отдельная auth).
 
 ---
 

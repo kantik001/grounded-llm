@@ -110,4 +110,4 @@ Embeddings (`multilingual-e5-small`) работают **внутри Python-ко
 
 ---
 
-См. также: [ARCHITECTURE.md](./ARCHITECTURE.md), [DEPLOY.md](./DEPLOY.md), [PILOT_PLAYBOOK.md](./PILOT_PLAYBOOK.md).
+См. также: [ARCHITECTURE.md](./ARCHITECTURE.md), [DEPLOY.md](./DEPLOY.md), [CASE_STUDY_HR_PILOT.md](../en/CASE_STUDY_HR_PILOT.md).

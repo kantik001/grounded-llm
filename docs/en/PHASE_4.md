@@ -4,7 +4,7 @@
 
 **Status:** ✅ Complete (merged to `main`)
 
-**Branch:** `feature/phase-4-spec-trust`
+**Branch:** `feature/phase-4-spec-trust` — **merged to `main`**
 
 ---
 

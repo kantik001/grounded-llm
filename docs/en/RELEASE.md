@@ -6,21 +6,36 @@
 - **API path version:** `/api/v1` — see [API_DEPRECATION_POLICY.md](./API_DEPRECATION_POLICY.md)
 - **OpenAPI `info.version`:** `1.0.0` for API v1 (independent from product tag)
 
+Phases **1–11 are merged to `main`**. The next `v0.3.0` tag covers standard publication through optional SaaS signup (Phases 4–11).
+
+---
+
 ## Before tagging `v0.3.0`
 
-1. Merge `feature/phase-5-standard-publication` to `main`
-2. CI green on `main` (all jobs including `secret-scan`, `eval-retrieval-gate`)
-3. Update [CHANGELOG.md](../../CHANGELOG.md): move `[Unreleased]` → `[0.3.0] - YYYY-MM-DD`
-4. Optional: run benchmark locally and attach summary:
+1. CI green on `main` (`eval-retrieval-gate`, `smoke-api`, `go-lint`, `python-lint`, `secret-scan`, conformance)
+2. Update [CHANGELOG.md](../../CHANGELOG.md): move `[Unreleased]` → `[0.3.0] - YYYY-MM-DD`
+3. Run pack registry validation:
+   ```bash
+   python scripts/init_pack.py registry --validate
+   ```
+4. Optional benchmark summary:
    ```bash
    python scripts/bench_report.py --version 0.3.0
    ```
-5. Enable **GitHub Pages** (Settings → Pages → Source: **GitHub Actions**)
+5. Build site data before Pages deploy:
+   ```bash
+   python scripts/build_site_data.py
+   ```
+6. **GitHub Pages** (repo must be **public** on GitHub Free, or use Pro): Settings → Pages → Source **GitHub Actions**, then run `Deploy site` workflow manually
+
+See [LAUNCH.md](./LAUNCH.md) for public launch checklist.
+
+---
 
 ## Tag and release
 
 ```bash
-git tag -a v0.3.0 -m "v0.3.0 — standard publication (spec v1, conformance, adversarial eval)"
+git tag -a v0.3.0 -m "v0.3.0 — Spec v1, conformance, ecosystem packs, connectors, optional SaaS signup"
 git push origin v0.3.0
 ```
 
@@ -29,14 +44,19 @@ The [Release workflow](../../.github/workflows/release.yml) will:
 - Publish GHCR images (`grounded-llm-server`, `-python`, `-webapp`)
 - Create GitHub Release with notes
 
+---
+
 ## Post-release checklist
 
-- [ ] Verify Pages site deployed (`Deploy site` workflow)
+- [ ] Verify Pages site (`Deploy site` workflow)
 - [ ] Run `python -m conformance all --url <prod> --rag-url <rag>` on staging
-- [ ] Announce: Spec v1 + RFC-0001 + conformance CLI
+- [ ] Announce: Spec v1 + RFC-0001 + conformance CLI + template packs
+- [ ] Optional: dev.to / Show HN per [LAUNCH.md](./LAUNCH.md)
+
+---
 
 ## Related
 
-- [PHASE_5.md](./PHASE_5.md)
+- [PHASE_5.md](./PHASE_5.md) · [PHASE_11.md](./PHASE_11.md)
 - [BENCHMARK.md](./BENCHMARK.md)
 - [COMPATIBILITY.md](./COMPATIBILITY.md)

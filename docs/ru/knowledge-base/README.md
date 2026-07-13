@@ -2,8 +2,17 @@
 
 Документация для изучения и сопровождения **ядра платформы Grounded LLM** (на русском языке).
 
-**См. также:** [../ARCHITECTURE.md](../ARCHITECTURE.md), [../DEPLOY.md](../DEPLOY.md), [../ROADMAP.md](../ROADMAP.md), [../../eval/README.md](../../eval/README.md).  
+**См. также:** [../README.md](../README.md), [../ARCHITECTURE.md](../ARCHITECTURE.md), [../DEPLOY.md](../DEPLOY.md), [../../eval/README.md](../../eval/README.md).  
 English: [../../en/knowledge-base/README.md](../../en/knowledge-base/README.md).
+
+### Только на английском (канон)
+
+| Тема | EN |
+|------|-----|
+| Spec v1, conformance | [GROUNDED_SPEC_v1.md](../../en/spec/GROUNDED_SPEC_v1.md) |
+| Terraform, K8s | [TERRAFORM.md](../../en/TERRAFORM.md), [K8S_DEPLOY.md](../../en/K8S_DEPLOY.md) |
+| Trust center, backup | [TRUST_CENTER.md](../../en/TRUST_CENTER.md) |
+| SDK | [QUICKSTART_SDK.md](../../en/QUICKSTART_SDK.md) |
 
 ---
 
@@ -46,8 +55,8 @@ English: [../../en/knowledge-base/README.md](../../en/knowledge-base/README.md).
 
 | Документ | Описание |
 |----------|----------|
-| [webapp-overview.md](./webapp-overview.md) | Telegram Web App |
-| [scripts-overview.md](./scripts-overview.md) | reindex, eval, init_domain |
+| [webapp-overview.md](./webapp-overview.md) | Чат, админка, signup, embed |
+| [scripts-overview.md](./scripts-overview.md) | reindex, eval, init_pack, connectors |
 | [tests-overview.md](./tests-overview.md) | pytest + Go tests |
 | [quality-eval-and-rag-logs.md](./quality-eval-and-rag-logs.md) | eval, логи `[RAG]` |
 

@@ -5,7 +5,7 @@
 
 ---
 
-## Endpoint (planned)
+## Endpoint
 
 ```http
 DELETE /api/admin/tenants/{tenant_id}?confirm=true

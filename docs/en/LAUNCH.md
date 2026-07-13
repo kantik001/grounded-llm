@@ -13,6 +13,7 @@ Use when the product is ready — repository is currently **private** on GitHub 
 - [ ] Run `python scripts/build_site_data.py` before Pages deploy
 - [ ] Review [SECURITY.md](../../SECURITY.md) — no secrets in history (`secret-scan` job)
 - [ ] Update README one-liner + demo GIF or screenshot
+- [ ] No internal sales playbooks or unpublished dev.to drafts in the public tree (see `.gitignore`)
 
 ---
 
@@ -38,7 +39,7 @@ gh workflow run "Deploy site" --ref main
 | **Hacker News** | Show HN — focus on spec + conformance + on-prem |
 | **Reddit** | r/selfhosted, r/MachineLearning, r/LangChain — follow sub rules |
 | **LinkedIn / X** | Short demo video, link to spec + benchmark |
-| **Dev.to / blog** | Retrieval eval gate article ([blog template](./blog/)) |
+| **Dev.to / blog** | Publish on dev.to first; repo keeps [retrieval eval gate](./blog/retrieval-eval-gate-in-ci.md) only until platform post is live |
 | **Product Hunt** | Optional — after stable public site |
 
 Message (one line):

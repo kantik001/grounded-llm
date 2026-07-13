@@ -98,7 +98,7 @@ cd client-assistant
 | UI branding | locale `branding.json`; customize `webapp/` if needed |
 | Eval questions | `eval/rag_{domain}_baseline.jsonl` |
 
-Scaffold: `scripts/init_domain.ps1` / `init_domain.sh`.
+Scaffold: `python scripts/init_pack.py install <pack_id>` (preferred) or `scripts/init_domain.ps1` / `init_domain.sh`.
 
 ### 3. Index and verify
 
@@ -138,3 +138,5 @@ make smoke
 ## Optional modules
 
 **Vision / CV** — separate domain pack, not part of platform core.
+
+**Hosted SaaS signup** — disabled by default. To enable self-serve tenant creation + Stripe billing, see [SAAS.md](./SAAS.md) and [BILLING.md](./BILLING.md). Not required for on-prem pilots.
