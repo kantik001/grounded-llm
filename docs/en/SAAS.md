@@ -1,6 +1,6 @@
 # Hosted SaaS (architecture prep)
 
-**Status:** Design document — Phase 9. Not implemented in reference deployment.
+**Status:** Phase 10 — signup API + UI scaffold; full hosted control plane remains Phase C.
 
 Phase C goal: controlled multi-tenant signup with the same core as on-prem.
 
@@ -21,23 +21,26 @@ Multi-tenant data paths already exist (`X-Tenant-ID`, `data/{tenant}/`).
 
 ---
 
-## Signup flow (target)
+## Signup flow (implemented)
 
-1. User registers (email + org)
-2. Plan selected ([plans.yaml](../../config/plans.yaml))
-3. Tenant id allocated → `ALLOWED_TENANTS`
-4. Default domain + template pack install
-5. Admin invites KB editors
+1. User opens `webapp/signup.html` or calls `POST /api/v1/signup`
+2. Plan selected from `GET /api/v1/plans` ([plans.yaml](../../config/plans.yaml))
+3. Tenant id allocated → written to `TENANTS_REGISTRY_FILE`
+4. Quotas applied to `TENANT_QUOTAS_FILE`
+5. Data directory `data/{tenant}/` created
+
+Upgrade via Stripe Checkout metadata (`tenant_id`, `plan`) + webhook.
 
 ---
 
-## Environment (future)
+## Environment
 
 | Variable | Purpose |
 |----------|---------|
-| `SAAS_SIGNUP_ENABLED` | Gate public registration |
-| `STRIPE_SECRET_KEY` | Billing webhooks |
-| `STRIPE_WEBHOOK_SECRET` | Verify events |
+| `SAAS_SIGNUP_ENABLED` | Gate public registration (`true` / `false`) |
+| `TENANTS_REGISTRY_FILE` | Persisted tenant list (e.g. `config/tenants.json`) |
+| `STRIPE_WEBHOOK_SECRET` | Verify Stripe webhook signatures |
+| `PLANS_FILE` | Plan tiers (default `config/plans.yaml`) |
 
 See [BILLING.md](./BILLING.md).
 

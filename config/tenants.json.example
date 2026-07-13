@@ -1,0 +1,9 @@
+[
+  {
+    "tenant_id": "acme-demo",
+    "org_name": "Acme Demo",
+    "email": "admin@example.com",
+    "plan": "starter",
+    "created_at": "2026-01-01T00:00:00Z"
+  }
+]

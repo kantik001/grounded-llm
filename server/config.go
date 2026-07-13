@@ -150,6 +150,12 @@ func logStartup(cfg *Config) {
 	if len(tenantQuotaRegistry) > 0 {
 		log.Printf("Tenant quotas: %d tenant(s)", len(tenantQuotaRegistry))
 	}
+	if saasSignupEnabled() {
+		log.Printf("SaaS signup: enabled")
+	}
+	if stripeWebhookSecret() != "" {
+		log.Printf("Stripe webhook: configured")
+	}
 	log.Printf("Default tenant: %s", cfg.DefaultTenantID)
 	log.Printf("Default locale: %s", cfg.DefaultLocale)
 	log.Printf("CORS origins: %v", cfg.CORSAllowedOrigins)

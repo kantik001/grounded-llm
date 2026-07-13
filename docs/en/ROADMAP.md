@@ -343,11 +343,11 @@ Strategy: [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md)
 
 ---
 
-## Phase 9 — Launch & live connectors (in progress)
+## Phase 9 — Launch & live connectors ✅
 
 **Goal:** Live Drive + Confluence, billing prep, launch playbook.
 
-**Plan:** [PHASE_9.md](./PHASE_9.md)
+**Plan:** [PHASE_9.md](./PHASE_9.md) — **complete**
 
 | Item | Artifact |
 |------|----------|
@@ -356,7 +356,22 @@ Strategy: [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md)
 | Billing scaffold | [BILLING.md](./BILLING.md), `config/plans.yaml` |
 | Launch playbook | [LAUNCH.md](./LAUNCH.md) |
 
-**Branch:** `feature/phase-9-launch-scale`
+---
+
+## Phase 10 — SaaS billing & signup (in progress)
+
+**Goal:** Stripe webhook, self-serve signup API + UI.
+
+**Plan:** [PHASE_10.md](./PHASE_10.md)
+
+| Item | Artifact |
+|------|----------|
+| Signup API | `POST /api/v1/signup` |
+| Stripe webhook | `server/stripe_webhook.go` |
+| Signup UI | `webapp/signup.html` |
+| Tenant registry | `config/tenants.json.example` |
+
+**Branch:** `feature/phase-10-saas-billing`
 
 ---
 
