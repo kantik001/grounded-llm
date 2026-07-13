@@ -171,6 +171,38 @@ Protect this endpoint in production.
 
 ---
 
+## Optional SaaS signup (hosted beta)
+
+Requires `SAAS_SIGNUP_ENABLED=true` and `TENANTS_REGISTRY_FILE`. See [SAAS.md](./SAAS.md).
+
+### List plans
+
+```bash
+curl -sS http://localhost:8080/api/v1/plans
+```
+
+### Self-serve signup
+
+```bash
+curl -sS -X POST http://localhost:8080/api/v1/signup \
+  -H 'Content-Type: application/json' \
+  -d '{"org_name":"Acme","email":"admin@acme.com","plan":"starter"}'
+```
+
+Response may include `admin_username`, `admin_password` (once), and `checkout_url` for paid plans.
+
+### Stripe Checkout (existing tenant)
+
+```bash
+curl -sS -X POST http://localhost:8080/api/v1/billing/stripe/checkout \
+  -H 'Content-Type: application/json' \
+  -d '{"tenant_id":"acme-demo","plan":"business","email":"admin@acme.com"}'
+```
+
+UI: `http://localhost/signup.html`
+
+---
+
 ## Smoke test script
 
 ```bash

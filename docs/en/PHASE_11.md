@@ -2,7 +2,7 @@
 
 **Goal:** Stripe Checkout session API, self-serve admin user on signup, paid-plan payment flow.
 
-**Branch:** `feature/phase-11-checkout-admin`  
+**Branch:** `feature/phase-11-checkout-admin` — **merged to `main`**  
 **Horizon:** 3 (hosted beta)  
 **Prerequisite:** Phase 10 merged to `main` ✅
 

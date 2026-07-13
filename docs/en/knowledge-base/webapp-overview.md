@@ -1,7 +1,7 @@
 ﻿# `webapp/` — Web UI
 
-**Files:** `index.html`, `admin.html`, `app.js`, `app.css`, `nginx.conf`  
-**Role:** reference UI for Telegram Web App + admin
+**Files:** `index.html`, `admin.html`, `signup.html`, `embed.html`, `app.js`, `app.css`, `nginx.conf`  
+**Role:** reference UI for Telegram Web App, admin, optional SaaS signup, embed widget
 
 ---
 
@@ -41,6 +41,14 @@ Header `X-Telegram-Init-Data` from Telegram (or dev bypass on server).
 - List articles, delete, reindex RAG
 
 Domain list from `GET /api/domains` (same as main chat).
+
+---
+
+## `signup.html` — optional SaaS signup
+
+- `GET /api/v1/plans` → plan dropdown
+- `POST /api/v1/signup` → tenant id, optional admin credentials, optional Stripe `checkout_url`
+- Requires server: `SAAS_SIGNUP_ENABLED=true`, `TENANTS_REGISTRY_FILE` — [SAAS.md](../SAAS.md)
 
 ---
 

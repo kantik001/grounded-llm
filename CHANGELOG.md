@@ -135,7 +135,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Admin auto-provision:** signup creates `{tenant}-admin` in `ADMIN_USERS_FILE`
 - **Paid plan flow:** starter quotas until Stripe webhook upgrades plan
 - **Plans:** `stripe_price_id` in `config/plans.yaml`
+- **Plans:** `stripe_price_id` in `config/plans.yaml`
 - [PHASE_11.md](docs/en/PHASE_11.md)
+
+### Changed (docs refresh)
+
+- Updated ROADMAP, README, BILLING/SAAS, RELEASE, API examples for Phases 10–11 complete
+- Russian ROADMAP points to English roadmap for phases 4–11
 
 ## [0.3.0] - TBD
 

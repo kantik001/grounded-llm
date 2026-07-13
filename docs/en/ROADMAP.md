@@ -273,8 +273,8 @@ The previous list (Helm, SaaS, vision pack, dashboard) is **split across Phases 
 |--------|--------|-------|
 | 1 Spec & conformance | Spec v1, conformance CLI, policies | 4 → 5 ✅ |
 | 2 Quality science | Eval, adversarial, benchmark, hybrid + **cross-encoder** | 4 → 7 |
-| 3 Reference deploy | Docker, Helm, Terraform **AWS+GCP+Azure**, vector adapters | 4 → 8 |
-| 4 Template marketplace | HR, IT, Legal FAQ, registry, **connectors** | 2 → 8 |
+| 3 Reference deploy | Docker, Helm, Terraform **AWS+GCP+Azure**, vector adapters, **SaaS signup (optional)** | 4 → 11 ✅ |
+| 4 Template marketplace | HR, IT, Legal FAQ, registry, **connectors (live + export)** | 2 → 9 ✅ |
 | 5 Governance & community | CONTRIBUTING, RFC; **GOVERNANCE, partner cert** | 5 → 7 |
 
 Strategy: [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md)
@@ -373,11 +373,11 @@ Strategy: [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md)
 
 ---
 
-## Phase 11 — Checkout & admin provisioning (in progress)
+## Phase 11 — Checkout & admin provisioning ✅
 
 **Goal:** Stripe Checkout API, admin auto-provision on signup.
 
-**Plan:** [PHASE_11.md](./PHASE_11.md)
+**Plan:** [PHASE_11.md](./PHASE_11.md) — **complete**
 
 | Item | Artifact |
 |------|----------|
@@ -385,7 +385,19 @@ Strategy: [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md)
 | Admin provision | `server/admin_users_persist.go` |
 | Paid signup flow | `stripe_price_id` in plans |
 
-**Branch:** `feature/phase-11-checkout-admin`
+---
+
+## What's next (post Phase 11)
+
+Numbered delivery phases **1–11 are complete**. Next work is **operator choice**, not a mandatory Phase 12 in code:
+
+| Track | Focus | Doc |
+|-------|-------|-----|
+| **Launch** | Public repo, `v0.3.0` tag, GitHub Pages, dev.to / HN | [LAUNCH.md](./LAUNCH.md), [RELEASE.md](./RELEASE.md) |
+| **Hosted beta** | Email creds, Stripe Customer Portal, staging deploy | [SAAS.md](./SAAS.md), [BILLING.md](./BILLING.md) |
+| **Enterprise pilot** | SAML, trust center refresh, first on-prem customer | [PILOT_PLAYBOOK.md](./PILOT_PLAYBOOK.md) |
+
+Long-term horizons B–D remain in the strategic sections above.
 
 ---
 
