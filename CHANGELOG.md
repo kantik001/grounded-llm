@@ -135,7 +135,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Admin auto-provision:** signup creates `{tenant}-admin` in `ADMIN_USERS_FILE`
 - **Paid plan flow:** starter quotas until Stripe webhook upgrades plan
 - **Plans:** `stripe_price_id` in `config/plans.yaml`
+- **Plans:** `stripe_price_id` in `config/plans.yaml`
 - [PHASE_11.md](docs/en/PHASE_11.md)
+
+### Changed (docs refresh)
+
+- Updated ROADMAP, README, BILLING/SAAS, RELEASE, API examples for Phases 10–11 complete
+- Russian docs: README hub, ROADMAP phases 1–11, SAAS/BILLING/LAUNCH/CONNECTORS summaries
+
+### Changed (public launch prep)
+
+- Removed internal sales materials (`SALES_ONE_PAGER_RF`, pilot playbooks, RU sales demo script) from public docs
+- Unpublished dev.to platform article kept local only (`.gitignore`); repo lists [retrieval eval gate](docs/en/blog/retrieval-eval-gate-in-ci.md) blog only
+- LAUNCH checklist updated; enterprise pilot links → partner certification / trust center
 
 ## [0.3.0] - TBD
 

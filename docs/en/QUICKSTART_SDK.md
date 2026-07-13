@@ -69,4 +69,4 @@ for token in client.stream_message_deltas("How many vacation days?", session_id=
 
 - [sdk/python/README.md](../../sdk/python/README.md)
 - [OpenAPI](http://localhost:8080/api/v1/openapi.json)
-- [PILOT_PLAYBOOK.md](./PILOT_PLAYBOOK.md)
+- [CASE_STUDY_HR_PILOT.md](./CASE_STUDY_HR_PILOT.md)

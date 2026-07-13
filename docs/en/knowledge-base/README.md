@@ -44,7 +44,7 @@ Russian docs: [../../ru/knowledge-base/README.md](../../ru/knowledge-base/README
 
 | Document | Description |
 |----------|-------------|
-| [webapp-overview.md](./webapp-overview.md) | Telegram Web App |
+| [webapp-overview.md](./webapp-overview.md) | Chat UI, admin, embed, signup |
 | [scripts-overview.md](./scripts-overview.md) | reindex, eval, init_domain |
 | [tests-overview.md](./tests-overview.md) | pytest + Go tests |
 | [quality-eval-and-rag-logs.md](./quality-eval-and-rag-logs.md) | Eval baselines |

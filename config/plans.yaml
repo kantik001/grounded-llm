@@ -1,5 +1,5 @@
-# Plan tiers scaffold (Phase 9 — billing prep, not wired to Stripe yet)
-# Used by docs/en/BILLING.md and future hosted SaaS (Phase C).
+# Plan tiers — optional hosted SaaS (Phase 9–11)
+# On-prem: documentation only; set quotas in tenant_quotas.json directly.
 
 version: 1
 currency: USD

@@ -1,26 +1,29 @@
-# HR Domain Pack (демо / продажи)
+# HR Domain Pack (шаблон)
 
-**Продукт:** ассистент по HR-политикам и employee handbook  
-**Domain ID:** `default` (демо) или `hr` у клиента  
-**Locale:** `config/locales/en/` для международных продаж
+**Сценарий:** внутренний HR-ассистент и employee handbook  
+**Domain ID:** `default` (демо) или свой slug, например `hr`  
+**Locale:** `config/locales/en/` (или `ru` для русской локали)
+
+Это **референсный шаблон** Grounded LLM. Скопируйте и адаптируйте, чтобы развернуть document-grounded ассистента за несколько дней.
 
 ---
 
-## Что продаём
+## Что даёт шаблон
 
-Внутренний HR-бот с ответами **только из документов компании**:
+Готовый **policy Q&A** с ответами только из документов компании:
 
 - Отпуск и планирование  
 - Больничные  
 - Удалёнка / гибрид  
 - Этика и эскалация в HR  
 
-**One-liner для pitch:**  
-*Сотрудники получают мгновенные ответы с цитатами из вашего HR handbook — в вашей инфраструктуре.*
+**One-liner:**
+
+> Сотрудники получают мгновенные ответы с цитатами из handbook — в вашей инфраструктуре.
 
 ---
 
-## Что входит в pack
+## Состав pack
 
 | Актив | Путь |
 |-------|------|
@@ -30,41 +33,46 @@
 | UI branding | `config/locales/en/branding.json` |
 | Few-shot | `config/locales/en/few_shot.json` |
 | Eval (EN) | `eval/rag_default_en_baseline.jsonl` |
-| Сценарий demo (EN) | [DEMO_SCRIPT.md](./DEMO_SCRIPT.md) |
-| Сценарий demo (RU) | [DEMO_SCRIPT_RU.md](./DEMO_SCRIPT_RU.md) |
-| Sales one-pager (РФ) | [SALES_ONE_PAGER_RF.md](../SALES_ONE_PAGER_RF.md) |
+| Манифест pack | `packs/hr/pack.yaml` |
+| Сценарий demo | [DEMO_SCRIPT.md](./DEMO_SCRIPT.md) |
 
-Русские демо-документы (`policy_*.txt` без `_en`) — для локали `ru` и русскоязычных пилотов.
+Русские демо-документы (`policy_*.txt` без `_en`) — для локали `ru`.
 
 ---
 
-## Внедрение у клиента (2–5 дней)
+## Развёртывание (2–5 дней)
+
+**Рекомендуется — установка из pack:**
+
+```bash
+python scripts/init_pack.py install hr
+python scripts/reindex_rag.py
+python scripts/run_rag_eval.py --suite default_en
+```
+
+**Вручную:**
 
 1. Запись в `config/domains.json` (domain `hr`).
 2. Документы клиента в `data/{tenant}/hr/`.
-3. Настройка промптов в `config/locales/en/`.
+3. Настройка `config/locales/en/prompts.json` и `branding.json`.
 4. Onboarding-вопросы под темы клиента.
-5. Reindex.
+5. `python scripts/reindex_rag.py` или `POST /admin/reindex`.
 6. Eval: `python scripts/run_rag_eval.py --suite default_en`.
-7. Пилот по [PILOT_PLAYBOOK.md](../PILOT_PLAYBOOK.md).
+7. Согласование с IT: [SECURITY_BRIEF.md](../SECURITY_BRIEF.md).
 
 ---
 
-## Цены (ориентир)
-
-| | USD |
-|---|-----|
-| Setup pack | $3k–8k или в пилоте |
-| Пилот 8 нед | $8k–25k |
-| Лицензия / год | $24k–80k |
-
----
-
-## Не входит (Фаза A)
+## Вне scope (сегодня)
 
 - Расчёт зарплаты, персональные данные  
-- SSO / RBAC — **Фаза B**
+- SSO / RBAC — см. [roadmap Phase B](../ROADMAP.md)  
+- Юридические консультации — disclaimer в branding bundles  
 
 ---
 
-См. [SECURITY_BRIEF.md](../SECURITY_BRIEF.md), [LOCALE_GUIDE.md](../LOCALE_GUIDE.md).
+## Связанные документы
+
+- [PLATFORM_VISION.md](../../../PLATFORM_VISION.md)  
+- [LOCALE_GUIDE.md](../LOCALE_GUIDE.md)  
+- [domain-pack-template/](../../../domain-pack-template/)  
+- [CASE_STUDY_HR_PILOT.md](../../en/CASE_STUDY_HR_PILOT.md) — шаблон KPI для пилота  

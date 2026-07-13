@@ -107,14 +107,22 @@ Handlers use `ctxActorUser(c)` / `ctxTelegramUser(c)`.
 
 ---
 
-## Protected routes
+## Route visibility
+
+**Public (no chat auth):** `/health`, `/ready`, `/domains`, `/onboarding`, `/branding`, `/metrics`
+
+**SaaS (optional, `SAAS_SIGNUP_ENABLED=true`):** `GET /api/v1/plans`, `POST /api/v1/signup`, `POST /api/v1/billing/stripe/checkout`, `POST /api/v1/billing/stripe/webhook` — see [SAAS.md](../SAAS.md)
+
+**Admin:** `/api/admin/*` — Basic, OIDC, or `ADMIN_USERS_FILE` (separate from chat auth)
+
+---
+
+## Protected routes (chat API)
 
 All below use **`auth` + rate limit**:
 
 - `/session`, `/history`, `/message`, `/feedback`
 - Mirrors under `/api/...` and `/api/v1/...`
-
-**Public:** `/health`, `/domains`, `/onboarding`, `/branding`, admin (separate auth).
 
 ---
 

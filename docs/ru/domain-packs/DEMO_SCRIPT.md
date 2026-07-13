@@ -1,8 +1,7 @@
 # Сценарий HR-demo (30 минут)
 
-> **Рынок РФ:** используйте [DEMO_SCRIPT_RU.md](./DEMO_SCRIPT_RU.md) и [SALES_ONE_PAGER_RF.md](../SALES_ONE_PAGER_RF.md).
-
-Домен **default**, локаль **en** (`?locale=en` или `DEFAULT_LOCALE=en`).
+Домен **default**, локаль **en** (`?locale=en` или `DEFAULT_LOCALE=en`).  
+Полный EN-скрипт: [DEMO_SCRIPT.md](../en/domain-packs/DEMO_SCRIPT.md).
 
 ---
 
@@ -67,7 +66,8 @@ Upload `.txt` → Reindex → вопрос по новому файлу.
 
 ## Закрытие (2 min)
 
-Пилот 8 недель, KPI, лицензия. IT — [SECURITY_BRIEF.md](../SECURITY_BRIEF.md).
+Следующий шаг — пилот с измеримыми KPI. IT — [SECURITY_BRIEF.md](../SECURITY_BRIEF.md).  
+Шаблон метрик: [CASE_STUDY_HR_PILOT.md](../../en/CASE_STUDY_HR_PILOT.md).
 
 ---
 

@@ -47,7 +47,21 @@ Layout: `data/{tenant_id}/{domain_id}/` (legacy `data/{domain_id}/` still suppor
 
 ---
 
-## New domain checklist
+## New assistant from template pack
+
+Prefer [packs/](../../packs/) over legacy `init_domain`:
+
+```bash
+python scripts/init_pack.py list
+python scripts/init_pack.py install it_support   # or: hr, legal_faq
+python scripts/reindex_rag.py
+```
+
+Registry: `packs/registry.yaml` — validate with `python scripts/init_pack.py registry --validate`.
+
+---
+
+## New domain checklist (manual)
 
 1. Entry in `config/domains.json` (with `names.ru` / `names.en`)
 2. Documents in `data/{tenant_id}/{domain_id}/`

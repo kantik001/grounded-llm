@@ -1,37 +1,36 @@
-# Hosted SaaS (architecture prep)
+# Hosted SaaS (optional beta layer)
 
-**Status:** Phase 10 — signup API + UI scaffold; full hosted control plane remains Phase C.
-
-Phase C goal: controlled multi-tenant signup with the same core as on-prem.
+**Status:** Phase 10–11 — signup API, Stripe Checkout + webhook, admin auto-provision. **Not required** for on-prem. Full multi-region control plane remains Phase C ([ROADMAP.md](./ROADMAP.md)).
 
 ---
 
 ## Components
 
 ```text
-Signup / billing (future)  →  tenant provisioner  →  existing stack
-                                ├── Postgres (tenant row)
-                                ├── data/{tenant}/
-                                ├── config per tenant
-                                └── Helm / Compose per tenant OR shared cluster
+signup.html / POST /api/v1/signup
+        ↓
+tenant registry + quotas + data/{tenant}/
+        ↓
+optional Stripe Checkout → webhook → plan upgrade
+        ↓
+existing stack (Go + Python RAG + Postgres)
 ```
 
-Reference implementation today: **single-tenant** Docker Compose / Helm.  
-Multi-tenant data paths already exist (`X-Tenant-ID`, `data/{tenant}/`).
+Reference deployment: **single-cluster** Docker Compose / Helm with multi-tenant paths (`X-Tenant-ID`, `data/{tenant}/`).
 
 ---
 
-## Signup flow (implemented)
+## Signup flow
 
 1. User opens `webapp/signup.html` or calls `POST /api/v1/signup`
-2. Plan selected from `GET /api/v1/plans` ([plans.yaml](../../config/plans.yaml))
-3. Tenant id allocated → written to `TENANTS_REGISTRY_FILE`
-4. Quotas applied to `TENANT_QUOTAS_FILE`
-5. Data directory `data/{tenant}/` created
+2. Plan from `GET /api/v1/plans` ([plans.yaml](../../config/plans.yaml))
+3. Tenant id → `TENANTS_REGISTRY_FILE`
+4. Quotas → `TENANT_QUOTAS_FILE`
+5. Data dir `data/{tenant}/` created
+6. Admin user `{tenant}-admin` when `ADMIN_USERS_FILE` is set (password returned once)
+7. Paid plan → `checkout_url` when `STRIPE_SECRET_KEY` + `stripe_price_id` configured
 
-Upgrade via Stripe Checkout (`POST /api/v1/billing/stripe/checkout`) + webhook.
-
-Signup returns `admin_username` / `admin_password` once when `ADMIN_USERS_FILE` is configured.
+Upgrade / renew via Stripe webhook ([BILLING.md](./BILLING.md)).
 
 ---
 
@@ -41,21 +40,27 @@ Signup returns `admin_username` / `admin_password` once when `ADMIN_USERS_FILE` 
 |----------|---------|
 | `SAAS_SIGNUP_ENABLED` | Gate public registration (`true` / `false`) |
 | `TENANTS_REGISTRY_FILE` | Persisted tenant list (e.g. `config/tenants.json`) |
-| `STRIPE_WEBHOOK_SECRET` | Verify Stripe webhook signatures |
+| `TENANT_QUOTAS_FILE` | Enforced quotas per tenant |
+| `ADMIN_USERS_FILE` | RBAC users file; signup appends tenant admin |
+| `STRIPE_SECRET_KEY` | Checkout session API |
+| `STRIPE_WEBHOOK_SECRET` | Verify webhook signatures |
 | `PLANS_FILE` | Plan tiers (default `config/plans.yaml`) |
 
-See [BILLING.md](./BILLING.md).
+See [BILLING.md](./BILLING.md) for Checkout redirect URLs.
 
 ---
 
-## Non-goals (until Phase C implementation)
+## Non-goals (until Phase C / hosted GA)
 
 - Multi-region control plane
 - Per-tenant isolated clusters (enterprise only, manual)
+- Email delivery of admin credentials
+- Stripe Customer Portal UI
 
 ---
 
 ## Related
 
-- [ROADMAP.md](./ROADMAP.md) Phase C
+- [ROADMAP.md](./ROADMAP.md)
+- [LAUNCH.md](./LAUNCH.md)
 - [config/QUOTAS.md](../../config/QUOTAS.md)

@@ -2,7 +2,7 @@
 
 Supported stack for **Grounded LLM** reference implementation. Other versions may work but are not tested in CI.
 
-Last updated: Phase 4 prep (2026-07)
+Last updated: Phase 11 / main (2026-07)
 
 ---
 
@@ -81,6 +81,8 @@ Not pinned — verify numeric grounding via built-in verify layer regardless of 
 | API path | OpenAPI file | Introduced |
 |----------|--------------|------------|
 | `/api/v1/*` | `server/openapi.v1.json` | Phase 2 |
+| `/api/v1/signup`, `/api/v1/plans` | (see [SAAS.md](./SAAS.md)) | Phase 10 — optional |
+| `/api/v1/billing/stripe/*` | (see [BILLING.md](./BILLING.md)) | Phase 10–11 — optional |
 
 See [API_DEPRECATION_POLICY.md](./API_DEPRECATION_POLICY.md) for stability rules.
 

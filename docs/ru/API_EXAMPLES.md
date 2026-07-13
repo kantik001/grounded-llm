@@ -14,20 +14,25 @@ OpenAPI: `GET /api/v1/openapi.json`
 | `X-Tenant-ID` | Арендатор |
 | `X-Locale` | `en` / `ru` |
 
+Полный список (EN): [API_EXAMPLES.md](../en/API_EXAMPLES.md).
+
 ---
 
-## Health
+## Health / Ready
 
 ```bash
 curl -sS http://localhost:8080/health
+curl -sS http://localhost:8080/ready
 ```
 
 ---
 
-## Домены
+## Домены и branding
 
 ```bash
-curl -sS "http://localhost:8080/api/domains?locale=en"
+curl -sS "http://localhost:8080/api/domains?locale=ru"
+curl -sS "http://localhost:8080/api/branding?locale=ru"
+curl -sS "http://localhost:8080/api/onboarding?domain_id=default&locale=ru"
 ```
 
 ---
@@ -48,7 +53,7 @@ curl -sS -X POST http://localhost:8080/api/session \
 SESSION_ID="<session_id>"
 curl -sS -X POST http://localhost:8080/api/message \
   -H "Content-Type: application/json; charset=utf-8" \
-  -d "{\"session_id\":\"${SESSION_ID}\",\"domain_id\":\"default\",\"text\":\"How many vacation days?\"}"
+  -d "{\"session_id\":\"${SESSION_ID}\",\"domain_id\":\"default\",\"text\":\"Сколько дней отпуска?\"}"
 ```
 
 ---
@@ -59,7 +64,7 @@ curl -sS -X POST http://localhost:8080/api/message \
 curl -sS -N -X POST "http://localhost:8080/api/message?stream=1" \
   -H "Content-Type: application/json; charset=utf-8" \
   -H "Accept: text/event-stream" \
-  -d "{\"session_id\":\"${SESSION_ID}\",\"domain_id\":\"default\",\"text\":\"How many vacation days?\"}"
+  -d "{\"session_id\":\"${SESSION_ID}\",\"domain_id\":\"default\",\"text\":\"Сколько дней отпуска?\"}"
 ```
 
 ---
@@ -75,6 +80,40 @@ curl -sS -u admin:password \
 
 ---
 
+## Admin — квоты tenant
+
+```bash
+curl -sS -u admin:password "http://localhost:8080/api/admin/quotas?tenant_id=default"
+```
+
+---
+
+## Опциональный SaaS signup
+
+Требует `SAAS_SIGNUP_ENABLED=true`. См. [SAAS.md](./SAAS.md).
+
+```bash
+curl -sS http://localhost:8080/api/v1/plans
+
+curl -sS -X POST http://localhost:8080/api/v1/signup \
+  -H 'Content-Type: application/json' \
+  -d '{"org_name":"Acme","email":"admin@acme.com","plan":"starter"}'
+```
+
+UI: `http://localhost/signup.html`
+
+---
+
+## Conformance (стандарт)
+
+```bash
+pip install -r conformance/requirements.txt
+python -m conformance spec
+python -m conformance check --url http://localhost:8080
+```
+
+---
+
 ## Smoke
 
 ```bash
@@ -83,4 +122,4 @@ bash scripts/smoke.sh http://localhost:8080
 
 ---
 
-Полный список: [API_EXAMPLES.md](../en/API_EXAMPLES.md).
+См. также: [DEPLOY.md](./DEPLOY.md), [knowledge-base/server-auth-and-limits.md](./knowledge-base/server-auth-and-limits.md).

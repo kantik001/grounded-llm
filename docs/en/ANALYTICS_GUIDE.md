@@ -72,4 +72,4 @@ Question previews in KB gaps are truncated to 80 characters. Do not index docume
 
 ---
 
-See also: [PILOT_PLAYBOOK.md](./PILOT_PLAYBOOK.md) · [SECURITY_BRIEF.md](./SECURITY_BRIEF.md)
+See also: [CASE_STUDY_HR_PILOT.md](./CASE_STUDY_HR_PILOT.md) · [SECURITY_BRIEF.md](./SECURITY_BRIEF.md)

@@ -124,4 +124,4 @@ Embeddings model (`intfloat/multilingual-e5-small`) runs **inside the Python con
 
 For security questionnaires during a pilot, request the architecture diagram and this brief together with your deployment diagram (network zones, egress to LLM).
 
-See also: [ARCHITECTURE.md](./ARCHITECTURE.md), [DEPLOY.md](./DEPLOY.md), [PILOT_PLAYBOOK.md](./PILOT_PLAYBOOK.md).
+See also: [ARCHITECTURE.md](./ARCHITECTURE.md), [DEPLOY.md](./DEPLOY.md), [CASE_STUDY_HR_PILOT.md](./CASE_STUDY_HR_PILOT.md).

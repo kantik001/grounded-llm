@@ -70,4 +70,4 @@ Grounded LLM with:
 
 ---
 
-See also: [PILOT_PLAYBOOK.md](./PILOT_PLAYBOOK.md) · [PLATFORM_VISION.md](../../PLATFORM_VISION.md)
+See also: [CASE_STUDY_HR_PILOT.md](./CASE_STUDY_HR_PILOT.md) · [PLATFORM_VISION.md](../../PLATFORM_VISION.md)

@@ -158,8 +158,12 @@ make eval-retrieval            # RAG baseline only (needs Python already on :500
 | [docs/en/K8S_DEPLOY.md](docs/en/K8S_DEPLOY.md) | Helm / Kubernetes deploy |
 | [docs/en/TRUST_CENTER.md](docs/en/TRUST_CENTER.md) | Security review summary |
 | [docs/en/BACKUP_RESTORE.md](docs/en/BACKUP_RESTORE.md) | Postgres, Chroma, data backup |
-| [docs/en/PHASE_4.md](docs/en/PHASE_4.md) | Spec, conformance, RTBF (done) |
-| [docs/en/PHASE_5.md](docs/en/PHASE_5.md) | Standard publication (in progress) |
+| [docs/en/PHASE_4.md](docs/en/PHASE_4.md) | Spec, conformance, tenant purge |
+| [docs/en/PHASE_5.md](docs/en/PHASE_5.md) | Standard publication (Spec v1, site) |
+| [docs/en/CONNECTORS.md](docs/en/CONNECTORS.md) | SharePoint, Drive, Confluence ingest |
+| [docs/en/SAAS.md](docs/en/SAAS.md) · [BILLING.md](docs/en/BILLING.md) | Optional hosted signup + Stripe |
+| [docs/en/LAUNCH.md](docs/en/LAUNCH.md) | Public launch playbook |
+| [docs/en/ROADMAP.md](docs/en/ROADMAP.md) | Phases 1–11 complete; what's next |
 | [docs/en/STANDARD_STRATEGY.md](docs/en/STANDARD_STRATEGY.md) | Horizons, pillars, path A→B |
 | [docs/en/spec/GROUNDED_SPEC_v1.md](docs/en/spec/GROUNDED_SPEC_v1.md) | Normative API v1 spec |
 | [docs/en/RFC.md](docs/en/RFC.md) | RFC process · [RFC-0001](docs/en/rfcs/RFC-0001-grounded-compatible.md) |
