@@ -25,6 +25,7 @@ func registerSaaSRoutes(router *gin.Engine, rl *rateLimiter) {
 	g.Use(lim)
 	g.GET("/plans", handleListPlans)
 	g.POST("/signup", handleSignup)
+	registerStripeCheckoutRoute(g)
 	g.POST("/billing/stripe/webhook", handleStripeWebhook)
 }
 
@@ -100,7 +101,11 @@ func handleSignup(c *gin.Context) {
 		c.JSON(http.StatusConflict, gin.H{"success": false, "error": err.Error()})
 		return
 	}
-	if err := applyPlanQuotas(tenantID, planID); err != nil {
+	effectivePlan := planID
+	if planRequiresCheckout(plan) {
+		effectivePlan = "starter"
+	}
+	if err := applyPlanQuotas(tenantID, effectivePlan); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
 		return
 	}
@@ -109,12 +114,39 @@ func handleSignup(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
+	resp := gin.H{
 		"success":   true,
 		"tenant_id": tenantID,
 		"plan":      planID,
 		"chat_url":  fmt.Sprintf("/?tenant_id=%s", tenantID),
-	})
+		"admin_url": fmt.Sprintf("/admin.html?tenant_id=%s", tenantID),
+	}
+
+	if saasProvisionAdmin() {
+		username, password, err := provisionSignupAdminUser(tenantID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
+			return
+		}
+		if username != "" {
+			resp["admin_username"] = username
+			resp["admin_password"] = password
+		}
+	}
+
+	if planRequiresCheckout(plan) {
+		checkoutURL, err := maybeCreateCheckoutURL(tenantID, planID, email, defaultCheckoutSuccessURL(), defaultCheckoutCancelURL())
+		if err != nil {
+			c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": err.Error()})
+			return
+		}
+		if checkoutURL != "" {
+			resp["checkout_url"] = checkoutURL
+			resp["payment_pending"] = true
+		}
+	}
+
+	c.JSON(http.StatusCreated, resp)
 }
 
 func allocateTenantID(orgName string) (string, error) {

@@ -40,4 +40,7 @@ button {
 button:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .result { margin-top: 1rem; }
+.admin-block, .checkout-block { margin: 0.75rem 0; padding: 0.75rem; background: #0f1419; border-radius: 8px; }
 .error { color: #ff8f8f; margin-top: 1rem; }
+.error.success { color: #8fd49a; }
+.btn.primary { background: #1f9d55; border-color: #1f9d55; display: inline-block; padding: 0.45rem 0.75rem; border-radius: 8px; text-decoration: none; }

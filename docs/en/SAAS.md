@@ -29,7 +29,9 @@ Multi-tenant data paths already exist (`X-Tenant-ID`, `data/{tenant}/`).
 4. Quotas applied to `TENANT_QUOTAS_FILE`
 5. Data directory `data/{tenant}/` created
 
-Upgrade via Stripe Checkout metadata (`tenant_id`, `plan`) + webhook.
+Upgrade via Stripe Checkout (`POST /api/v1/billing/stripe/checkout`) + webhook.
+
+Signup returns `admin_username` / `admin_password` once when `ADMIN_USERS_FILE` is configured.
 
 ---
 

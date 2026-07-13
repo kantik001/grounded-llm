@@ -29,7 +29,7 @@ type stripeEventData struct {
 	Object json.RawMessage `json:"object"`
 }
 
-type stripeCheckoutSession struct {
+type stripeWebhookCheckoutSession struct {
 	Customer string            `json:"customer"`
 	Metadata map[string]string `json:"metadata"`
 }
@@ -92,7 +92,7 @@ func handleStripeWebhook(c *gin.Context) {
 }
 
 func handleCheckoutCompleted(raw json.RawMessage) error {
-	var sess stripeCheckoutSession
+	var sess stripeWebhookCheckoutSession
 	if err := json.Unmarshal(raw, &sess); err != nil {
 		return err
 	}

@@ -30,6 +30,15 @@
         <div id="result" class="result" hidden>
             <h2>Workspace ready</h2>
             <p>Tenant ID: <code id="tenantId"></code></p>
+            <div id="adminBlock" class="admin-block" hidden>
+                <p>Admin login (save now — shown once):</p>
+                <p>User <code id="adminUser"></code> · Password <code id="adminPass"></code></p>
+                <p><a id="adminLink" class="btn" href="/admin.html">Open admin</a></p>
+            </div>
+            <div id="checkoutBlock" class="checkout-block" hidden>
+                <p id="checkoutNote">Complete payment for your selected plan.</p>
+                <p><a id="checkoutLink" class="btn primary" href="#">Pay with Stripe</a></p>
+            </div>
             <p><a id="chatLink" class="btn" href="/">Open chat</a></p>
         </div>
 

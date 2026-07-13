@@ -156,6 +156,9 @@ func logStartup(cfg *Config) {
 	if stripeWebhookSecret() != "" {
 		log.Printf("Stripe webhook: configured")
 	}
+	if stripeSecretKey() != "" {
+		log.Printf("Stripe checkout: configured")
+	}
 	log.Printf("Default tenant: %s", cfg.DefaultTenantID)
 	log.Printf("Default locale: %s", cfg.DefaultLocale)
 	log.Printf("CORS origins: %v", cfg.CORSAllowedOrigins)

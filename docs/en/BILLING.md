@@ -18,10 +18,10 @@ Source of truth: [config/plans.yaml](../../config/plans.yaml).
 
 ---
 
-## Integration (Phase 10)
+## Integration (Phase 10–11)
 
 1. **Signup** — `POST /api/v1/signup` creates tenant + applies plan quotas from `config/plans.yaml`
-2. **Stripe Checkout** — attach metadata: `tenant_id`, `plan`
+2. **Stripe Checkout** — `POST /api/v1/billing/stripe/checkout` for paid plans (`stripe_price_id` in plans.yaml)
 3. **Webhook** — `POST /api/v1/billing/stripe/webhook` updates quotas on subscription events
 
 Environment:
@@ -32,7 +32,11 @@ Environment:
 | `TENANTS_REGISTRY_FILE` | e.g. `config/tenants.json` |
 | `TENANT_QUOTAS_FILE` | quota enforcement file |
 | `STRIPE_WEBHOOK_SECRET` | Stripe signing secret (`whsec_…`) |
+| `STRIPE_SECRET_KEY` | Stripe API key for Checkout (`sk_…`) |
+| `STRIPE_CHECKOUT_SUCCESS_URL` | Redirect after payment (default `http://localhost/signup.html?checkout=success`) |
+| `STRIPE_CHECKOUT_CANCEL_URL` | Redirect on cancel |
 | `PLANS_FILE` | defaults to `config/plans.yaml` |
+| `ADMIN_USERS_FILE` | required for auto admin provision on signup |
 
 Suggested webhook events:
 

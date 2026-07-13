@@ -15,10 +15,11 @@ type planQuotas struct {
 }
 
 type planDefinition struct {
-	Label         string     `yaml:"label" json:"label"`
-	PriceMonthly  *int       `yaml:"price_monthly" json:"price_monthly"`
-	ContactSales  bool       `yaml:"contact_sales" json:"contact_sales"`
-	Quotas        planQuotas `yaml:"quotas" json:"quotas"`
+	Label          string     `yaml:"label" json:"label"`
+	PriceMonthly   *int       `yaml:"price_monthly" json:"price_monthly"`
+	StripePriceID  string     `yaml:"stripe_price_id" json:"stripe_price_id,omitempty"`
+	ContactSales   bool       `yaml:"contact_sales" json:"contact_sales"`
+	Quotas         planQuotas `yaml:"quotas" json:"quotas"`
 }
 
 type plansFile struct {
