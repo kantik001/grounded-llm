@@ -50,7 +50,21 @@
 
 ---
 
-## Чеклист нового домена
+## Новый ассистент из template pack
+
+Предпочтительно [packs/](../../packs/):
+
+```bash
+python scripts/init_pack.py list
+python scripts/init_pack.py install it_support   # или: hr, legal_faq
+python scripts/reindex_rag.py
+```
+
+Реестр: `packs/registry.yaml` — `python scripts/init_pack.py registry --validate`
+
+---
+
+## Чеклист нового домена (вручную)
 
 1. Запись в `config/domains.json` (поля `names.ru` / `names.en` для UI)
 2. Документы в `data/{tenant_id}/{domain_id}/`
@@ -64,9 +78,8 @@
 
 ## Документация
 
-| Язык | Путь |
-|------|------|
-| Русский | [knowledge-base/README.md](./knowledge-base/README.md) |
+| Документация | [knowledge-base/README.md](./knowledge-base/README.md) |
+| Указатель RU | [README.md](./README.md) |
 | English | [../en/knowledge-base/README.md](../en/knowledge-base/README.md) |
 
 Общий указатель: [../README.md](../README.md).

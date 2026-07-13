@@ -1,11 +1,11 @@
 # Дорожная карта — Grounded LLM
 
-> **Актуальные фазы 4–11 (spec, connectors, SaaS):** см. английскую версию — [docs/en/ROADMAP.md](../en/ROADMAP.md).  
-> Этот файл описывает стратегические фазы A–D и ранний baseline; полностью не синхронизирован с delivery phases 1–11.
+> **Фазы доставки 1–11 (spec, connectors, SaaS):** сводка ниже; детали — [docs/en/ROADMAP.md](../en/ROADMAP.md).  
+> Стратегические фазы **A–D** — долгосрочный план (продажи, enterprise, экосистема).
 
-Стратегия: **международный B2B-продукт** — компании разворачивают ассистента по своим документам on-prem или в private cloud.  
-Язык продаж и документации по умолчанию — **английский**; русская локаль остаётся для разработки и локального рынка.  
-Привязки к конкретной стране нет — новые языки добавляются через locale packs, когда появится платящий спрос.
+Стратегия: **open platform** — cited, verified document assistants on-prem / private cloud.  
+Язык продукта и спецификации по умолчанию — **английский**; `docs/ru/` — для RU-локали и пилотов.  
+Новые языки — через locale packs, без логики «под страну» в core.
 
 ---
 
@@ -104,45 +104,13 @@
 
 ---
 
-## Фаза B — готовность к enterprise (4–9 месяцев)
+## Фаза B — enterprise readiness (4–9 месяцев)
 
-**Цель:** пройти security review и закупку у компаний среднего и крупного размера.
+**Цель:** security review и закупка у mid-market / enterprise.
 
-### Продукт
+**Большая часть инженерных пунктов уже в `main`:** RBAC, audit log, квоты, OIDC SSO, analytics dashboard, async reindex, Helm, retention, hybrid/cross-encoder rerank. См. [ROADMAP (EN)](../en/ROADMAP.md) Phase B checklist.
 
-| Задача | Зачем |
-|--------|-------|
-| **RBAC** | Роли: только чат / редактор KB / admin / управление API keys |
-| **Audit log** | Кто загрузил/удалил документ, reindex, вход в админку |
-| **Квоты per tenant** | Сообщения/день, объём KB, число доменов — основа для billing |
-| **SSO (OIDC/SAML)** | Стандарт enterprise; Telegram остаётся опциональным каналом |
-| **Analytics dashboard** | Вопросы/день, verify pass rate, пробелы в KB, feedback — UI для admin |
-| **Async reindex** | Статус задачи, админ не «висит» 10+ минут |
-
-### Инженерия
-
-| Задача | Зачем |
-|--------|-------|
-| Helm chart | Повторяемый деплой в Kubernetes |
-| Backup/restore | Postgres + Chroma + `data/` |
-| Readiness probes | Отдельно postgres, python RAG, chroma |
-| Retention policies | Настраиваемое хранение сообщений/сессий |
-| Улучшение retrieval | Reranker или hybrid search; измерять через eval |
-
-### GTM
-
-- **Годовая лицензия** (не self-serve с карты)
-- Partner program v1: 1–2 integrator, rev share
-- Trust center: security, architecture, subprocessors (LLM API)
-
-### Критерии успеха фазы B
-
-- 1–2 оплаченные годовые лицензии
-- Security questionnaire — без кастомного кода на каждого клиента
-- Verify pass rate ≥75% на production eval
-- Удовлетворённость админов пилота (NPS) ≥40
-
-**Деньги:** годовая лицензия **$24k–80k** + support retainer.
+Остаётся в основном **GTM и SAML**, trust center под конкретного клиента.
 
 ---
 
@@ -244,28 +212,43 @@ MVP+i18n → EN product + HR pack → RBAC, audit, SSO,     → SaaS + billing +
 
 ---
 
-## Ближайшие 90 дней (конкретный backlog)
+## Фазы доставки 1–11 ✅ (сводка)
 
-**Продукт (Фаза A) — выполнено:**
+Нумерованные фазы в коде **завершены** (смержены в `main`).
 
-1. ~~English-first webapp~~ ✅
-2. ~~Security & architecture brief~~ ✅ → [SECURITY_BRIEF.md](./SECURITY_BRIEF.md)
-3. ~~HR domain pack + demo script~~ ✅ → [domain-packs/HR.md](./domain-packs/HR.md)
-4. ~~Eval + smoke CI~~ ✅
+| Фаза | Суть |
+|------|------|
+| **1–3** | Trust, API v1, enterprise (Helm, readiness, retention) |
+| **4** | Spec, conformance, tenant purge |
+| **5** | Spec v1, conformance CLI, site, RFC |
+| **6** | Legal FAQ pack, vector adapters, hybrid, AWS Terraform |
+| **7** | Pack registry, cross-encoder, connectors, GCP, governance |
+| **8** | SharePoint Graph, Azure TF, embed widget, export connectors |
+| **9** | Live Drive/Confluence, launch playbook, plans scaffold |
+| **10** | Signup API, Stripe webhook, tenant registry |
+| **11** | Stripe Checkout, admin auto-provision on signup |
 
-**Дальше — Фаза B:**
+Детали: [PHASE_4.md](../en/PHASE_4.md) … [PHASE_11.md](../en/PHASE_11.md) (EN).
 
-5. Audit log (минимальный)
-6. RBAC
-7. Первый платный пилот (GTM)
+---
+
+## Что дальше (после фазы 11)
+
+Не обязательная «фаза 12 в коде» — выбор оператора:
+
+| Трек | Фокус | Документ |
+|------|-------|----------|
+| **Launch** | Public repo, `v0.3.0`, Pages, dev.to / HN | [LAUNCH.md](./LAUNCH.md) |
+| **Hosted beta** | Email creds, Stripe Portal, staging | [SAAS.md](./SAAS.md) |
+| **Enterprise pilot** | SAML, trust center, первый клиент | [PILOT_PLAYBOOK.md](./PILOT_PLAYBOOK.md) |
 
 ---
 
 ## Связь со старым «Фаза 3»
 
-Прежний список (Helm, SaaS, vision pack, audit, dashboard) **разложен по фазам B–D** и привязан к деньгам и покупателям.  
-**Фаза A** — новый обязательный шаг: без него международный рынок не откроется, даже при хорошем коде.
+Прежний список (Helm, SaaS, vision pack, audit, dashboard) **разложен по фазам B–D и 1–11**.  
+**Фаза A** — обязательный фундамент для международного позиционирования.
 
 ---
 
-См. также: [ARCHITECTURE.md](./ARCHITECTURE.md), [DEPLOY.md](./DEPLOY.md), [английская версия ROADMAP](../en/ROADMAP.md).
+См. также: [ARCHITECTURE.md](./ARCHITECTURE.md), [DEPLOY.md](./DEPLOY.md), [README.md](./README.md), [английская ROADMAP](../en/ROADMAP.md).

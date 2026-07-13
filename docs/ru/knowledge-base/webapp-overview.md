@@ -1,7 +1,7 @@
 ﻿# `webapp/` — веб-интерфейс
 
-**Файлы:** `index.html`, `admin.html`, `app.js`, `app.css`, `nginx.conf`  
-**Роль:** эталонный UI для Telegram Web App + админка KB
+**Файлы:** `index.html`, `admin.html`, `signup.html`, `embed.html`, `app.js`, `app.css`, `nginx.conf`  
+**Роль:** эталонный UI — чат, админка KB, опциональный SaaS signup, embed-виджет
 
 ---
 
@@ -41,6 +41,20 @@ flowchart LR
 - Список статей, удаление, reindex
 
 Список доменов: `GET /api/domains`.
+
+---
+
+## `signup.html` — опциональный SaaS signup
+
+- `GET /api/v1/plans`, `POST /api/v1/signup`
+- Ответ: tenant id, опционально admin credentials и Stripe `checkout_url`
+- Сервер: `SAAS_SIGNUP_ENABLED=true`, `TENANTS_REGISTRY_FILE` — [SAAS.md](../SAAS.md)
+
+---
+
+## `embed.html` — виджет для intranet
+
+Встраиваемый чат для партнёрских сайтов. См. [EMBED.md (EN)](../../en/EMBED.md).
 
 ---
 

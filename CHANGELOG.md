@@ -141,7 +141,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed (docs refresh)
 
 - Updated ROADMAP, README, BILLING/SAAS, RELEASE, API examples for Phases 10–11 complete
-- Russian ROADMAP points to English roadmap for phases 4–11
+- Russian docs: README hub, ROADMAP phases 1–11, SAAS/BILLING/LAUNCH/CONNECTORS summaries
 
 ## [0.3.0] - TBD
 

@@ -97,7 +97,7 @@ cd client-assistant
 | Промпты и UI | `config/locales/ru/` и `config/locales/en/` |
 | Eval-вопросы | `eval/rag_{domain}_baseline.jsonl` |
 
-Быстрый старт: `scripts/init_domain.ps1` / `init_domain.sh`.
+Быстрый старт: `python scripts/init_pack.py install <pack_id>` (предпочтительно) или `scripts/init_domain.ps1` / `init_domain.sh`.
 
 ### 3. Индексация и проверка
 
@@ -137,3 +137,7 @@ make smoke
 ## Опциональные модули
 
 **Vision / CV** — отдельный domain pack, не входит в ядро платформы.
+
+**Hosted SaaS signup** — по умолчанию выключен. Self-serve tenant + Stripe: [SAAS.md](./SAAS.md), [BILLING.md](./BILLING.md). Для on-prem пилотов не требуется.
+
+**Коннекторы ingest:** [CONNECTORS.md](./CONNECTORS.md).

@@ -38,6 +38,7 @@ Locale bundles and LLM prompts: `config/locales/{en,ru}/`.
 | **Platform → open standard (publish next)** | [from-vertical-rag-to-open-standard.md](en/blog/from-vertical-rag-to-open-standard.md) |
 | Media / GIF checklist | [DEVTO_PLATFORM_ARTICLE_MEDIA.md](en/blog/DEVTO_PLATFORM_ARTICLE_MEDIA.md) |
 
+## Phase plans (delivery history)
 
 | Phase | Doc |
 |-------|-----|
@@ -46,15 +47,29 @@ Locale bundles and LLM prompts: `config/locales/{en,ru}/`.
 | 6–8 Ecosystem & connectors | [PHASE_6.md](en/PHASE_6.md) … [PHASE_8.md](en/PHASE_8.md) |
 | 9–11 Launch & SaaS | [PHASE_9.md](en/PHASE_9.md) … [PHASE_11.md](en/PHASE_11.md) |
 
-## Russian documentation (legacy locale)
+## Russian documentation
 
-[`docs/ru/`](ru/) — architecture, deploy, and knowledge-base articles in Russian.  
-**Roadmap (RU)** may lag [en/ROADMAP.md](en/ROADMAP.md); use English roadmap for phases 4–11.
+[`docs/ru/`](ru/) — architecture, deploy, roadmap summary, knowledge-base (RU).  
+**Canonical** for phases 4–11, spec, conformance: [en/ROADMAP.md](en/ROADMAP.md).
+
+| RU hub | [ru/README.md](ru/README.md) |
+|--------|------------------------------|
+| Standard strategy (RU) | [ru/STANDARD_STRATEGY.md](ru/STANDARD_STRATEGY.md) |
+| Launch checklist (RU) | [ru/LAUNCH.md](ru/LAUNCH.md) |
 
 | Archive / legacy | Path |
 |------------------|------|
 | RU sales one-pager | [SALES_ONE_PAGER_RF.md](ru/SALES_ONE_PAGER_RF.md) |
 | RU demo script | [DEMO_SCRIPT_RU.md](ru/domain-packs/DEMO_SCRIPT_RU.md) |
+
+## Phase plans (delivery history)
+
+| Phase | Doc |
+|-------|-----|
+| 4 Spec & trust | [PHASE_4.md](en/PHASE_4.md) |
+| 5 Standard publication | [PHASE_5.md](en/PHASE_5.md) |
+| 6–8 Ecosystem & connectors | [PHASE_6.md](en/PHASE_6.md) … [PHASE_8.md](en/PHASE_8.md) |
+| 9–11 Launch & SaaS | [PHASE_9.md](en/PHASE_9.md) … [PHASE_11.md](en/PHASE_11.md) |
 
 ## Phase A deliverables (reference)
 
