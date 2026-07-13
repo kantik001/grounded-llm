@@ -30,7 +30,14 @@
 
 Locale bundles and LLM prompts: `config/locales/{en,ru}/`.
 
-## Phase plans (delivery history)
+## Blog drafts (dev.to)
+
+| Article | File |
+|---------|------|
+| Retrieval eval gate in CI | [retrieval-eval-gate-in-ci.md](en/blog/retrieval-eval-gate-in-ci.md) |
+| **Platform → open standard (publish next)** | [from-vertical-rag-to-open-standard.md](en/blog/from-vertical-rag-to-open-standard.md) |
+| Media / GIF checklist | [DEVTO_PLATFORM_ARTICLE_MEDIA.md](en/blog/DEVTO_PLATFORM_ARTICLE_MEDIA.md) |
+
 
 | Phase | Doc |
 |-------|-----|
