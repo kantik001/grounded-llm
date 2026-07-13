@@ -8,6 +8,7 @@ COPY webapp/index.html /usr/share/nginx/html/
 COPY webapp/app.css /usr/share/nginx/html/
 COPY webapp/app.js /usr/share/nginx/html/
 COPY webapp/admin.html /usr/share/nginx/html/
+COPY webapp/admin.js /usr/share/nginx/html/
 COPY webapp/embed.html /usr/share/nginx/html/
 COPY webapp/embed.css /usr/share/nginx/html/
 COPY webapp/embed.js /usr/share/nginx/html/

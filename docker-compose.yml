@@ -107,6 +107,7 @@ services:
       - ./webapp/app.css:/usr/share/nginx/html/app.css:ro
       - ./webapp/app.js:/usr/share/nginx/html/app.js:ro
       - ./webapp/admin.html:/usr/share/nginx/html/admin.html:ro
+      - ./webapp/admin.js:/usr/share/nginx/html/admin.js:ro
       - ./webapp/embed.html:/usr/share/nginx/html/embed.html:ro
       - ./webapp/embed.css:/usr/share/nginx/html/embed.css:ro
       - ./webapp/embed.js:/usr/share/nginx/html/embed.js:ro

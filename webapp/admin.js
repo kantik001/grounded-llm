@@ -1,0 +1,450 @@
+﻿const STORAGE_KEY = 'grounded_llm_admin_basic';
+const DOMAIN_STORAGE_KEY = 'grounded_llm_admin_domain_id';
+var adminRoles = [];
+var ssoEnabled = false;
+var basicAuthEnabled = true;
+var usingSSOSession = false;
+
+function hasAdminRole(role) {
+    if (!adminRoles || !adminRoles.length) return true;
+    if (adminRoles.indexOf('admin') >= 0) return true;
+    return adminRoles.indexOf(role) >= 0;
+}
+
+function applyRoleUI() {
+    document.getElementById('kbEditorSection').hidden = !hasAdminRole('kb_editor');
+    document.getElementById('auditSection').hidden = !hasAdminRole('admin');
+    document.getElementById('analyticsSection').hidden = !hasAdminRole('admin');
+    document.getElementById('apiKeysSection').hidden = !hasAdminRole('api_manager');
+    var hint = document.getElementById('rolesHint');
+    if (adminRoles && adminRoles.length) {
+        hint.hidden = false;
+        hint.textContent = 'Roles: ' + adminRoles.join(', ');
+    } else {
+        hint.hidden = true;
+    }
+}
+
+function selectedDomainId() {
+    return document.getElementById('domainSelect').value;
+}
+
+function updateFilesLabel() {
+    var id = selectedDomainId() || '…';
+    document.getElementById('filesLabel').textContent = 'Files in data/' + id + '/';
+}
+
+async function loadDomainsCatalog() {
+    var sel = document.getElementById('domainSelect');
+    sel.innerHTML = '<option value="">Loading…</option>';
+    sel.disabled = true;
+    try {
+        var res = await fetch('/api/domains', { method: 'GET' });
+        var txt = await res.text();
+        var data;
+        try { data = JSON.parse(txt); } catch (e) { throw new Error(txt.slice(0, 200)); }
+        if (!res.ok || !data.success) throw new Error(data.error || ('HTTP ' + res.status));
+        var domains = data.domains || [];
+        if (!domains.length) throw new Error('Domain catalog is empty');
+        sel.innerHTML = '';
+        domains.forEach(function(d) {
+            var opt = document.createElement('option');
+            opt.value = d.id;
+            var label = (d.emoji ? d.emoji + ' ' : '') + (d.name || d.id);
+            if (d.rag_enabled === false) label += ' (RAG off)';
+            opt.textContent = label;
+            sel.appendChild(opt);
+        });
+        var saved = sessionStorage.getItem(DOMAIN_STORAGE_KEY);
+        var defaultId = data.default_domain || domains[0].id;
+        var pick = saved && domains.some(function(d) { return d.id === saved; }) ? saved : defaultId;
+        if (domains.some(function(d) { return d.id === pick; })) {
+            sel.value = pick;
+        } else {
+            sel.value = domains[0].id;
+        }
+        sessionStorage.setItem(DOMAIN_STORAGE_KEY, sel.value);
+        updateFilesLabel();
+    } catch (e) {
+        sel.innerHTML = '<option value="">—</option>';
+        throw e;
+    } finally {
+        sel.disabled = false;
+    }
+}
+
+function getCreds() {
+    try {
+        var raw = sessionStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch (e) {
+        return null;
+    }
+}
+
+async function loadAuthConfig() {
+    try {
+        var res = await fetch('/api/admin/auth/config', { credentials: 'include' });
+        var data = await res.json();
+        if (data.success) {
+            ssoEnabled = !!data.sso_enabled;
+            basicAuthEnabled = data.basic_auth !== false;
+        }
+    } catch (e) { /* ignore */ }
+    document.getElementById('ssoLoginBlock').hidden = !ssoEnabled;
+    document.getElementById('basicLoginBlock').hidden = !basicAuthEnabled;
+    document.getElementById('logoutBtn').hidden = !ssoEnabled;
+}
+
+function authHeader() {
+    var c = getCreds();
+    if (!c || !c.user) return null;
+    return 'Basic ' + btoa(unescape(encodeURIComponent(c.user + ':' + (c.pass || ''))));
+}
+
+function setStatus(el, text, ok) {
+    el.textContent = text || '';
+    el.className = 'status' + (text ? (ok ? ' ok' : ' err') : '');
+}
+
+async function adminFetch(path, init) {
+    var opts = init ? Object.assign({}, init) : {};
+    opts.credentials = 'include';
+    var h = authHeader();
+    if (h) {
+        opts.headers = Object.assign({}, opts.headers || {}, { 'Authorization': h });
+    }
+    var res = await fetch('/api/admin' + path, opts);
+    var txt = await res.text();
+    var data;
+    try { data = JSON.parse(txt); } catch (e) { throw new Error(txt.slice(0, 200)); }
+    if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+    return data;
+}
+
+async function checkLogin() {
+    var data = await adminFetch('/status', { method: 'GET' });
+    usingSSOSession = !authHeader();
+    adminRoles = data.roles || [];
+    applyRoleUI();
+    document.getElementById('toolsCard').hidden = false;
+    setStatus(document.getElementById('loginStatus'), 'Connected. data_dir: ' + (data.data_dir || '—'), true);
+    if (hasAdminRole('kb_editor')) {
+        await loadDomainsCatalog();
+        await refreshFiles();
+        await resumeReindexIfActive();
+    }
+    if (hasAdminRole('admin')) {
+        await refreshAuditLog();
+        await refreshAnalytics();
+    }
+    if (hasAdminRole('api_manager')) {
+        await refreshAPIKeys();
+    }
+}
+
+async function refreshFiles() {
+    var domainId = selectedDomainId();
+    if (!domainId) return;
+    var list = document.getElementById('fileList');
+    list.innerHTML = '<li>Loading…</li>';
+    try {
+        var data = await adminFetch('/articles?domain_id=' + encodeURIComponent(domainId), { method: 'GET' });
+        list.innerHTML = '';
+        var articles = data.articles || data.files || [];
+        if (!articles.length) {
+            list.innerHTML = '<li>(no files)</li>';
+            return;
+        }
+        articles.forEach(function(a) {
+            var name = typeof a === 'string' ? a : a.filename;
+            var li = document.createElement('li');
+            if (typeof a === 'string') {
+                li.textContent = a;
+            } else {
+                var chunks = a.chunks != null ? a.chunks : '—';
+                var kb = a.size_bytes ? (Math.round(a.size_bytes / 1024) + ' KB') : '';
+                li.textContent = name + (kb ? ' · ' + kb : '') + ' · chunks: ' + chunks;
+                var del = document.createElement('button');
+                del.type = 'button';
+                del.textContent = 'Delete';
+                del.style.marginLeft = '8px';
+                del.style.fontSize = '12px';
+                del.addEventListener('click', function() {
+                    if (!confirm('Delete ' + name + '? Run reindex after deletion.')) return;
+                    adminFetch('/articles?domain_id=' + encodeURIComponent(domainId) +
+                        '&filename=' + encodeURIComponent(name), { method: 'DELETE' })
+                        .then(function() { return refreshFiles(); })
+                        .then(function() { return refreshAuditLog(); })
+                        .catch(function(e) { setStatus(document.getElementById('actionStatus'), e.message, false); });
+                });
+                li.appendChild(del);
+            }
+            list.appendChild(li);
+        });
+    } catch (e) {
+        list.innerHTML = '<li>Error: ' + e.message + '</li>';
+    }
+}
+
+document.getElementById('ssoLoginBtn').addEventListener('click', function() {
+    window.location.href = '/api/admin/auth/login';
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async function() {
+    try {
+        await fetch('/api/admin/auth/logout', { method: 'POST', credentials: 'include' });
+    } catch (e) { /* ignore */ }
+    sessionStorage.removeItem(STORAGE_KEY);
+    document.getElementById('toolsCard').hidden = true;
+    usingSSOSession = false;
+    setStatus(document.getElementById('loginStatus'), 'Signed out', true);
+});
+
+document.getElementById('saveLoginBtn').addEventListener('click', function() {
+    var user = document.getElementById('adminUser').value.trim();
+    var pass = document.getElementById('adminPass').value;
+    if (!user || !pass) {
+        setStatus(document.getElementById('loginStatus'), 'Enter login and password', false);
+        return;
+    }
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ user: user, pass: pass }));
+    setStatus(document.getElementById('loginStatus'), 'Checking…', true);
+    checkLogin().catch(function(e) {
+        setStatus(document.getElementById('loginStatus'), e.message, false);
+    });
+});
+
+document.getElementById('refreshBtn').addEventListener('click', function() {
+    refreshFiles().catch(function(e) {
+        setStatus(document.getElementById('actionStatus'), e.message, false);
+    });
+});
+
+document.getElementById('domainSelect').addEventListener('change', function() {
+    sessionStorage.setItem(DOMAIN_STORAGE_KEY, selectedDomainId());
+    updateFilesLabel();
+    refreshFiles().catch(function(e) {
+        setStatus(document.getElementById('actionStatus'), e.message, false);
+    });
+});
+
+document.getElementById('uploadBtn').addEventListener('click', async function() {
+    var fileInput = document.getElementById('uploadFile');
+    var f = fileInput.files && fileInput.files[0];
+    if (!f) {
+        setStatus(document.getElementById('actionStatus'), 'Select a file (.txt, .pdf, or .docx)', false);
+        return;
+    }
+    var fd = new FormData();
+    fd.append('domain_id', selectedDomainId());
+    fd.append('file', f);
+    var btn = document.getElementById('uploadBtn');
+    btn.disabled = true;
+    try {
+        var data = await adminFetch('/upload', { method: 'POST', body: fd });
+        setStatus(document.getElementById('actionStatus'), 'Uploaded: ' + data.filename, true);
+        fileInput.value = '';
+        await refreshFiles();
+        await refreshAuditLog();
+    } catch (e) {
+        setStatus(document.getElementById('actionStatus'), e.message, false);
+    } finally {
+        btn.disabled = false;
+    }
+});
+
+async function refreshAuditLog() {
+    var list = document.getElementById('auditList');
+    list.innerHTML = '<li>Loading…</li>';
+    try {
+        var data = await adminFetch('/audit-log?limit=20', { method: 'GET' });
+        var entries = data.entries || [];
+        list.innerHTML = '';
+        if (!entries.length) {
+            list.innerHTML = '<li>(no events yet)</li>';
+            return;
+        }
+        entries.forEach(function(e) {
+            var li = document.createElement('li');
+            var ok = e.success ? 'ok' : 'fail';
+            var parts = [e.occurred_at || '', e.action || '', ok];
+            if (e.actor) parts.push('actor=' + e.actor);
+            if (e.domain_id) parts.push('domain=' + e.domain_id);
+            if (e.resource) parts.push(e.resource);
+            li.textContent = parts.join(' · ');
+            list.appendChild(li);
+        });
+    } catch (e) {
+        list.innerHTML = '<li>' + e.message + '</li>';
+    }
+}
+
+document.getElementById('auditRefreshBtn').addEventListener('click', refreshAuditLog);
+
+async function refreshAnalytics() {
+    var tenant = document.getElementById('analyticsTenant').value.trim();
+    var days = document.getElementById('analyticsDays').value || '7';
+    var q = '?days=' + encodeURIComponent(days);
+    if (tenant) q += '&tenant_id=' + encodeURIComponent(tenant);
+    try {
+        var data = await adminFetch('/analytics' + q, { method: 'GET' });
+        var a = data.analytics || {};
+        var rag = a.rag || {};
+        document.getElementById('mQuestions').textContent = a.questions_total != null ? a.questions_total : '—';
+        document.getElementById('mToday').textContent = a.questions_today != null ? a.questions_today : '—';
+        document.getElementById('mVerify').textContent = rag.verify_pass_rate != null
+            ? Math.round(rag.verify_pass_rate) + '%' : '—';
+        document.getElementById('mSoftFail').textContent = rag.soft_fail != null ? rag.soft_fail : '—';
+        var up = 0, down = 0;
+        (a.feedback || []).forEach(function(f) {
+            if (f.rating === 1) up = f.count;
+            if (f.rating === -1) down = f.count;
+        });
+        document.getElementById('mThumbsUp').textContent = up;
+        document.getElementById('mThumbsDown').textContent = down;
+        var tbody = document.querySelector('#analyticsDaily tbody');
+        tbody.innerHTML = '';
+        var daily = a.questions_per_day || [];
+        if (!daily.length) {
+            tbody.innerHTML = '<tr><td colspan="2">(no data)</td></tr>';
+        } else {
+            daily.forEach(function(row) {
+                var tr = document.createElement('tr');
+                tr.innerHTML = '<td>' + row.date + '</td><td>' + row.count + '</td>';
+                tbody.appendChild(tr);
+            });
+        }
+        var gaps = document.getElementById('analyticsGaps');
+        gaps.innerHTML = '';
+        var kb = a.kb_gaps || [];
+        if (!kb.length) {
+            gaps.innerHTML = '<li>(no gaps in window)</li>';
+        } else {
+            kb.forEach(function(g) {
+                var li = document.createElement('li');
+                var preview = g.question_preview ? (' · "' + g.question_preview + '"') : '';
+                li.textContent = (g.occurred_at || '') + ' · ' + (g.domain_id || '?') +
+                    ' · ' + (g.kind || '') + preview;
+                gaps.appendChild(li);
+            });
+        }
+    } catch (e) {
+        document.getElementById('mQuestions').textContent = '!';
+        setStatus(document.getElementById('actionStatus'), 'Analytics: ' + e.message, false);
+    }
+}
+
+document.getElementById('analyticsRefreshBtn').addEventListener('click', function() {
+    refreshAnalytics().catch(function(e) {
+        setStatus(document.getElementById('actionStatus'), e.message, false);
+    });
+});
+
+async function refreshAPIKeys() {
+    var list = document.getElementById('apiKeysList');
+    list.innerHTML = '<li>Loading…</li>';
+    try {
+        var data = await adminFetch('/api-keys', { method: 'GET' });
+        var keys = data.keys || [];
+        list.innerHTML = '';
+        if (!keys.length) {
+            list.innerHTML = '<li>(no API keys configured)</li>';
+            return;
+        }
+        keys.forEach(function(k) {
+            var li = document.createElement('li');
+            li.textContent = (k.label || '?') + ' · roles: ' + ((k.roles || []).join(', ') || 'chat_only');
+            list.appendChild(li);
+        });
+    } catch (e) {
+        list.innerHTML = '<li>' + e.message + '</li>';
+    }
+}
+
+document.getElementById('apiKeysRefreshBtn').addEventListener('click', refreshAPIKeys);
+
+var reindexPollTimer = null;
+
+async function pollReindexJob(jobId) {
+    var data = await adminFetch('/reindex/status?job_id=' + encodeURIComponent(jobId), { method: 'GET' });
+    var job = data.job || {};
+    var label = data.status_label || job.status || '?';
+    var hint = document.getElementById('reindexJobHint');
+    hint.hidden = false;
+    hint.textContent = 'Job #' + job.id + ' · ' + label;
+    if (data.done) {
+        if (reindexPollTimer) {
+            clearInterval(reindexPollTimer);
+            reindexPollTimer = null;
+        }
+        document.getElementById('reindexBtn').disabled = false;
+        if (job.status === 'failed') {
+            setStatus(document.getElementById('actionStatus'), 'Reindex failed: ' + (job.error_msg || 'unknown error'), false);
+        } else {
+            setStatus(document.getElementById('actionStatus'), 'Reindex completed (job #' + job.id + ')', true);
+            await refreshAuditLog();
+        }
+        return;
+    }
+    setStatus(document.getElementById('actionStatus'), 'Reindex ' + label + ' (job #' + job.id + ')…', true);
+}
+
+async function resumeReindexIfActive() {
+    try {
+        var data = await adminFetch('/reindex/status', { method: 'GET' });
+        if (!data.success || data.done) return;
+        var job = data.job || {};
+        if (!job.id) return;
+        document.getElementById('reindexBtn').disabled = true;
+        await pollReindexJob(job.id);
+        if (reindexPollTimer) clearInterval(reindexPollTimer);
+        reindexPollTimer = setInterval(function() {
+            pollReindexJob(job.id).catch(function(e) {
+                setStatus(document.getElementById('actionStatus'), e.message, false);
+            });
+        }, 2000);
+    } catch (e) { /* no prior job */ }
+}
+
+document.getElementById('reindexBtn').addEventListener('click', async function() {
+    var btn = document.getElementById('reindexBtn');
+    btn.disabled = true;
+    setStatus(document.getElementById('actionStatus'), 'Queuing reindex…', true);
+    try {
+        var data = await adminFetch('/reindex', { method: 'POST' });
+        var jobId = data.job_id;
+        if (!jobId) throw new Error('No job_id in response');
+        await pollReindexJob(jobId);
+        if (reindexPollTimer) clearInterval(reindexPollTimer);
+        reindexPollTimer = setInterval(function() {
+            pollReindexJob(jobId).catch(function(e) {
+                setStatus(document.getElementById('actionStatus'), e.message, false);
+                btn.disabled = false;
+                if (reindexPollTimer) {
+                    clearInterval(reindexPollTimer);
+                    reindexPollTimer = null;
+                }
+            });
+        }, 2000);
+    } catch (e) {
+        setStatus(document.getElementById('actionStatus'), e.message, false);
+        btn.disabled = false;
+    }
+});
+
+(function init() {
+    loadAuthConfig().then(function() {
+        var params = new URLSearchParams(window.location.search);
+        if (params.get('sso_error')) {
+            setStatus(document.getElementById('loginStatus'), 'SSO failed: ' + params.get('sso_error'), false);
+        }
+        var c = getCreds();
+        if (c) {
+            document.getElementById('adminUser').value = c.user || '';
+            document.getElementById('adminPass').value = c.pass || '';
+        }
+        checkLogin().catch(function() {});
+    });
+})();
