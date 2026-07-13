@@ -2,7 +2,7 @@
 
 **Goal:** Live Google Drive + Confluence connectors, hosted/billing prep, public launch playbook.
 
-**Branch:** `feature/phase-9-launch-scale`  
+**Branch:** `feature/phase-9-launch-scale` — **merged to `main`**  
 **Horizon:** 2 → 3 (launch prep)  
 **Prerequisite:** Phase 8 merged to `main` ✅
 

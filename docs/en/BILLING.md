@@ -1,6 +1,6 @@
 # Billing & plan tiers (scaffold)
 
-**Status:** Phase 9 scaffold — `config/plans.yaml` defines tiers; **no Stripe integration yet**.
+**Status:** Phase 10 — Stripe webhook + signup API implemented; **Checkout session creation is manual/Stripe Dashboard for now**.
 
 Maps to existing per-tenant quotas ([config/QUOTAS.md](../../config/QUOTAS.md)).
 
@@ -18,11 +18,21 @@ Source of truth: [config/plans.yaml](../../config/plans.yaml).
 
 ---
 
-## Integration path (Phase 10+)
+## Integration (Phase 10)
 
-1. **Stripe Checkout** — create subscription on signup
-2. **Webhook** — `customer.subscription.updated` → update `config/tenant_quotas.json`
-3. **Enforcement** — existing Go quota middleware ([QUOTAS.md](../../config/QUOTAS.md))
+1. **Signup** — `POST /api/v1/signup` creates tenant + applies plan quotas from `config/plans.yaml`
+2. **Stripe Checkout** — attach metadata: `tenant_id`, `plan`
+3. **Webhook** — `POST /api/v1/billing/stripe/webhook` updates quotas on subscription events
+
+Environment:
+
+| Variable | Purpose |
+|----------|---------|
+| `SAAS_SIGNUP_ENABLED` | `true` to allow public signup |
+| `TENANTS_REGISTRY_FILE` | e.g. `config/tenants.json` |
+| `TENANT_QUOTAS_FILE` | quota enforcement file |
+| `STRIPE_WEBHOOK_SECRET` | Stripe signing secret (`whsec_…`) |
+| `PLANS_FILE` | defaults to `config/plans.yaml` |
 
 Suggested webhook events:
 

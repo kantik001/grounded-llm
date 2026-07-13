@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grounded LLM — Sign up</title>
+    <link rel="stylesheet" href="signup.css">
+</head>
+<body>
+    <main class="signup-card">
+        <h1>Create your workspace</h1>
+        <p class="lead">Self-serve signup for hosted Grounded LLM. Requires <code>SAAS_SIGNUP_ENABLED=true</code> on the server.</p>
+
+        <form id="signupForm">
+            <label>
+                Organization name
+                <input type="text" id="orgName" name="org_name" required maxlength="120" autocomplete="organization">
+            </label>
+            <label>
+                Work email
+                <input type="email" id="email" name="email" required autocomplete="email">
+            </label>
+            <label>
+                Plan
+                <select id="plan" name="plan" required></select>
+            </label>
+            <button type="submit" id="submitBtn">Create workspace</button>
+        </form>
+
+        <div id="result" class="result" hidden>
+            <h2>Workspace ready</h2>
+            <p>Tenant ID: <code id="tenantId"></code></p>
+            <p><a id="chatLink" class="btn" href="/">Open chat</a></p>
+        </div>
+
+        <p id="error" class="error" role="alert" hidden></p>
+        <p class="foot"><a href="/">Back to chat</a></p>
+    </main>
+    <script src="signup.js" defer></script>
+</body>
+</html>

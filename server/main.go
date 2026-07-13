@@ -17,6 +17,10 @@ func main() {
 	loadOIDCSettings(config)
 	loadTenantQuotas()
 	initTenantConfig(config)
+	loadTenantRegistry()
+	if err := loadPlans(); err != nil {
+		log.Printf("Plans file: %v (SaaS billing uses config/plans.yaml when enabled)", err)
+	}
 	logStartup(config)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
@@ -74,6 +78,7 @@ func main() {
 	rl := newRateLimiter(config.RateLimitPerMinute, time.Minute)
 
 	registerPublicRoutes(router)
+	registerSaaSRoutes(router, rl)
 	registerAdminRoutes(router, config)
 	registerProtectedRoutes(router, config, rl)
 	startConfigReloadWatcher()

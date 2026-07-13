@@ -121,6 +121,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Site packs section:** dynamic load from `packs.json`
 - [PHASE_9.md](docs/en/PHASE_9.md)
 
+### Added (Phase 10 — SaaS billing & signup)
+
+- **Signup API:** `POST /api/v1/signup`, `GET /api/v1/plans`
+- **Stripe webhook:** `POST /api/v1/billing/stripe/webhook` → tenant quotas
+- **Tenant registry:** `config/tenants.json.example`, `server/tenant_registry.go`
+- **Signup UI:** `webapp/signup.html`
+- [PHASE_10.md](docs/en/PHASE_10.md)
+
 ## [0.3.0] - TBD
 
 Standard publication release: Spec v1, conformance CLI, adversarial eval, tenant purge, Helm, SDK adoption docs.
