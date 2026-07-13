@@ -19,6 +19,38 @@ async function loadPlans() {
   });
 }
 
+function showResult(data) {
+  form.hidden = true;
+  result.hidden = false;
+  document.getElementById('tenantId').textContent = data.tenant_id;
+  const chat = document.getElementById('chatLink');
+  chat.href = data.chat_url || `/?tenant_id=${data.tenant_id}`;
+
+  const adminBlock = document.getElementById('adminBlock');
+  if (data.admin_username && data.admin_password) {
+    adminBlock.hidden = false;
+    document.getElementById('adminUser').textContent = data.admin_username;
+    document.getElementById('adminPass').textContent = data.admin_password;
+    const adminLink = document.getElementById('adminLink');
+    adminLink.href = data.admin_url || `/admin.html?tenant_id=${data.tenant_id}`;
+  } else {
+    adminBlock.hidden = true;
+  }
+
+  const checkoutBlock = document.getElementById('checkoutBlock');
+  if (data.checkout_url) {
+    checkoutBlock.hidden = false;
+    const pay = document.getElementById('checkoutLink');
+    pay.href = data.checkout_url;
+    if (data.payment_pending) {
+      document.getElementById('checkoutNote').textContent =
+        'Complete payment to activate your paid plan. Starter limits apply until checkout succeeds.';
+    }
+  } else {
+    checkoutBlock.hidden = true;
+  }
+}
+
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   errorEl.hidden = true;
@@ -38,11 +70,10 @@ form.addEventListener('submit', async (e) => {
     if (!res.ok || !data.success) {
       throw new Error(data.error || 'Signup failed');
     }
-    form.hidden = true;
-    result.hidden = false;
-    document.getElementById('tenantId').textContent = data.tenant_id;
-    const chat = document.getElementById('chatLink');
-    chat.href = data.chat_url || `/?tenant_id=${data.tenant_id}`;
+    showResult(data);
+    if (data.checkout_url && new URLSearchParams(location.search).get('auto_checkout') === '1') {
+      window.location.href = data.checkout_url;
+    }
   } catch (err) {
     errorEl.textContent = err.message || String(err);
     errorEl.hidden = false;
@@ -50,6 +81,16 @@ form.addEventListener('submit', async (e) => {
     submitBtn.disabled = false;
   }
 });
+
+const checkoutStatus = new URLSearchParams(location.search).get('checkout');
+if (checkoutStatus === 'success') {
+  errorEl.textContent = 'Payment received. Your plan will update shortly after Stripe webhook processing.';
+  errorEl.hidden = false;
+  errorEl.classList.add('success');
+} else if (checkoutStatus === 'cancel') {
+  errorEl.textContent = 'Checkout canceled. Your workspace was created with starter limits until you upgrade.';
+  errorEl.hidden = false;
+}
 
 loadPlans().catch((err) => {
   errorEl.textContent = err.message || String(err);

@@ -358,11 +358,11 @@ Strategy: [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md)
 
 ---
 
-## Phase 10 — SaaS billing & signup (in progress)
+## Phase 10 — SaaS billing & signup ✅
 
 **Goal:** Stripe webhook, self-serve signup API + UI.
 
-**Plan:** [PHASE_10.md](./PHASE_10.md)
+**Plan:** [PHASE_10.md](./PHASE_10.md) — **complete**
 
 | Item | Artifact |
 |------|----------|
@@ -371,7 +371,21 @@ Strategy: [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md)
 | Signup UI | `webapp/signup.html` |
 | Tenant registry | `config/tenants.json.example` |
 
-**Branch:** `feature/phase-10-saas-billing`
+---
+
+## Phase 11 — Checkout & admin provisioning (in progress)
+
+**Goal:** Stripe Checkout API, admin auto-provision on signup.
+
+**Plan:** [PHASE_11.md](./PHASE_11.md)
+
+| Item | Artifact |
+|------|----------|
+| Checkout API | `POST /api/v1/billing/stripe/checkout` |
+| Admin provision | `server/admin_users_persist.go` |
+| Paid signup flow | `stripe_price_id` in plans |
+
+**Branch:** `feature/phase-11-checkout-admin`
 
 ---
 

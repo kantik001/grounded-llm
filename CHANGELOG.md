@@ -129,6 +129,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Signup UI:** `webapp/signup.html`
 - [PHASE_10.md](docs/en/PHASE_10.md)
 
+### Added (Phase 11 — checkout & admin provisioning)
+
+- **Stripe Checkout:** `POST /api/v1/billing/stripe/checkout`
+- **Admin auto-provision:** signup creates `{tenant}-admin` in `ADMIN_USERS_FILE`
+- **Paid plan flow:** starter quotas until Stripe webhook upgrades plan
+- **Plans:** `stripe_price_id` in `config/plans.yaml`
+- [PHASE_11.md](docs/en/PHASE_11.md)
+
 ## [0.3.0] - TBD
 
 Standard publication release: Spec v1, conformance CLI, adversarial eval, tenant purge, Helm, SDK adoption docs.

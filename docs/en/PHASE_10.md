@@ -2,7 +2,7 @@
 
 **Goal:** Stripe webhook → tenant quotas, public signup API + UI, tenant registry.
 
-**Branch:** `feature/phase-10-saas-billing`  
+**Branch:** `feature/phase-10-saas-billing` — **merged to `main`**  
 **Horizon:** 3 (hosted beta prep)  
 **Prerequisite:** Phase 9 merged to `main` ✅
 
@@ -60,8 +60,7 @@ Open `http://localhost/signup.html` (nginx webapp) when signup is enabled.
 
 ## Out of scope (Phase 11+)
 
-- Stripe Checkout session creation endpoint
-- Self-serve admin user provisioning
+- Email delivery of admin credentials
 - Making repository public (operator decision — [LAUNCH.md](./LAUNCH.md))
 
 ---
