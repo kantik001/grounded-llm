@@ -6,21 +6,21 @@
 - **API path version:** `/api/v1` — see [API_DEPRECATION_POLICY.md](./API_DEPRECATION_POLICY.md)
 - **OpenAPI `info.version`:** `1.0.0` for API v1 (independent from product tag)
 
-Phases **1–11 are merged to `main`**. The next `v0.3.0` tag covers standard publication through optional SaaS signup (Phases 4–11).
+Phases **1–11 are merged to `main`**. Tagged releases use `vMAJOR.MINOR.PATCH` on `main` (first release: **v0.1.0**).
 
 ---
 
-## Before tagging `v0.3.0`
+## Before tagging
 
 1. CI green on `main` (`eval-retrieval-gate`, `smoke-api`, `go-lint`, `python-lint`, `secret-scan`, conformance)
-2. Update [CHANGELOG.md](../../CHANGELOG.md): move `[Unreleased]` → `[0.3.0] - YYYY-MM-DD`
+2. Update [CHANGELOG.md](../../CHANGELOG.md): move `[Unreleased]` → `[VERSION] - YYYY-MM-DD`
 3. Run pack registry validation:
    ```bash
    python scripts/init_pack.py registry --validate
    ```
 4. Optional benchmark summary:
    ```bash
-   python scripts/bench_report.py --version 0.3.0
+   python scripts/bench_report.py --version 0.1.0
    ```
 5. Build site data before Pages deploy:
    ```bash
@@ -35,8 +35,8 @@ See [LAUNCH.md](./LAUNCH.md) for public launch checklist.
 ## Tag and release
 
 ```bash
-git tag -a v0.3.0 -m "v0.3.0 — Spec v1, conformance, ecosystem packs, connectors, optional SaaS signup"
-git push origin v0.3.0
+git tag -a v0.1.0 -m "v0.1.0 — Grounded Spec v1, hybrid retrieval, pgvector, conformance"
+git push origin v0.1.0
 ```
 
 The [Release workflow](../../.github/workflows/release.yml) will:
