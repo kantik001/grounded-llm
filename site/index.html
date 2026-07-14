@@ -4,16 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Grounded LLM — Open standard for verified document assistants</title>
-  <meta name="description" content="Cited, verified, on-prem document assistants with conformance tests and public eval benchmarks.">
+  <meta name="description" content="Grounded LLM v0.1.0 — open spec for cited, verified document assistants. Hybrid BM25+RRF, pgvector, 89 eval cases, conformance CLI, on-prem deploy.">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
-    <p class="eyebrow">Open platform · Spec v1</p>
+    <p class="eyebrow">Open platform · Spec v1 · <span class="release-tag">v0.1.0</span></p>
     <h1>Grounded LLM</h1>
-    <p class="lead">Deploy document-grounded assistants with <strong>citations</strong>, <strong>numeric verify</strong>, and <strong>measurable retrieval quality</strong> — on your infrastructure.</p>
+    <p class="lead">Reference implementation of an <strong>open spec</strong> for document-grounded assistants: <strong>citations</strong>, <strong>numeric verify</strong>, and <strong>measurable retrieval quality</strong> — on your infrastructure.</p>
     <div class="actions">
       <a class="btn primary" href="https://github.com/kantik001/grounded-llm">GitHub</a>
+      <a class="btn release" href="https://github.com/kantik001/grounded-llm/releases/tag/v0.1.0">Release v0.1.0</a>
       <a class="btn" href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/spec/GROUNDED_SPEC_v1.md">Read Spec v1</a>
       <a class="btn sponsor" href="https://github.com/sponsors/kantik001">♥ Sponsor</a>
     </div>
@@ -21,12 +22,24 @@
 
   <main>
     <section>
+      <h2>What&apos;s in v0.1.0</h2>
+      <ul class="highlights">
+        <li><strong>Hybrid retrieval</strong> — BM25 sparse + dense embeddings + RRF (<code>RAG_RETRIEVAL_MODE=hybrid</code>)</li>
+        <li><strong>Vector backends</strong> — Chroma, Qdrant, <strong>pgvector</strong> (<code>VECTOR_STORE</code>)</li>
+        <li><strong>Quality gate</strong> — <strong>89</strong> retrieval eval cases + adversarial suite in CI</li>
+        <li><strong>Platform</strong> — Go orchestration + Python retrieval (Flask), multi-tenant <code>/api/v1</code>, OIDC/RBAC, Helm/Terraform</li>
+        <li><strong>Template packs</strong> — HR, IT Support, Legal FAQ</li>
+        <li><strong>Ecosystem</strong> — agent runtime is a <a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/ECOSYSTEM.md">separate project</a>, not in the standard core</li>
+      </ul>
+    </section>
+
+    <section>
       <h2>What makes it a standard</h2>
       <ul>
         <li><a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/spec/GROUNDED_SPEC_v1.md">Grounded Spec v1</a> — normative API contract</li>
         <li><a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/rfcs/RFC-0001-grounded-compatible.md">RFC-0001</a> — «Grounded-compatible» definition</li>
         <li><a href="https://github.com/kantik001/grounded-llm/tree/main/conformance">Conformance suite</a> — run against any deployment</li>
-        <li><a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/BENCHMARK.md">Public benchmark</a> — retrieval + adversarial eval</li>
+        <li><a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/BENCHMARK.md">Public benchmark</a> — 89 retrieval + adversarial eval</li>
       </ul>
     </section>
 
@@ -40,6 +53,7 @@ docker compose up -d --build
 pip install -r conformance/requirements.txt
 python -m conformance spec</code></pre>
       <p>Full guide: <a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/DEPLOY.md">Deploy</a> · <a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/QUICKSTART_SDK.md">SDK</a></p>
+      <p class="muted-note">Tagged images on GHCR: <code>ghcr.io/kantik001/grounded-llm-server:0.1.0</code> · <code>-python</code> · <code>-webapp</code></p>
     </section>
 
     <section>
@@ -57,7 +71,9 @@ python -m conformance spec --json</code></pre>
     <section>
       <h2>Official template packs</h2>
       <ul id="pack-list" class="pack-list">
-        <li>Loading packs…</li>
+        <li><strong>hr</strong> · domain <code>default</code> · eval <code>default_en</code></li>
+        <li><strong>it_support</strong> · domain <code>it_support</code> · eval <code>it_support</code></li>
+        <li><strong>legal_faq</strong> · domain <code>legal_faq</code> · eval <code>legal_faq</code></li>
       </ul>
       <p><a href="https://github.com/kantik001/grounded-llm/tree/main/packs">All packs</a> · registry: <code>packs/registry.yaml</code></p>
     </section>
@@ -66,6 +82,7 @@ python -m conformance spec --json</code></pre>
       <h2>Strategy &amp; roadmap</h2>
       <p>
         <a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/STANDARD_STRATEGY.md">Standard strategy</a> ·
+        <a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/ECOSYSTEM.md">Ecosystem</a> ·
         <a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/ROADMAP.md">Roadmap</a> ·
         <a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/RFC.md">RFC process</a>
       </p>
@@ -73,20 +90,19 @@ python -m conformance spec --json</code></pre>
   </main>
 
   <footer>
-    <p>MIT License · <a href="https://github.com/kantik001/grounded-llm">kantik001/grounded-llm</a></p>
+    <p>MIT License · <a href="https://github.com/kantik001/grounded-llm">kantik001/grounded-llm</a> · <a href="https://github.com/kantik001/grounded-llm/releases/tag/v0.1.0">v0.1.0</a> (2026-07-14)</p>
   </footer>
   <script>
     fetch('packs.json').then(r => r.json()).then(data => {
       const ul = document.getElementById('pack-list');
+      if (!ul || !(data.packs || []).length) return;
       ul.innerHTML = '';
-      (data.packs || []).forEach(p => {
+      data.packs.forEach(p => {
         const li = document.createElement('li');
         li.innerHTML = '<strong>' + p.id + '</strong> · domain <code>' + p.domain_id + '</code> · eval <code>' + p.eval_suite + '</code>';
         ul.appendChild(li);
       });
-    }).catch(() => {
-      document.getElementById('pack-list').innerHTML = '<li>See packs/ in the repository.</li>';
-    });
+    }).catch(() => {});
   </script>
 </body>
 </html>
