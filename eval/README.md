@@ -5,7 +5,7 @@
 | `rag_default_baseline.jsonl` | `default` | 12 | RU (legacy demo) |
 | `rag_default_en_baseline.jsonl` | `default` | 18 | EN (HR demo) |
 | `rag_it_support_baseline.jsonl` | `it_support` | 16 | EN (IT support template) |
-| `rag_adversarial_baseline.jsonl` | mixed | 25 | EN (adversarial retrieval) |
+| `rag_hybrid_baseline.jsonl` | `default` | 5 | EN (keyword-heavy hybrid) |
 | `rag_adversarial_e2e.jsonl` | mixed | 5 | EN (adversarial `/message` E2E) |
 
 Line format (baseline):
@@ -53,7 +53,7 @@ make eval-retrieval
 | Job | What it checks |
 |-----|----------------|
 | `eval-baseline-validate` | JSONL structure (fast, no RAG) |
-| `eval-retrieval-gate` | Reindex Chroma → start Python → **all suites must pass** |
+| `eval-retrieval-gate` | Reindex Chroma → start Python → **all suites must pass** (hybrid suite only when `RAG_RETRIEVAL_MODE=hybrid`) |
 
 Local equivalent of the retrieval gate:
 

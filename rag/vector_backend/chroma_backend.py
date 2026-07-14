@@ -2,17 +2,13 @@
 
 from __future__ import annotations
 
-import glob
 import os
 import shutil
 from typing import Any
 
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-
-from rag.document_loaders import load_file, supported_extensions
-from rag.kb_discovery import discover_kb_directories
+from rag.indexing import split_kb_documents
 from rag.vector_backend.base import VectorBackend
 
 _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -22,15 +18,6 @@ EMBEDDING_MODEL = "intfloat/multilingual-e5-small"
 
 def _persist_dir() -> str:
     return os.environ.get("CHROMA_PERSIST_DIR", DEFAULT_PERSIST_DIR).strip() or DEFAULT_PERSIST_DIR
-
-
-def _load_all_documents():
-    all_docs = []
-    for tenant_id, domain_id, domain_dir in discover_kb_directories():
-        for ext in supported_extensions():
-            for file_path in glob.glob(os.path.join(domain_dir, f"*{ext}")):
-                all_docs.extend(load_file(domain_id, file_path, tenant_id=tenant_id))
-    return all_docs
 
 
 class ChromaBackend(VectorBackend):
@@ -43,12 +30,10 @@ class ChromaBackend(VectorBackend):
 
     def _create_store(self) -> Chroma | None:
         print("Creating vector store (Chroma)...")
-        documents = _load_all_documents()
-        if not documents:
+        docs = split_kb_documents()
+        if not docs:
             print("No documents to index.")
             return None
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-        docs = text_splitter.split_documents(documents)
         print(f"Chunks: {len(docs)}")
         persist_dir = _persist_dir()
         store = Chroma.from_documents(docs, self._embeddings, persist_directory=persist_dir)

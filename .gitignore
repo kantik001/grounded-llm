@@ -11,6 +11,7 @@
 
 # RAG / logs
 chroma_db/
+sparse_index/
 models/*.pth
 logs.json
 uploads/

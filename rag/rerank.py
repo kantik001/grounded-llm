@@ -18,9 +18,7 @@ def reranker_mode() -> str:
         return "keyword"
     if raw == "none":
         return "none"
-    # hybrid retrieval mode defaults to keyword rerank
-    retrieval = (os.environ.get("RAG_RETRIEVAL_MODE") or "vector").strip().lower()
-    return "keyword" if retrieval == "hybrid" else "none"
+    return "none"
 
 
 def _tokens(text: str) -> set[str]:

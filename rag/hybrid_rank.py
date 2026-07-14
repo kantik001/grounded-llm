@@ -1,4 +1,7 @@
-"""Keyword hybrid reranking — re-exports from rag.rerank for backwards compatibility."""
+"""Keyword rerank helper — re-exports from rag.rerank (legacy API).
+
+For true hybrid retrieval use RAG_RETRIEVAL_MODE=hybrid (BM25 + dense + RRF).
+"""
 
 from typing import Any
 
