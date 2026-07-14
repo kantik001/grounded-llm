@@ -2,7 +2,7 @@ name: grounded_llm
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     container_name: grounded_llm_postgres
     environment:
       POSTGRES_USER: grounded
@@ -29,6 +29,10 @@ services:
       - PYTHON_SERVICE_PORT=5000
       - DOMAINS_CONFIG_PATH=/config/domains.json
       - FORCE_RAG_REINDEX=${FORCE_RAG_REINDEX:-false}
+      - VECTOR_STORE=${VECTOR_STORE:-chroma}
+      - DATABASE_URL=${DATABASE_URL:-postgres://grounded:grounded@postgres:5432/grounded?sslmode=disable}
+      - PGVECTOR_URL=${PGVECTOR_URL:-}
+      - PGVECTOR_COLLECTION=${PGVECTOR_COLLECTION:-grounded_chunks}
       - ADMIN_SECRET=${ADMIN_SECRET:-}
       - RAG_SERVICE_TOKEN=${RAG_SERVICE_TOKEN:-}
       - DEFAULT_LOCALE=${DEFAULT_LOCALE:-en}
@@ -79,6 +83,8 @@ services:
       - MESSAGE_RETENTION_DAYS=${MESSAGE_RETENTION_DAYS:-0}
       - SESSION_RETENTION_DAYS=${SESSION_RETENTION_DAYS:-0}
       - RETENTION_INTERVAL_HOURS=${RETENTION_INTERVAL_HOURS:-24}
+      - LLM_MOCK=${LLM_MOCK:-}
+      - RAG_MOCK=${RAG_MOCK:-}
     volumes:
       - uploads_data:/data/uploads
       - ./data:/app/data

@@ -117,6 +117,25 @@ POST /rag/context
 
 Production deployments SHOULD protect this with internal token (`X-RAG-Service-Token`). This path is **not** part of public integrator v1.
 
+### 7.1 Retrieval modes (reference implementation)
+
+Implementations MAY support configurable retrieval strategies. The reference platform supports:
+
+| Mode | Env | Behavior |
+|------|-----|----------|
+| **Vector** | `RAG_RETRIEVAL_MODE=vector` (default) | Dense embedding search only |
+| **Hybrid** | `RAG_RETRIEVAL_MODE=hybrid` | BM25 sparse + dense vectors fused with reciprocal rank fusion (RRF) |
+
+Optional second-stage rerank: `RAG_RERANKER=keyword|cross_encoder`.
+
+**Grounded-compatible** implementations MUST pass golden retrieval eval in their documented default mode. Implementations that ship hybrid mode SHOULD publish eval results for both `vector` and `hybrid` in release notes (see [BENCHMARK.md](../BENCHMARK.md)).
+
+Alternate vector stores (Chroma, Qdrant, **pgvector**) are implementation details; chunk metadata MUST include `domain_id`, `tenant_id`, and stable `chunk_id` for fusion and audit.
+
+### 7.2 Out of scope (separate projects)
+
+Arbitrary **tool use**, **ReAct agents**, **MCP gateways**, and **workflow graphs** are out of scope for Spec v1. Adjacent agent runtimes MAY call this retrieval contract as a tool. See [ECOSYSTEM.md](../ECOSYSTEM.md).
+
 ---
 
 ## 8. Conformance levels

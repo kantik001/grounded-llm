@@ -89,6 +89,7 @@ Each phase PR should state: **which pillar(s)** and **which horizon** it advance
 - General chatbot without knowledge base
 - Country-specific compliance packages without a client
 - Feature parity with Glean/Copilot SaaS
+- **ReAct / MCP / agent runtime in core** — separate ecosystem project; see [ECOSYSTEM.md](./ECOSYSTEM.md)
 
 ---
 

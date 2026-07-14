@@ -6,7 +6,7 @@ global:
 
 postgres:
   enabled: true
-  image: postgres:16-alpine
+  image: pgvector/pgvector:pg16
   storage: 10Gi
   user: grounded
   password: grounded

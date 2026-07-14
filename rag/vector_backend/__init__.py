@@ -22,8 +22,14 @@ def get_vector_backend() -> VectorBackend:
         from rag.vector_backend.qdrant_backend import QdrantBackend
 
         _backend = QdrantBackend()
+    elif name == "pgvector":
+        from rag.vector_backend.pgvector_backend import PGVectorBackend
+
+        _backend = PGVectorBackend()
     else:
-        raise ValueError(f"Unknown VECTOR_STORE={name!r} (supported: chroma, qdrant)")
+        raise ValueError(
+            f"Unknown VECTOR_STORE={name!r} (supported: chroma, qdrant, pgvector)"
+        )
     return _backend
 
 

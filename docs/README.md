@@ -14,6 +14,7 @@
 | API examples | [API_EXAMPLES.md](en/API_EXAMPLES.md) |
 | Connectors | [CONNECTORS.md](en/CONNECTORS.md) |
 | Optional SaaS / billing | [SAAS.md](en/SAAS.md) · [BILLING.md](en/BILLING.md) |
+| Ecosystem (standard vs agents) | [ECOSYSTEM.md](en/ECOSYSTEM.md) |
 | Locale guide | [LOCALE_GUIDE.md](en/LOCALE_GUIDE.md) |
 | Knowledge base (deep dives) | [en/knowledge-base/](en/knowledge-base/README.md) |
 

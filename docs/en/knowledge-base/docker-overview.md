@@ -29,7 +29,7 @@ flowchart LR
 
 | Service | Image | Role |
 |---------|-------|------|
-| **postgres** | `postgres:16-alpine` | users, sessions, messages, feedback, analytics |
+| **postgres** | `pgvector/pgvector:pg16` | users, sessions, messages, feedback, analytics; optional pgvector |
 | **python** | `Dockerfile.python` | Flask: RAG retrieval, reindex, `/health` |
 | **server** | `Dockerfile.server` | API, LLM orchestration, verify, admin |
 | **webapp** | `Dockerfile.webapp` | Reference UI (Telegram Web App) + nginx → server |

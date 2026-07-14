@@ -129,3 +129,4 @@ Success metric for the platform: **new grounded assistant from template in &lt;3
 - [docs/en/ARCHITECTURE.md](docs/en/ARCHITECTURE.md)
 - [docs/en/ROADMAP.md](docs/en/ROADMAP.md)
 - [docs/en/SECURITY_BRIEF.md](docs/en/SECURITY_BRIEF.md)
+- [docs/en/ECOSYSTEM.md](docs/en/ECOSYSTEM.md) — standard core vs agent projects
