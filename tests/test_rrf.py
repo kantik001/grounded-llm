@@ -1,7 +1,6 @@
 """Tests for reciprocal rank fusion."""
 
 from langchain_core.documents import Document
-
 from rag.rrf import reciprocal_rank_fusion
 
 

@@ -8,6 +8,7 @@ from typing import Any
 
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
+
 from rag.indexing import split_kb_documents
 from rag.vector_backend.base import VectorBackend
 

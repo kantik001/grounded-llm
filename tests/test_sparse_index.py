@@ -4,7 +4,6 @@ import os
 import tempfile
 
 from langchain_core.documents import Document
-
 from rag.sparse_index import BM25SparseIndex, reset_sparse_index
 
 

@@ -6,7 +6,6 @@ import os
 import pickle
 import re
 import shutil
-from typing import Any
 
 from langchain_core.documents import Document
 from rank_bm25 import BM25Plus

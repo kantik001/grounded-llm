@@ -4,8 +4,7 @@ import os
 from unittest.mock import MagicMock, patch
 
 from langchain_core.documents import Document
-
-from rag.vector_store import retrieval_mode, reset_vector_store, search
+from rag.vector_store import reset_vector_store, retrieval_mode, search
 
 
 def _doc(chunk_id: str, text: str) -> Document:

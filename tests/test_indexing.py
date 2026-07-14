@@ -1,7 +1,6 @@
 """Tests for shared KB indexing helpers."""
 
 from langchain_core.documents import Document
-
 from rag.indexing import document_key, split_kb_documents
 
 
