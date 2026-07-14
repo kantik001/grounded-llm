@@ -8,10 +8,12 @@ Grounded LLM supports pluggable vector indexes for the Python RAG service. The r
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `VECTOR_STORE` | `chroma` | Backend: `chroma` or `qdrant` |
+| `VECTOR_STORE` | `chroma` | Backend: `chroma`, `qdrant`, or `pgvector` |
 | `CHROMA_PERSIST_DIR` | `./chroma_db` | Chroma on-disk path |
 | `QDRANT_URL` | `http://127.0.0.1:6333` | Qdrant HTTP endpoint |
 | `QDRANT_COLLECTION` | `grounded_llm` | Qdrant collection name |
+| `PGVECTOR_URL` | `DATABASE_URL` | Postgres DSN for pgvector (`postgresql+psycopg://...`) |
+| `PGVECTOR_COLLECTION` | `grounded_chunks` | pgvector collection name |
 | `RAG_RETRIEVAL_MODE` | `vector` | `vector` or `hybrid` (BM25 + dense + RRF) |
 | `RAG_RRF_K` | `60` | RRF constant for hybrid fusion |
 | `SPARSE_INDEX_DIR` | `./sparse_index` | BM25 index persistence path |
@@ -57,6 +59,40 @@ Changing backend or embedding model requires **full reindex** and eval gate re-r
 
 ---
 
+## pgvector (optional)
+
+Store embeddings in PostgreSQL with the **pgvector** extension — same database as sessions when desired.
+
+**Requirements:**
+
+- Postgres image with pgvector (reference deploy uses `pgvector/pgvector:pg16`)
+- Migration `009_pgvector.sql` enables `CREATE EXTENSION vector`
+
+Install optional dependencies:
+
+```bash
+pip install -r api/requirements-pgvector.txt
+```
+
+Reindex:
+
+```bash
+VECTOR_STORE=pgvector \
+DATABASE_URL=postgres://grounded:grounded@localhost:5432/grounded?sslmode=disable \
+FORCE_RAG_REINDEX=true \
+python scripts/reindex_rag.py
+```
+
+Docker Compose (optional):
+
+```bash
+VECTOR_STORE=pgvector docker compose up -d --build
+```
+
+Chunks use stable `chunk_id` metadata; filters: `domain_id` + `tenant_id`.
+
+---
+
 ## Reranking and hybrid retrieval
 
 | Mode | Env | Notes |
@@ -94,7 +130,7 @@ CI uses default (`vector`) so existing gates stay fast.
 | `rag/indexing.py` | Shared chunking + `chunk_id` metadata |
 | `rag/sparse_index.py` | BM25 sparse index |
 | `rag/rrf.py` | Reciprocal rank fusion |
-| `rag/vector_backend/` | Backend interface + Chroma/Qdrant |
+| `rag/vector_backend/` | Backend interface + Chroma / Qdrant / pgvector |
 | `rag/vector_store.py` | Public API (`search`, `index_stats_for_domain`) |
 | `rag/rerank.py` | Keyword + cross-encoder reranking |
 | `rag/hybrid_rank.py` | Back-compat keyword rerank re-export |

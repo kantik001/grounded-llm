@@ -1,0 +1,5 @@
+# Optional pgvector backend (VECTOR_STORE=pgvector)
+-r requirements.txt
+langchain-postgres>=0.0.12
+pgvector>=0.3.6
+psycopg[binary]>=3.2.0

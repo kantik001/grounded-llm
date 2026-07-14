@@ -12,7 +12,7 @@ Last updated: Phase 11 / main (2026-07)
 |-----------|-----------|--------|-------|
 | **Go** | 1.23.x | `1.23` in `.github/workflows/ci.yml` | Server orchestration |
 | **Python** | 3.11 – 3.12 | `3.11` in CI | RAG service only |
-| **PostgreSQL** | 16.x | `postgres:16-alpine` | Sessions, messages, audit |
+| **PostgreSQL** | 16.x | `pgvector/pgvector:pg16` | Sessions, messages, audit; optional pgvector embeddings |
 | **Node** | — | not required | Static webapp, no build step |
 
 ---
@@ -22,7 +22,7 @@ Last updated: Phase 11 / main (2026-07)
 | Component | Pin | Location |
 |-----------|-----|----------|
 | **Embedding model** | `intfloat/multilingual-e5-small` | `rag/vector_store.py` |
-| **Vector store** | Chroma (default) or Qdrant (optional) | `VECTOR_STORE`, see [VECTOR_STORE.md](./docs/en/VECTOR_STORE.md) |
+| **Vector store** | Chroma (default), Qdrant, or pgvector (optional) | `VECTOR_STORE`, see [VECTOR_STORE.md](./docs/en/VECTOR_STORE.md) |
 | **Chunking** | 500 / overlap 50 | `RecursiveCharacterTextSplitter` |
 | **Hybrid rerank** | BM25 + dense + RRF | `RAG_RETRIEVAL_MODE=hybrid` |
 | **Keyword rerank** | Overlap on query tokens (optional) | `RAG_RERANKER=keyword` |

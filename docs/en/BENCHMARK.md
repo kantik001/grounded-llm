@@ -12,6 +12,7 @@ Public quality metrics for the reference implementation and **Grounded-compatibl
 | RU legacy | `eval/rag_default_baseline.jsonl` | 12 | Retrieval accuracy |
 | IT support | `eval/rag_it_support_baseline.jsonl` | 16 | Cross-template retrieval |
 | Adversarial | `eval/rag_adversarial_baseline.jsonl` | 25 | Wrong numbers, cross-domain, injection |
+| Hybrid (keyword-heavy) | `eval/rag_hybrid_baseline.jsonl` | 5 | BM25+RRF regression (`RAG_RETRIEVAL_MODE=hybrid`) |
 | Adversarial E2E | `eval/rag_adversarial_e2e.jsonl` | 5 | Full `/message` path (mock or staging) |
 
 ---

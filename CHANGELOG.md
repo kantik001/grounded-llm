@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **pgvector adapter:** `VECTOR_STORE=pgvector` — PostgreSQL embeddings via `langchain-postgres` (`rag/vector_backend/pgvector_backend.py`, migration `009_pgvector.sql`)
+- **Ecosystem docs:** [ECOSYSTEM.md](docs/en/ECOSYSTEM.md) — standard core vs separate agent projects; hybrid retrieval in Grounded Spec §7
 - **True hybrid retrieval:** `RAG_RETRIEVAL_MODE=hybrid` — BM25 sparse index + dense vectors + RRF fusion (`rag/sparse_index.py`, `rag/rrf.py`, `rag/indexing.py`)
 - Shared chunking with stable `chunk_id` metadata for dense/sparse alignment
 - Eval suite `eval/rag_hybrid_baseline.jsonl` for keyword-heavy hybrid regression
@@ -24,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `RAG_RETRIEVAL_MODE=hybrid` no longer implies keyword-only rerank; use `RAG_RERANKER=keyword` for optional second stage
 - `scripts/reindex_rag.py` rebuilds BM25 sparse index alongside vector store
+- Reference Postgres image: `pgvector/pgvector:pg16` (Docker Compose, Helm, CI) for optional pgvector extension
 - Smoke script covers metrics, branding, and message flow
 - CI jobs: `go-lint`, `python-lint`, `openapi-validate`
 
