@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **True hybrid retrieval:** `RAG_RETRIEVAL_MODE=hybrid` — BM25 sparse index + dense vectors + RRF fusion (`rag/sparse_index.py`, `rag/rrf.py`, `rag/indexing.py`)
+- Shared chunking with stable `chunk_id` metadata for dense/sparse alignment
+- Eval suite `eval/rag_hybrid_baseline.jsonl` for keyword-heavy hybrid regression
+- Dependency `rank-bm25` for lexical retrieval
 - **Phase 1 engineering bar:** golangci-lint, Ruff, Dependabot, OpenAPI validation in CI
 - **Mock modes for CI:** `LLM_MOCK` and `RAG_MOCK` for deterministic smoke/E2E without external APIs
 - **Release workflow:** GitHub Release + GHCR images on `v*.*.*` tags
@@ -18,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `RAG_RETRIEVAL_MODE=hybrid` no longer implies keyword-only rerank; use `RAG_RERANKER=keyword` for optional second stage
+- `scripts/reindex_rag.py` rebuilds BM25 sparse index alongside vector store
 - Smoke script covers metrics, branding, and message flow
 - CI jobs: `go-lint`, `python-lint`, `openapi-validate`
 

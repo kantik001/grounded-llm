@@ -1,0 +1,5 @@
+{"domain_id": "default", "question": "HR Portal vacation planning advance notice 14 days", "expect_contains": ["14"], "expect_context": true, "category": "keyword"}
+{"domain_id": "it_support", "question": "password reset link 24 hours validity", "expect_contains": ["24"], "expect_context": true, "category": "keyword"}
+{"domain_id": "default", "question": "remote work maximum two days per week", "expect_contains": ["2"], "expect_context": true, "category": "keyword"}
+{"domain_id": "default", "question": "sick note submission three working days HR", "expect_contains": ["3"], "expect_context": true, "category": "keyword"}
+{"domain_id": "default", "question": "core messenger hours 09:00 18:00 availability", "expect_contains": ["09:00", "18:00"], "expect_context": true, "category": "keyword"}

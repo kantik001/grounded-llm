@@ -12,8 +12,10 @@ Grounded LLM supports pluggable vector indexes for the Python RAG service. The r
 | `CHROMA_PERSIST_DIR` | `./chroma_db` | Chroma on-disk path |
 | `QDRANT_URL` | `http://127.0.0.1:6333` | Qdrant HTTP endpoint |
 | `QDRANT_COLLECTION` | `grounded_llm` | Qdrant collection name |
-| `RAG_RETRIEVAL_MODE` | `vector` | Legacy: `hybrid` enables keyword rerank |
-| `RAG_RERANKER` | `none` | `none`, `keyword`, or `cross_encoder` |
+| `RAG_RETRIEVAL_MODE` | `vector` | `vector` or `hybrid` (BM25 + dense + RRF) |
+| `RAG_RRF_K` | `60` | RRF constant for hybrid fusion |
+| `SPARSE_INDEX_DIR` | `./sparse_index` | BM25 index persistence path |
+| `RAG_RERANKER` | `none` | `none`, `keyword`, or `cross_encoder` (optional second stage) |
 | `RAG_CROSS_ENCODER_MODEL` | `cross-encoder/ms-marco-MiniLM-L-6-v2` | Cross-encoder model name |
 | `FORCE_RAG_REINDEX` | `false` | Rebuild index on startup |
 
@@ -55,21 +57,33 @@ Changing backend or embedding model requires **full reindex** and eval gate re-r
 
 ---
 
-## Reranking
+## Reranking and hybrid retrieval
 
 | Mode | Env | Notes |
 |------|-----|-------|
-| Vector only | default | Top-k from embedding search |
-| Keyword | `RAG_RERANKER=keyword` or `RAG_RETRIEVAL_MODE=hybrid` | Overlap on query tokens |
+| Vector only | `RAG_RETRIEVAL_MODE=vector` (default) | Top-k from embedding search |
+| **Hybrid (BM25 + dense + RRF)** | `RAG_RETRIEVAL_MODE=hybrid` | Sparse BM25 + dense vectors fused with reciprocal rank fusion |
+| Keyword rerank (optional) | `RAG_RERANKER=keyword` | Second-stage overlap rerank after vector or hybrid fusion |
 | Cross-encoder | `RAG_RERANKER=cross_encoder` | `sentence-transformers` CrossEncoder; slower, often better on policy Q&A |
 
-Flow when reranker is enabled:
+### Hybrid flow (`RAG_RETRIEVAL_MODE=hybrid`)
 
-1. Fetch `2× rag_k` vector hits  
-2. Rerank with selected scorer  
-3. Return top `rag_k` fragments  
+1. Fetch `3× rag_k` hits from dense vector search (Chroma/Qdrant)  
+2. Fetch `3× rag_k` hits from BM25 sparse index (`rag/sparse_index.py`)  
+3. Fuse with RRF (`RAG_RRF_K`, default `60`)  
+4. Optionally rerank with `RAG_RERANKER`  
+5. Return top `rag_k` fragments  
 
-Measure impact with `scripts/run_rag_eval.py` before production. CI uses default (`none`).
+Sparse index is rebuilt with `FORCE_RAG_REINDEX=true` or `python scripts/reindex_rag.py` and persisted under `sparse_index/` (override with `SPARSE_INDEX_DIR`).
+
+Measure impact:
+
+```bash
+RAG_RETRIEVAL_MODE=hybrid python scripts/run_rag_eval.py --suite hybrid
+RAG_RETRIEVAL_MODE=hybrid python scripts/run_rag_eval.py --suite default_en
+```
+
+CI uses default (`vector`) so existing gates stay fast.
 
 ---
 
@@ -77,10 +91,13 @@ Measure impact with `scripts/run_rag_eval.py` before production. CI uses default
 
 | Module | Role |
 |--------|------|
+| `rag/indexing.py` | Shared chunking + `chunk_id` metadata |
+| `rag/sparse_index.py` | BM25 sparse index |
+| `rag/rrf.py` | Reciprocal rank fusion |
 | `rag/vector_backend/` | Backend interface + Chroma/Qdrant |
 | `rag/vector_store.py` | Public API (`search`, `index_stats_for_domain`) |
 | `rag/rerank.py` | Keyword + cross-encoder reranking |
-| `rag/hybrid_rank.py` | Back-compat re-export |
+| `rag/hybrid_rank.py` | Back-compat keyword rerank re-export |
 
 ---
 

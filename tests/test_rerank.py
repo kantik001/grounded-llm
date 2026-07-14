@@ -16,11 +16,11 @@ def test_reranker_mode_default_none():
     assert reranker_mode() == "none"
 
 
-def test_reranker_mode_hybrid_legacy():
+def test_reranker_mode_hybrid_no_implicit_keyword():
     os.environ.pop("RAG_RERANKER", None)
     os.environ["RAG_RETRIEVAL_MODE"] = "hybrid"
     try:
-        assert reranker_mode() == "keyword"
+        assert reranker_mode() == "none"
     finally:
         os.environ.pop("RAG_RETRIEVAL_MODE", None)
 

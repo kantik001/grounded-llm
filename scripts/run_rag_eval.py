@@ -21,6 +21,19 @@ EVAL_DIR = _ROOT / "eval"
 RESULTS_DIR = EVAL_DIR / "results"
 
 SUITES: Dict[str, Path] = {}
+# Keyword-heavy cases for BM25+RRF; skipped in --suite all unless RAG_RETRIEVAL_MODE=hybrid
+HYBRID_ONLY_SUITES = frozenset({"hybrid"})
+
+
+def _retrieval_mode() -> str:
+    return (os.environ.get("RAG_RETRIEVAL_MODE") or "vector").strip().lower()
+
+
+def suites_for_all() -> List[str]:
+    names = list(get_suites().keys())
+    if _retrieval_mode() != "hybrid":
+        names = [n for n in names if n not in HYBRID_ONLY_SUITES]
+    return names
 
 
 def discover_suites() -> Dict[str, Path]:
@@ -172,7 +185,7 @@ def main() -> int:
 
     suites_map = get_suites()
     if args.suite == "all":
-        suites = list(suites_map.keys())
+        suites = suites_for_all()
     else:
         if args.suite not in suites_map:
             print(f"Unknown suite: {args.suite}. Available: {', '.join(sorted(suites_map))}", file=sys.stderr)
