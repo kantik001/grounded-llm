@@ -13,6 +13,8 @@ Public quality metrics for the reference implementation and **Grounded-compatibl
 | IT support | `eval/rag_it_support_baseline.jsonl` | 16 | Cross-template retrieval |
 | Adversarial | `eval/rag_adversarial_baseline.jsonl` | 25 | Wrong numbers, cross-domain, injection |
 | Hybrid (keyword-heavy) | `eval/rag_hybrid_baseline.jsonl` | 5 | BM25+RRF regression (`RAG_RETRIEVAL_MODE=hybrid`) |
+| Legal FAQ | `eval/rag_legal_faq_baseline.jsonl` | 13 | Cross-template retrieval |
+| **Retrieval total** | — | **89** | All JSONL suites above (excl. E2E) |
 | Adversarial E2E | `eval/rag_adversarial_e2e.jsonl` | 5 | Full `/message` path (mock or staging) |
 
 ---
@@ -55,11 +57,15 @@ Example output:
 ```json
 {
   "reference_impl": "grounded-llm",
-  "version": "0.3.0",
+  "version": "0.1.0",
   "suites": {
     "default_en": {"passed": 18, "total": 18, "pass_rate": 1.0},
-    "adversarial": {"passed": 25, "total": 25, "pass_rate": 1.0}
-  }
+    "it_support": {"passed": 16, "total": 16, "pass_rate": 1.0},
+    "legal_faq": {"passed": 13, "total": 13, "pass_rate": 1.0},
+    "adversarial": {"passed": 25, "total": 25, "pass_rate": 1.0},
+    "hybrid": {"passed": 5, "total": 5, "pass_rate": 1.0}
+  },
+  "retrieval_total": {"passed": 89, "total": 89, "pass_rate": 1.0}
 }
 ```
 

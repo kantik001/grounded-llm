@@ -1,18 +1,19 @@
 # Grounded LLM
 
 [![CI](https://github.com/kantik001/grounded-llm/actions/workflows/ci.yml/badge.svg)](https://github.com/kantik001/grounded-llm/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/kantik001/grounded-llm?label=v0.1.0)](https://github.com/kantik001/grounded-llm/releases/tag/v0.1.0)
 
 **Open platform to deploy cited, verified document assistants in days — templates, API, on-prem.**
 
-Grounded LLM is a production-oriented platform for **document-grounded** assistants: answers come **only from your knowledge base**, with **source citations**, **numeric verification**, and **measurable retrieval quality**. Not a generic chatbot builder.
+Grounded LLM is the **reference implementation** of an open spec for **document-grounded** assistants: answers come **only from your knowledge base**, with **source citations**, **numeric verification**, and **measurable retrieval quality**. Not a generic chatbot builder.
 
 | | |
 |---|---|
 | **Cited RAG** | Every answer links to source documents |
-| **Eval-driven quality** | JSONL baselines + **retrieval gate in CI** |
-| **Enterprise-ready deploy** | Docker Compose, multi-tenant API, on-prem |
+| **Eval-driven quality** | **89** retrieval cases + adversarial gate in CI |
+| **Enterprise-ready deploy** | Docker Compose, Helm, multi-tenant API, on-prem |
 
-**Channels:** Web chat · REST API (`/api/v1`) · Telegram Mini App (optional)
+**Channels:** Web chat · REST API (`/api/v1`) · Telegram Mini App (optional) · [Landing](https://kantik001.github.io/grounded-llm/)
 
 ---
 
@@ -20,7 +21,7 @@ Grounded LLM is a production-oriented platform for **document-grounded** assista
 
 Organizations cannot use public ChatGPT for internal policies and handbooks. They need assistants that stay **inside their infrastructure**, cite **their** documents, and **refuse to hallucinate** when the answer is not in the knowledge base.
 
-Grounded LLM separates **orchestration** (Go: auth, sessions, LLM, verify) from **retrieval** (Python: embeddings, Chroma) so teams can ship a new assistant from a **template pack** in days—not rebuild RAG from scratch.
+Grounded LLM separates **orchestration** (Go: auth, sessions, LLM, verify) from **retrieval** (Python: hybrid search, pluggable vector backends) so teams can ship a new assistant from a **template pack** in days—not rebuild RAG from scratch.
 
 ---
 
@@ -44,12 +45,13 @@ flowchart TB
 
     subgraph py [Python RAG :5000]
         Flask[Flask api/app.py]
-        RAG[rag/: retrieval, loaders]
-        Chroma[(ChromaDB embeddings)]
+        RAG[rag/: hybrid BM25 + dense + RRF]
+        Vector[(Chroma / Qdrant / pgvector)]
+        Sparse[(BM25 sparse index)]
     end
 
     subgraph storage [Storage]
-        PG[(PostgreSQL)]
+        PG[(PostgreSQL sessions + audit)]
         Files["data/{tenant}/{domain}/"]
     end
 
@@ -61,8 +63,11 @@ flowchart TB
     Auth --> API
     API --> LLM
     LLM -->|POST /rag/context| Flask
-    Flask --> RAG --> Chroma
-    Chroma --> Files
+    Flask --> RAG
+    RAG --> Vector
+    RAG --> Sparse
+    Vector --> Files
+    Sparse --> Files
     LLM --> LLMExt
     LLM --> Verify
     API --> PG
@@ -70,7 +75,9 @@ flowchart TB
     Admin -->|reindex| Flask
 ```
 
-**Message flow:** client → Go auth/session → Python retrieval (Chroma) → Go LLM → verify → citations → Postgres.
+**Message flow:** client → Go auth/session → Python hybrid retrieval → Go LLM → numeric verify → citations → Postgres.
+
+**Numeric verify:** after the LLM answer, Go extracts numbers from the reply and checks each appears in retrieved context (±0.01). Answers with unsupported numbers are rejected. Details: [rag-verifier.md](docs/en/knowledge-base/rag-verifier.md).
 
 | Layer | Path | Purpose |
 |-------|------|---------|
@@ -107,7 +114,7 @@ python scripts/reindex_rag.py
 
 Legacy scaffold: `./scripts/init_domain.sh hr_policies default` (data dir only).
 
-Reference templates: [HR domain pack](docs/en/domain-packs/HR.md) · [IT Support pack](docs/en/domain-packs/IT_SUPPORT.md) · [packs/](packs/)
+Reference templates: [HR](docs/en/domain-packs/HR.md) · [IT Support](docs/en/domain-packs/IT_SUPPORT.md) · [Legal FAQ](docs/en/domain-packs/LEGAL_FAQ.md) · [packs/registry.yaml](packs/registry.yaml)
 
 **Python SDK (integrators):**
 
@@ -136,14 +143,15 @@ Examples: [docs/en/API_EXAMPLES.md](docs/en/API_EXAMPLES.md)
 ## Quality and security
 
 ```bash
-make test                    # Go + Python unit tests
+make test                      # Go + Python unit tests (~78 pytest + Go)
 make eval-retrieval-ci         # Full retrieval gate (reindex + eval, same as CI)
 make eval-retrieval            # RAG baseline only (needs Python already on :5000)
+python -m conformance spec     # Offline OpenAPI / spec check
 ```
 
-- **CI:** `eval-retrieval-gate` runs all suites (EN 18 + RU 12) on every push/PR
-- Eval suites: `eval/rag_default_en_baseline.jsonl`, `eval/rag_default_baseline.jsonl`
-- Security overview: [docs/en/SECURITY_BRIEF.md](docs/en/SECURITY_BRIEF.md)
+- **CI:** `eval-retrieval-gate` runs **89 retrieval cases** (HR, IT, Legal, adversarial, hybrid) on every push/PR — see [BENCHMARK.md](docs/en/BENCHMARK.md)
+- **Unit tests:** hybrid/RRF, pgvector, connectors, verifier — `tests/`
+- **Security:** gitleaks, CodeQL, [SECURITY_BRIEF.md](docs/en/SECURITY_BRIEF.md)
 
 ---
 
@@ -167,8 +175,9 @@ make eval-retrieval            # RAG baseline only (needs Python already on :500
 | [docs/en/STANDARD_STRATEGY.md](docs/en/STANDARD_STRATEGY.md) | Horizons, pillars, path A→B |
 | [docs/en/spec/GROUNDED_SPEC_v1.md](docs/en/spec/GROUNDED_SPEC_v1.md) | Normative API v1 spec |
 | [docs/en/RFC.md](docs/en/RFC.md) | RFC process · [RFC-0001](docs/en/rfcs/RFC-0001-grounded-compatible.md) |
-| [docs/en/BENCHMARK.md](docs/en/BENCHMARK.md) | Public eval metrics |
-| [docs/en/RELEASE.md](docs/en/RELEASE.md) | Tag & release checklist (v0.3.0) |
+| [docs/en/ECOSYSTEM.md](docs/en/ECOSYSTEM.md) | Standard core vs agents (separate project) |
+| [docs/en/BENCHMARK.md](docs/en/BENCHMARK.md) | Public eval metrics (89 retrieval cases) |
+| [docs/en/RELEASE.md](docs/en/RELEASE.md) | Tag & release checklist (v0.1.0) |
 | [Site (GitHub Pages)](https://kantik001.github.io/grounded-llm/) | Spec, conformance, quick start |
 | [docs/en/API_DEPRECATION_POLICY.md](docs/en/API_DEPRECATION_POLICY.md) | `/api/v1` stability & sunset |
 | [docs/en/COMPATIBILITY.md](docs/en/COMPATIBILITY.md) | Supported stack matrix |
