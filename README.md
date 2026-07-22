@@ -106,6 +106,8 @@ python scripts/reindex_rag.py
 | Go API | http://localhost:8080/health |
 | OpenAPI | http://localhost:8080/api/v1/openapi.json |
 
+**Try it in 5 minutes:** open the web chat and ask the HR questions in [docs/en/DEMO.md](docs/en/DEMO.md) (cited answers + out-of-scope refusals). Longer walkthrough: [DEMO_SCRIPT.md](docs/en/domain-packs/DEMO_SCRIPT.md).
+
 **Production-shaped deploy** (required secrets, no public Python/Postgres ports):
 
 ```bash
@@ -172,6 +174,7 @@ python -m conformance spec     # Offline OpenAPI / spec check
 | Doc | Description |
 |-----|-------------|
 | [PLATFORM_VISION.md](PLATFORM_VISION.md) | What we are (and are not) |
+| [docs/en/DEMO.md](docs/en/DEMO.md) | 5-minute HR demo (clone → ask) |
 | [docs/en/QUICKSTART_SDK.md](docs/en/QUICKSTART_SDK.md) | SDK + CLI in 5 minutes |
 | [docs/en/COMPARISON.md](docs/en/COMPARISON.md) | vs alternatives (honest) |
 | [docs/en/CASE_STUDY_HR_PILOT.md](docs/en/CASE_STUDY_HR_PILOT.md) | HR pilot KPI template |
