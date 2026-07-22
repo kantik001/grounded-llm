@@ -2,6 +2,8 @@
 
 Use the **default** domain with English locale (`?locale=en` or `DEFAULT_LOCALE=en`).
 
+For a short engineer path (clone → up → 6 questions), see [DEMO.md](../DEMO.md).
+
 ---
 
 ## Setup (before demo)
