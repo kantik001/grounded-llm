@@ -110,6 +110,11 @@ func getEnv(key, defaultValue string) string {
 // Пишет в лог основные настройки при старте сервера.
 func logStartup(cfg *Config) {
 	log.Printf("Starting Grounded LLM Server...")
+	if isProductionEnv() {
+		log.Printf("Environment: production (safety checks enforced)")
+	} else {
+		log.Printf("Environment: development")
+	}
 	log.Printf("Python RAG context URL: %s", cfg.PythonRAGURL)
 	log.Printf("LLM Model: %s", cfg.LLMModel)
 	if cfg.LLMMock {

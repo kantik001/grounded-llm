@@ -17,7 +17,42 @@ from rag.domains_config import list_domains, normalize_domain_id
 from rag.retrieval import retrieve_rag_context
 
 app = Flask(__name__)
-CORS(app)
+
+
+def _is_production() -> bool:
+    for key in ("GROUNDED_ENV", "APP_ENV", "ENV"):
+        val = (os.environ.get(key) or "").strip().lower()
+        if val in ("production", "prod"):
+            return True
+    return False
+
+
+def _configure_cors() -> None:
+    """CORS is optional; Python RAG is an internal service (prefer network isolation)."""
+    raw = (os.environ.get("PYTHON_CORS_ORIGINS") or "").strip()
+    if not raw:
+        return
+    if raw == "*":
+        if _is_production():
+            raise RuntimeError("PYTHON_CORS_ORIGINS=* is not allowed in production")
+        CORS(app)
+        return
+    origins = [o.strip() for o in raw.split(",") if o.strip()]
+    if origins:
+        CORS(app, resources={r"/*": {"origins": origins}})
+
+
+_configure_cors()
+
+
+def _require_production_secrets() -> None:
+    if not _is_production():
+        return
+    if not (os.environ.get("RAG_SERVICE_TOKEN") or "").strip():
+        raise RuntimeError("RAG_SERVICE_TOKEN must be set when GROUNDED_ENV=production")
+
+
+_require_production_secrets()
 
 
 def _admin_authorized() -> bool:
@@ -27,7 +62,11 @@ def _admin_authorized() -> bool:
 
 
 def _rag_service_authorized() -> bool:
-    """Internal auth for Go server → Python RAG calls. Open when RAG_SERVICE_TOKEN is unset."""
+    """Internal auth for Go server → Python RAG calls.
+
+    Open when RAG_SERVICE_TOKEN is unset (local/dev only).
+    In production, startup requires the token and every call must present it.
+    """
     expected = os.environ.get("RAG_SERVICE_TOKEN", "")
     if not expected:
         return True

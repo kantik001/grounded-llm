@@ -22,8 +22,9 @@ services:
       context: .
       dockerfile: Dockerfile.python
     container_name: grounded_llm_python
+    # Local debug only — bind to loopback (not LAN). Production: use docker-compose.prod.yml (no host port).
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     restart: unless-stopped
     environment:
       - PYTHON_SERVICE_PORT=5000
@@ -36,6 +37,9 @@ services:
       - ADMIN_SECRET=${ADMIN_SECRET:-}
       - RAG_SERVICE_TOKEN=${RAG_SERVICE_TOKEN:-}
       - DEFAULT_LOCALE=${DEFAULT_LOCALE:-en}
+      - GROUNDED_ENV=${GROUNDED_ENV:-development}
+      - GUNICORN_WORKERS=${GUNICORN_WORKERS:-2}
+      - GUNICORN_TIMEOUT=${GUNICORN_TIMEOUT:-120}
     volumes:
       - chroma_data:/app/chroma_db
       - ./api:/app/api:ro
@@ -85,6 +89,7 @@ services:
       - RETENTION_INTERVAL_HOURS=${RETENTION_INTERVAL_HOURS:-24}
       - LLM_MOCK=${LLM_MOCK:-}
       - RAG_MOCK=${RAG_MOCK:-}
+      - GROUNDED_ENV=${GROUNDED_ENV:-development}
     volumes:
       - uploads_data:/data/uploads
       - ./data:/app/data

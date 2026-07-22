@@ -1,0 +1,95 @@
+# Production overlay for Grounded LLM.
+# Usage:
+#   cp .env.example .env   # set required secrets
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Required in .env when GROUNDED_ENV=production:
+#   POSTGRES_PASSWORD, ADMIN_PASSWORD, ADMIN_SECRET, RAG_SERVICE_TOKEN
+#   DATABASE_URL must NOT use grounded:grounded
+#   TELEGRAM_AUTH_DISABLED must be false
+#   LLM_MOCK / RAG_MOCK must be unset/false
+
+name: grounded_llm
+
+services:
+  postgres:
+    environment:
+      POSTGRES_USER: grounded
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: grounded
+    # Never publish Postgres to the host in production
+    ports: !reset []
+
+  python:
+    # Internal network only — do not publish :5000
+    ports: !reset []
+    expose:
+      - "5000"
+    environment:
+      - GROUNDED_ENV=production
+      - PYTHON_SERVICE_PORT=5000
+      - DOMAINS_CONFIG_PATH=/config/domains.json
+      - FORCE_RAG_REINDEX=${FORCE_RAG_REINDEX:-false}
+      - VECTOR_STORE=${VECTOR_STORE:-chroma}
+      - DATABASE_URL=${DATABASE_URL:?DATABASE_URL is required}
+      - PGVECTOR_URL=${PGVECTOR_URL:-}
+      - PGVECTOR_COLLECTION=${PGVECTOR_COLLECTION:-grounded_chunks}
+      - ADMIN_SECRET=${ADMIN_SECRET:?ADMIN_SECRET is required}
+      - RAG_SERVICE_TOKEN=${RAG_SERVICE_TOKEN:?RAG_SERVICE_TOKEN is required}
+      - DEFAULT_LOCALE=${DEFAULT_LOCALE:-en}
+      - GUNICORN_WORKERS=${GUNICORN_WORKERS:-2}
+      - GUNICORN_TIMEOUT=${GUNICORN_TIMEOUT:-120}
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: "2.0"
+
+  server:
+    environment:
+      - GROUNDED_ENV=production
+      - PYTHON_RAG_URL=http://python:5000/rag/context
+      - LLM_API_KEY=${LLM_API_KEY:?LLM_API_KEY is required}
+      - LLM_BASE_URL=${LLM_BASE_URL:-https://openrouter.ai/api}
+      - LLM_MODEL=${LLM_MODEL:-openrouter/free}
+      - SERVER_PORT=8080
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_AUTH_DISABLED=false
+      - TELEGRAM_INIT_DATA_MAX_AGE_SEC=${TELEGRAM_INIT_DATA_MAX_AGE_SEC:-86400}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS is required}
+      - RATE_LIMIT_REQUESTS_PER_MINUTE=${RATE_LIMIT_REQUESTS_PER_MINUTE:-30}
+      - DATABASE_URL=${DATABASE_URL:?DATABASE_URL is required}
+      - UPLOAD_DIR=/data/uploads
+      - MIGRATIONS_DIR=/migrations
+      - DOMAINS_CONFIG_PATH=/config/domains.json
+      - LOCALES_ROOT=/config/locales
+      - DEFAULT_LOCALE=${DEFAULT_LOCALE:-en}
+      - CONFIG_RELOAD_INTERVAL_SEC=${CONFIG_RELOAD_INTERVAL_SEC:-0}
+      - DATA_DIR=/app/data
+      - PYTHON_BASE_URL=http://python:5000
+      - ADMIN_USER=${ADMIN_USER:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
+      - ADMIN_SECRET=${ADMIN_SECRET:?ADMIN_SECRET is required}
+      - RAG_SERVICE_TOKEN=${RAG_SERVICE_TOKEN:?RAG_SERVICE_TOKEN is required}
+      - MESSAGE_RETENTION_DAYS=${MESSAGE_RETENTION_DAYS:-90}
+      - SESSION_RETENTION_DAYS=${SESSION_RETENTION_DAYS:-365}
+      - RETENTION_INTERVAL_HOURS=${RETENTION_INTERVAL_HOURS:-24}
+      - LLM_MOCK=
+      - RAG_MOCK=
+    # Prefer reverse-proxy only; keep 8080 published only if needed for debugging
+    ports:
+      - "127.0.0.1:8080:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+
+  webapp:
+    ports:
+      - "80:80"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.5"

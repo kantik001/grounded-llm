@@ -3,7 +3,10 @@ FROM python:3.11-slim
 WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHON_SERVICE_PORT=5000 \
+    GUNICORN_WORKERS=2 \
+    GUNICORN_TIMEOUT=120
 
 COPY api/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
@@ -14,8 +17,7 @@ COPY scripts/ ./scripts/
 COPY config/ ./config/
 COPY data/ ./data/
 
-ENV PYTHON_SERVICE_PORT=5000
-
 EXPOSE 5000
 
-CMD ["python", "api/app.py"]
+# Production WSGI server (Flask app object: api.app:app)
+CMD ["sh", "-c", "gunicorn -w ${GUNICORN_WORKERS:-2} -b 0.0.0.0:${PYTHON_SERVICE_PORT:-5000} --timeout ${GUNICORN_TIMEOUT:-120} --graceful-timeout 30 --access-logfile - --error-logfile - api.app:app"]

@@ -2,6 +2,7 @@
 python-dotenv==1.2.2
 flask>=3.0.0
 flask-cors>=4.0.0
+gunicorn>=22.0.0
 
 langchain-core>=0.2.0
 langchain-community>=0.4.2

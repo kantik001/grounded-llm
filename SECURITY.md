@@ -42,14 +42,14 @@ For deployment and data-flow details, see [docs/en/SECURITY_BRIEF.md](docs/en/SE
 | Component | Notes |
 |-----------|-------|
 | **Go server** | Public API; Telegram HMAC, API keys, admin Basic Auth / OIDC |
-| **Python RAG** | Internal service; `/rag/context` has **no auth** — must not be exposed on public networks |
+| **Python RAG** | Internal service; protect with `RAG_SERVICE_TOKEN` (`X-RAG-Service-Token`). Set `GROUNDED_ENV=production` so the token is **required** at startup. Do not publish port `5000` publicly — use `docker-compose.prod.yml` |
 | **PostgreSQL / Chroma / data/** | Client-side storage; stays in your infrastructure |
 | **`/metrics`** | Unauthenticated by default — restrict via network policy in production |
 
 ### Out of scope for this repository
 
 - Vulnerabilities in third-party LLM providers (OpenRouter, OpenAI, etc.)
-- Misconfiguration by deployers (default passwords, exposed admin ports)
+- Misconfiguration by deployers who ignore production checklist / `GROUNDED_ENV`
 - Issues requiring physical access to client infrastructure
 
 We **do** accept reports for:
@@ -64,13 +64,17 @@ We **do** accept reports for:
 
 Before production:
 
-- [ ] Change default Postgres credentials (`docker-compose.yml` / `DATABASE_URL`)
-- [ ] Set strong `ADMIN_PASSWORD` and `ADMIN_SECRET`
-- [ ] Do not expose Python RAG port (`5000`) publicly
-- [ ] Set `TELEGRAM_AUTH_DISABLED=false` (never in production)
+- [ ] Use `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d`
+- [ ] Set `GROUNDED_ENV=production` (enforces fail-fast checks in Go + Python)
+- [ ] Change Postgres password (`POSTGRES_PASSWORD` / `DATABASE_URL` — not `grounded:grounded`)
+- [ ] Set strong `ADMIN_PASSWORD`, `ADMIN_SECRET`, and `RAG_SERVICE_TOKEN`
+- [ ] Do not expose Python RAG port (`5000`) on the public interface
+- [ ] Keep `TELEGRAM_AUTH_DISABLED=false` (never in production)
+- [ ] Never enable `LLM_MOCK` / `RAG_MOCK` in production
 - [ ] Restrict `/metrics` to internal network
-- [ ] Configure `CORS_ALLOWED_ORIGINS` explicitly
+- [ ] Configure `CORS_ALLOWED_ORIGINS` explicitly (no `*`)
 - [ ] Use OIDC SSO for admin in enterprise deployments ([config/SSO.md](config/SSO.md))
+- [ ] Terminate TLS at nginx/ingress (Basic Auth over plaintext HTTP is unsafe)
 
 ## Dependencies
 

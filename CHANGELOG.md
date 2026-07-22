@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Production hardening:** `GROUNDED_ENV=production` fail-fast checks (admin password, `RAG_SERVICE_TOKEN`, `ADMIN_SECRET`, no default DB password, no mock modes)
+- **`docker-compose.prod.yml`:** required secrets, no public Python/Postgres ports, resource limits
+- **Gunicorn** for Python RAG (`Dockerfile.python`) instead of Flask development server
+- Graceful shutdown on SIGINT/SIGTERM for Go server
+- Knowledge upload content sniffing (PDF/DOCX magic, UTF-8 TXT)
+- nginx `limit_req` on `/api/`
+
+### Changed
+
+- Local Compose binds Python RAG to `127.0.0.1:5000` only (not all interfaces)
+- Python CORS disabled by default (internal service); optional `PYTHON_CORS_ORIGINS`
+- SECURITY.md / NETWORK_SECURITY.md aligned with token-based Go ↔ Python auth
+
 ## [0.1.0] - 2026-07-14
 
 First tagged open-source release — reference implementation of the **Grounded** standard for document-grounded assistants (citations, numeric verify, measurable retrieval quality, on-prem deploy).

@@ -4,7 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -20,6 +24,9 @@ func main() {
 	loadTenantRegistry()
 	if err := loadPlans(); err != nil {
 		log.Printf("Plans file: %v (SaaS billing uses config/plans.yaml when enabled)", err)
+	}
+	if err := validateProductionConfig(config); err != nil {
+		log.Fatalf("%v", err)
 	}
 	logStartup(config)
 
@@ -85,8 +92,29 @@ func main() {
 	startRetentionWorker(config)
 
 	serverAddr := fmt.Sprintf(":%s", config.ServerPort)
-	log.Printf("Server starting on port %s", config.ServerPort)
-	if err := router.Run(serverAddr); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+	srv := &http.Server{
+		Addr:              serverAddr,
+		Handler:           router,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
+
+	go func() {
+		log.Printf("Server starting on port %s", config.ServerPort)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Failed to start server: %v", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	sig := <-quit
+	log.Printf("Shutdown signal received (%v), draining…", sig)
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer shutdownCancel()
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Printf("Graceful shutdown error: %v", err)
+	} else {
+		log.Printf("Server stopped cleanly")
 	}
 }

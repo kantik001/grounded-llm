@@ -106,6 +106,16 @@ python scripts/reindex_rag.py
 | Go API | http://localhost:8080/health |
 | OpenAPI | http://localhost:8080/api/v1/openapi.json |
 
+**Production-shaped deploy** (required secrets, no public Python/Postgres ports):
+
+```bash
+# Set GROUNDED_ENV=production, ADMIN_PASSWORD, ADMIN_SECRET, RAG_SERVICE_TOKEN,
+# POSTGRES_PASSWORD, DATABASE_URL, CORS_ALLOWED_ORIGINS, LLM_API_KEY in .env
+make up-prod
+```
+
+See [SECURITY.md](SECURITY.md) and [docs/en/NETWORK_SECURITY.md](docs/en/NETWORK_SECURITY.md).
+
 **New assistant from template:**
 
 ```bash

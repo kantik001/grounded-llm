@@ -1,4 +1,4 @@
-.PHONY: build up down restart logs clean ps help test test-go test-py smoke eval-retrieval eval-retrieval-ci reindex conformance-spec conformance-http
+.PHONY: build up up-prod down restart logs clean ps help test test-go test-py smoke eval-retrieval eval-retrieval-ci reindex conformance-spec conformance-http
 
 # Docker Compose project name
 PROJECT_NAME := grounded_llm
@@ -16,6 +16,10 @@ build-no-cache:
 ## Start all services in background
 up:
 	docker compose -p $(PROJECT_NAME) up -d
+
+## Production overlay (required secrets in .env — see docker-compose.prod.yml)
+up-prod:
+	docker compose -p $(PROJECT_NAME) -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
 ## Start with rebuild of changed services
 up-build:
@@ -127,6 +131,7 @@ help:
 	@echo "  make build          - Build all Docker images"
 	@echo "  make build-no-cache - Full rebuild without cache"
 	@echo "  make up             - Start services in background"
+	@echo "  make up-prod        - Start with production overlay (required secrets)"
 	@echo "  make up-build       - Start with rebuild"
 	@echo "  make up-dev         - Start in foreground (debug)"
 	@echo "  make down           - Stop services"

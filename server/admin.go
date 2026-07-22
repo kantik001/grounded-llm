@@ -201,13 +201,10 @@ func handleAdminUpload(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
 		return
 	}
-	if strings.EqualFold(filepath.Ext(name), ".txt") {
-		body, err := os.ReadFile(dst)
-		if err != nil || len(strings.TrimSpace(string(body))) == 0 {
-			_ = os.Remove(dst)
-			c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "TXT file is empty"})
-			return
-		}
+	if err := validateKnowledgeFileContent(dst, name); err != nil {
+		_ = os.Remove(dst)
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
+		return
 	}
 	log.Printf("Admin upload: %s -> %s", name, dst)
 	recordAdminAudit(c, auditOpts{
