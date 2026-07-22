@@ -12,7 +12,7 @@ Grounded LLM is the **reference implementation** of an open spec for **document-
 | | |
 |---|---|
 | **Cited RAG** | Every answer links to source documents |
-| **Eval-driven quality** | **89** retrieval cases + adversarial gate in CI |
+| **Eval-driven quality** | **99** retrieval cases + adversarial gate in CI |
 | **Enterprise-ready deploy** | Docker Compose, Helm, multi-tenant API, on-prem |
 
 **Channels:** Web chat · REST API (`/api/v1`) · Telegram Mini App (optional) · [Landing](https://kantik001.github.io/grounded-llm/)
@@ -163,7 +163,7 @@ make eval-retrieval            # RAG baseline only (needs Python already on :500
 python -m conformance spec     # Offline OpenAPI / spec check
 ```
 
-- **CI:** `eval-retrieval-gate` runs **89 retrieval cases** (HR, IT, Legal, adversarial, hybrid) on every push/PR — see [BENCHMARK.md](docs/en/BENCHMARK.md)
+- **CI:** `eval-retrieval-gate` runs **99 retrieval cases** (HR, IT, Legal, adversarial, hybrid) on every push/PR — see [BENCHMARK.md](docs/en/BENCHMARK.md)
 - **Unit tests:** hybrid/RRF, pgvector, connectors, verifier — `tests/`
 - **Security:** gitleaks, CodeQL, [SECURITY_BRIEF.md](docs/en/SECURITY_BRIEF.md)
 
@@ -191,7 +191,7 @@ python -m conformance spec     # Offline OpenAPI / spec check
 | [docs/en/spec/GROUNDED_SPEC_v1.md](docs/en/spec/GROUNDED_SPEC_v1.md) | Normative API v1 spec |
 | [docs/en/RFC.md](docs/en/RFC.md) | RFC process · [RFC-0001](docs/en/rfcs/RFC-0001-grounded-compatible.md) |
 | [docs/en/ECOSYSTEM.md](docs/en/ECOSYSTEM.md) | Standard core vs agents (separate project) |
-| [docs/en/BENCHMARK.md](docs/en/BENCHMARK.md) | Public eval metrics (89 retrieval cases) |
+| [docs/en/BENCHMARK.md](docs/en/BENCHMARK.md) | Public eval metrics (99 retrieval cases) |
 | [docs/en/RELEASE.md](docs/en/RELEASE.md) | Tag & release checklist (v0.1.0) |
 | [Site (GitHub Pages)](https://kantik001.github.io/grounded-llm/) | Spec, conformance, quick start |
 | [docs/en/API_DEPRECATION_POLICY.md](docs/en/API_DEPRECATION_POLICY.md) | `/api/v1` stability & sunset |

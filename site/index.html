@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Grounded LLM — Open standard for verified document assistants</title>
-  <meta name="description" content="Grounded LLM v0.1.0 — open spec for cited, verified document assistants. Hybrid BM25+RRF, pgvector, 89 eval cases, conformance CLI, on-prem deploy.">
+  <meta name="description" content="Grounded LLM v0.2.0 — open spec for cited, verified document assistants. Hybrid BM25+RRF, pgvector, 99 eval cases, conformance CLI, on-prem deploy.">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -26,7 +26,7 @@
       <ul class="highlights">
         <li><strong>Hybrid retrieval</strong> — BM25 sparse + dense embeddings + RRF (<code>RAG_RETRIEVAL_MODE=hybrid</code>)</li>
         <li><strong>Vector backends</strong> — Chroma, Qdrant, <strong>pgvector</strong> (<code>VECTOR_STORE</code>)</li>
-        <li><strong>Quality gate</strong> — <strong>89</strong> retrieval eval cases + adversarial suite in CI</li>
+        <li><strong>Quality gate</strong> — <strong>99</strong> retrieval eval cases + adversarial suite in CI</li>
         <li><strong>Platform</strong> — Go orchestration + Python retrieval (Flask), multi-tenant <code>/api/v1</code>, OIDC/RBAC, Helm/Terraform</li>
         <li><strong>Template packs</strong> — HR, IT Support, Legal FAQ</li>
         <li><strong>Ecosystem</strong> — agent runtime is a <a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/ECOSYSTEM.md">separate project</a>, not in the standard core</li>
@@ -39,7 +39,7 @@
         <li><a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/spec/GROUNDED_SPEC_v1.md">Grounded Spec v1</a> — normative API contract</li>
         <li><a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/rfcs/RFC-0001-grounded-compatible.md">RFC-0001</a> — «Grounded-compatible» definition</li>
         <li><a href="https://github.com/kantik001/grounded-llm/tree/main/conformance">Conformance suite</a> — run against any deployment</li>
-        <li><a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/BENCHMARK.md">Public benchmark</a> — 89 retrieval + adversarial eval</li>
+        <li><a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/BENCHMARK.md">Public benchmark</a> — 99 retrieval + adversarial eval</li>
       </ul>
     </section>
 

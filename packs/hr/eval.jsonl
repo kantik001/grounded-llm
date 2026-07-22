@@ -16,3 +16,6 @@
 {"domain_id": "default", "question": "What is the CEO salary on the Moon in 2099?", "expect_out_of_scope": true, "expect_contains": [], "category": "edge"}
 {"domain_id": "default", "question": "How many vacation days for employees on Mars?", "expect_out_of_scope": true, "expect_contains": [], "category": "edge"}
 {"domain_id": "default", "question": "What is the stock ticker symbol for our company on Neptune?", "expect_out_of_scope": true, "expect_contains": [], "category": "edge"}
+{"domain_id": "default", "question": "What's our annual leave entitlement in calendar days?", "expect_contains": ["28"], "expect_context": true, "category": "paraphrase"}
+{"domain_id": "default", "question": "How early should I book time off in the HR Portal?", "expect_contains": ["14"], "expect_context": true, "category": "paraphrase"}
+{"domain_id": "default", "question": "What's the weekly remote-work cap?", "expect_contains": ["2"], "expect_context": true, "category": "paraphrase"}

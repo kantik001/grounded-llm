@@ -22,6 +22,7 @@ LLM_API_KEY=sk-...          # OpenAI-compatible
 # Optional local smoke without a real LLM:
 # LLM_MOCK=true
 # RAG_MOCK=true
+# Local compose defaults RAG_RERANKER=keyword (override in .env if needed)
 ```
 
 ```bash

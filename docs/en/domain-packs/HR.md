@@ -35,6 +35,14 @@ A ready-to-run **policy Q&A assistant** grounded in company documents:
 | Eval baseline (EN) | `eval/rag_default_en_baseline.jsonl` |
 | Pack manifest | `packs/hr/pack.yaml` |
 | Live demo script | [DEMO_SCRIPT.md](./DEMO_SCRIPT.md) |
+| 5-minute path | [DEMO.md](../DEMO.md) |
+
+**Quality tip:** local Compose sets `RAG_RERANKER=keyword` by default. For stronger ranking in production, keep keyword or try `cross_encoder` (slower; downloads a model). Measure with:
+
+```bash
+python scripts/run_rag_eval.py --suite default_en
+python scripts/run_rag_eval.py --suite adversarial
+```
 
 ---
 
