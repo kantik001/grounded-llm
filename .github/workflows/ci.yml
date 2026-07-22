@@ -302,6 +302,69 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
 
+      # Python image pulls torch/CUDA wheels — many unfixed HIGH; gate on CRITICAL only.
+      - name: Trivy scan python image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          image-ref: grounded-llm-python:ci
+          severity: CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
+
+  helm-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.16.4
+
+      - name: Helm lint
+        run: helm lint deploy/helm/grounded-llm
+
+      - name: Helm template (smoke render)
+        run: |
+          helm template grounded deploy/helm/grounded-llm \
+            --set secrets.ragServiceToken=ci-token \
+            --set secrets.adminPassword=ci-pass \
+            --set secrets.adminSecret=ci-secret \
+            --set secrets.llmApiKey=ci-key \
+            >/dev/null
+
+  backup-smoke:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: grounded
+          POSTGRES_PASSWORD: grounded
+          POSTGRES_DB: grounded
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U grounded -d grounded"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Postgres backup/restore smoke
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: "5432"
+          PGUSER: grounded
+          PGPASSWORD: grounded
+          PGDATABASE: grounded
+          PGSSLMODE: disable
+        run: bash scripts/backup_postgres_smoke.sh
+
   load-smoke:
     runs-on: ubuntu-latest
     services:

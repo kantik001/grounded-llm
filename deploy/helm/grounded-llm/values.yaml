@@ -11,6 +11,17 @@ postgres:
   user: grounded
   password: grounded
   database: grounded
+  probes:
+    readiness:
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      timeoutSeconds: 3
+      failureThreshold: 6
+    liveness:
+      initialDelaySeconds: 15
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 6
 
 server:
   replicaCount: 1
@@ -23,9 +34,20 @@ server:
     TELEGRAM_AUTH_DISABLED: "false"
     RATE_LIMIT_REQUESTS_PER_MINUTE: "30"
     DEFAULT_LOCALE: en
-  # readinessProbe uses /ready (DB + Python RAG)
-  livenessPath: /health
-  readinessPath: /ready
+  # /health = process up; /ready = Postgres + Python RAG
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 10
+      periodSeconds: 20
+      timeoutSeconds: 3
+      failureThreshold: 3
+    readiness:
+      path: /ready
+      initialDelaySeconds: 15
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 3
 
 python:
   replicaCount: 1
@@ -39,6 +61,24 @@ python:
   env:
     FORCE_RAG_REINDEX: "false"
     DEFAULT_LOCALE: en
+  # startupProbe covers slow embedding model / index warm-up
+  probes:
+    startup:
+      path: /health
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 36
+    liveness:
+      path: /health
+      periodSeconds: 20
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      path: /ready
+      initialDelaySeconds: 5
+      periodSeconds: 15
+      timeoutSeconds: 5
+      failureThreshold: 3
 
 webapp:
   enabled: true
@@ -47,6 +87,19 @@ webapp:
     repository: ghcr.io/your-org/grounded-llm-webapp
     tag: latest
   port: 80
+  probes:
+    liveness:
+      path: /
+      initialDelaySeconds: 5
+      periodSeconds: 20
+      timeoutSeconds: 3
+      failureThreshold: 3
+    readiness:
+      path: /
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
 
 ingress:
   enabled: false

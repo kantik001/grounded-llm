@@ -32,11 +32,14 @@ Ingress (optional)
 
 ## Health probes
 
-| Service | Liveness | Readiness |
-|---------|----------|-----------|
-| Go server | `GET /health` | `GET /ready` (Postgres + Python RAG) |
-| Python RAG | `GET /health` | `GET /ready` (data dir + chroma state) |
-| Postgres | `pg_isready` | `pg_isready` |
+| Service | Liveness | Readiness | Startup |
+|---------|----------|-----------|---------|
+| Go server | `GET /health` | `GET /ready` (Postgres + Python RAG) | — |
+| Python RAG | `GET /health` | `GET /ready` (+ `X-RAG-Service-Token`) | `GET /health` (covers model/index warm-up; ~6 min budget) |
+| Postgres | `pg_isready` | `pg_isready` | — |
+| Webapp | `GET /` | `GET /` | — |
+
+Tune timings under `*.probes` in `values.yaml` (timeouts, `failureThreshold`, Python `startupProbe`).
 
 Set the same `RAG_SERVICE_TOKEN` on Go server and Python service. Go sends `X-RAG-Service-Token` on internal calls.
 

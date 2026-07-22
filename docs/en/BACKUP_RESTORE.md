@@ -26,6 +26,18 @@ Restore:
 docker exec -i grounded_llm_postgres pg_restore -U grounded -d grounded --clean --if-exists < grounded-YYYYMMDD.dump
 ```
 
+### Smoke test (CI / local)
+
+Applies migrations, seeds a marker row, `pg_dump` → `pg_restore` into a throwaway DB, verifies the row:
+
+```bash
+# Compose Postgres on localhost:5432
+PGPASSWORD=grounded bash scripts/backup_postgres_smoke.sh
+
+# Or via Makefile (same defaults)
+make backup-smoke
+```
+
 ### Kubernetes
 
 Use your cluster backup tool (Velero, CloudNativePG, RDS snapshots) on the Postgres PVC or managed instance.

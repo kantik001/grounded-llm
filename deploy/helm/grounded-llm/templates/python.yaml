@@ -60,21 +60,31 @@ spec:
           volumeMounts:
             - name: chroma
               mountPath: /app/chroma_db
+          startupProbe:
+            httpGet:
+              path: {{ .Values.python.probes.startup.path }}
+              port: http
+            periodSeconds: {{ .Values.python.probes.startup.periodSeconds }}
+            timeoutSeconds: {{ .Values.python.probes.startup.timeoutSeconds }}
+            failureThreshold: {{ .Values.python.probes.startup.failureThreshold }}
           livenessProbe:
             httpGet:
-              path: /health
+              path: {{ .Values.python.probes.liveness.path }}
               port: http
-            initialDelaySeconds: 30
-            periodSeconds: 20
+            periodSeconds: {{ .Values.python.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.python.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.python.probes.liveness.failureThreshold }}
           readinessProbe:
             httpGet:
-              path: /ready
+              path: {{ .Values.python.probes.readiness.path }}
               port: http
               httpHeaders:
                 - name: X-RAG-Service-Token
                   value: {{ .Values.secrets.ragServiceToken | quote }}
-            initialDelaySeconds: 60
-            periodSeconds: 15
+            initialDelaySeconds: {{ .Values.python.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.python.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.python.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.python.probes.readiness.failureThreshold }}
           resources:
             {{- toYaml .Values.python.resources | nindent 12 }}
       volumes:

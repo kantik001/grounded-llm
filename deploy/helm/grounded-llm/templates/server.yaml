@@ -91,15 +91,19 @@ spec:
             {{- end }}
           livenessProbe:
             httpGet:
-              path: {{ .Values.server.livenessPath }}
+              path: {{ .Values.server.probes.liveness.path }}
               port: http
-            initialDelaySeconds: 10
-            periodSeconds: 20
+            initialDelaySeconds: {{ .Values.server.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.server.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.server.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.server.probes.liveness.failureThreshold }}
           readinessProbe:
             httpGet:
-              path: {{ .Values.server.readinessPath }}
+              path: {{ .Values.server.probes.readiness.path }}
               port: http
-            initialDelaySeconds: 15
-            periodSeconds: 10
+            initialDelaySeconds: {{ .Values.server.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.server.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.server.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.server.probes.readiness.failureThreshold }}
           resources:
             {{- toYaml .Values.server.resources | nindent 12 }}

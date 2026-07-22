@@ -43,14 +43,18 @@ spec:
               name: http
           livenessProbe:
             httpGet:
-              path: /
+              path: {{ .Values.webapp.probes.liveness.path }}
               port: http
-            initialDelaySeconds: 5
-            periodSeconds: 20
+            initialDelaySeconds: {{ .Values.webapp.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.webapp.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.webapp.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.webapp.probes.liveness.failureThreshold }}
           readinessProbe:
             httpGet:
-              path: /
+              path: {{ .Values.webapp.probes.readiness.path }}
               port: http
-            initialDelaySeconds: 5
-            periodSeconds: 10
+            initialDelaySeconds: {{ .Values.webapp.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.webapp.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.webapp.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.webapp.probes.readiness.failureThreshold }}
 {{- end }}
