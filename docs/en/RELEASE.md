@@ -6,7 +6,7 @@
 - **API path version:** `/api/v1` — see [API_DEPRECATION_POLICY.md](./API_DEPRECATION_POLICY.md)
 - **OpenAPI `info.version`:** `1.0.0` for API v1 (independent from product tag)
 
-Phases **1–11 are merged to `main`**. Tagged releases use `vMAJOR.MINOR.PATCH` on `main` (first release: **v0.1.0**).
+Phases **1–11 are merged to `main`**. Tagged releases use `vMAJOR.MINOR.PATCH` on `main` (current: prepare **v0.2.0** after production hardening).
 
 ---
 
@@ -35,8 +35,8 @@ See [LAUNCH.md](./LAUNCH.md) for public launch checklist.
 ## Tag and release
 
 ```bash
-git tag -a v0.1.0 -m "v0.1.0 — Grounded Spec v1, hybrid retrieval, pgvector, conformance"
-git push origin v0.1.0
+git tag -a v0.2.0 -m "v0.2.0 — production hardening, Trivy, load smoke, tenant isolation tests"
+git push origin v0.2.0
 ```
 
 The [Release workflow](../../.github/workflows/release.yml) will:

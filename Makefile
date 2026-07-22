@@ -1,4 +1,4 @@
-.PHONY: build up up-prod down restart logs clean ps help test test-go test-py smoke eval-retrieval eval-retrieval-ci reindex conformance-spec conformance-http
+.PHONY: build up up-prod down restart logs clean ps help test test-go test-py smoke load-smoke eval-retrieval eval-retrieval-ci reindex conformance-spec conformance-http
 
 # Docker Compose project name
 PROJECT_NAME := grounded_llm
@@ -151,4 +151,9 @@ help:
 	@echo "  make init-pack-list    - List official template packs"
 	@echo "  make init-pack-install PACK=it_support - Install a template pack"
 	@echo "  make smoke          - Smoke API (localhost:8080)"
+	@echo "  make load-smoke     - Concurrent load smoke (mock server on :8080)"
 	@echo "  make help           - This help"
+
+## Concurrent load smoke (requires server with TELEGRAM_AUTH_DISABLED + mocks or real stack)
+load-smoke:
+	bash scripts/load_smoke.sh $(or $(URL),http://127.0.0.1:8080) $(or $(N),20) $(or $(ROUNDS),2)

@@ -1,7 +1,7 @@
 # Grounded LLM
 
 [![CI](https://github.com/kantik001/grounded-llm/actions/workflows/ci.yml/badge.svg)](https://github.com/kantik001/grounded-llm/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/kantik001/grounded-llm?label=v0.1.0)](https://github.com/kantik001/grounded-llm/releases/tag/v0.1.0)
+[![Release](https://img.shields.io/github/v/release/kantik001/grounded-llm)](https://github.com/kantik001/grounded-llm/releases)
 
 **Open platform to deploy cited, verified document assistants in days — templates, API, on-prem.**
 

@@ -74,12 +74,19 @@ Changes to `rag/`, `config/`, `eval/`, or `data/` that affect retrieval **must p
 
 ## Pull request process
 
-1. Fork the repository and create a branch from `main` (e.g. `feature/my-change` or `fix/issue-123`).
+**Do not push commits directly to `main`.** All changes go through a feature/fix branch and a pull request.
+
+1. Fork (or clone) the repository and create a branch from `main`:
+   ```bash
+   git checkout main
+   git pull origin main
+   git checkout -b feature/my-change   # or fix/..., docs/...
+   ```
 2. Make focused changes — one logical change per PR when possible.
 3. Add or update tests for behavior changes.
 4. Update documentation if you change APIs, config, or deploy steps.
-5. Fill out the PR template checklist.
-6. Ensure CI is green before requesting review.
+5. Push the branch and open a PR against `main`; fill out the PR template checklist.
+6. Ensure CI is green before requesting review / merging.
 
 We review PRs as time allows. Be patient — this is a community-driven project.
 
