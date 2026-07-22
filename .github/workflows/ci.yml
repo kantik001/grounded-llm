@@ -284,3 +284,86 @@ jobs:
 
       - name: Build python image
         run: docker build -f Dockerfile.python -t grounded-llm-python:ci .
+
+      # Pin by commit SHA (v0.36.0); avoid mutable/missing numeric tags after trivy-action remediations.
+      - name: Trivy scan server image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          image-ref: grounded-llm-server:ci
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+          ignore-unfixed: true
+
+      - name: Trivy scan webapp image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          image-ref: grounded-llm-webapp:ci
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+          ignore-unfixed: true
+
+  load-smoke:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: grounded
+          POSTGRES_PASSWORD: grounded
+          POSTGRES_DB: grounded
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U grounded -d grounded"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache-dependency-path: server/go.sum
+
+      - name: Build and start server (mock LLM/RAG)
+        env:
+          DATABASE_URL: postgres://grounded:grounded@localhost:5432/grounded?sslmode=disable
+          TELEGRAM_AUTH_DISABLED: "true"
+          LLM_MOCK: "true"
+          RAG_MOCK: "true"
+          # Default is 30 req/min; concurrent load smoke exceeds that and returns 429.
+          RATE_LIMIT_REQUESTS_PER_MINUTE: "2000"
+          PYTHON_RAG_URL: http://127.0.0.1:59999/rag/context
+          PYTHON_BASE_URL: http://127.0.0.1:59999
+          DOMAINS_CONFIG_PATH: ${{ github.workspace }}/config/domains.json
+          LOCALES_ROOT: ${{ github.workspace }}/config/locales
+          MIGRATIONS_DIR: ${{ github.workspace }}/migrations
+          DATA_DIR: ${{ github.workspace }}/data
+          UPLOAD_DIR: /tmp/grounded-uploads
+          SERVER_PORT: "8080"
+        run: |
+          mkdir -p /tmp/grounded-uploads
+          cd server
+          go mod tidy
+          go build -o ../server-bin .
+          cd ..
+          ./server-bin &
+          echo $! > server.pid
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:8080/health; then
+              echo "Server ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Server failed to start"
+          exit 1
+
+      - name: Concurrent load smoke
+        run: bash scripts/load_smoke.sh http://127.0.0.1:8080 20 2
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f server.pid ]; then kill $(cat server.pid) 2>/dev/null || true; fi

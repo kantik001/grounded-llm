@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-22
+
+Production hardening and CI quality gates for safer deploys.
+
 ### Added
 
 - **Production hardening:** `GROUNDED_ENV=production` fail-fast checks (admin password, `RAG_SERVICE_TOKEN`, `ADMIN_SECRET`, no default DB password, no mock modes)
@@ -15,12 +19,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Graceful shutdown on SIGINT/SIGTERM for Go server
 - Knowledge upload content sniffing (PDF/DOCX magic, UTF-8 TXT)
 - nginx `limit_req` on `/api/`
+- Multi-tenant isolation tests (`ALLOWED_TENANTS` + per-tenant KB paths)
+- Trivy image scan (CRITICAL/HIGH) on server and webapp CI images
+- Concurrent load smoke (`scripts/load_smoke.sh`, optional `scripts/load_smoke.js` for k6)
 
 ### Changed
 
 - Local Compose binds Python RAG to `127.0.0.1:5000` only (not all interfaces)
 - Python CORS disabled by default (internal service); optional `PYTHON_CORS_ORIGINS`
 - SECURITY.md / NETWORK_SECURITY.md aligned with token-based Go ↔ Python auth
+- Go toolchain / golangci-lint aligned for Go 1.25 (pgx v5.10)
 
 ## [0.1.0] - 2026-07-14
 
@@ -69,5 +77,6 @@ First tagged open-source release — reference implementation of the **Grounded*
 - English-first docs (`docs/en/`) + Russian hub (`docs/ru/`)
 - GitHub Pages landing (`site/`)
 
-[Unreleased]: https://github.com/kantik001/grounded-llm/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/kantik001/grounded-llm/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/kantik001/grounded-llm/releases/tag/v0.2.0
 [0.1.0]: https://github.com/kantik001/grounded-llm/releases/tag/v0.1.0
