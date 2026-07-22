@@ -30,7 +30,7 @@ def test_baseline_jsonl_structure(path: Path):
     if path.name == "rag_legal_faq_baseline.jsonl":
         assert len(cases) >= 10, f"{path.name}: Legal FAQ template requires at least 10 cases, got {len(cases)}"
     if path.name == "rag_adversarial_baseline.jsonl":
-        assert len(cases) >= 20, f"{path.name}: adversarial pack requires at least 20 cases, got {len(cases)}"
+        assert len(cases) >= 25, f"{path.name}: adversarial pack requires at least 25 cases, got {len(cases)}"
         types = {c.get("adversarial_type") for c in cases}
         assert "wrong_number" in types, "adversarial pack needs wrong_number cases"
         assert "cross_domain" in types, "adversarial pack needs cross_domain cases"

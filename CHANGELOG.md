@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- HR paraphrase + adversarial near-miss retrieval cases (eval total **99**)
+- Local Compose default `RAG_RERANKER=keyword` for stronger demo ranking (override via env; CI stays `none` unless set)
+
 ## [0.2.0] - 2026-07-22
 
 Production hardening and CI quality gates for safer deploys.

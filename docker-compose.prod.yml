@@ -39,6 +39,9 @@ services:
       - DEFAULT_LOCALE=${DEFAULT_LOCALE:-en}
       - GUNICORN_WORKERS=${GUNICORN_WORKERS:-2}
       - GUNICORN_TIMEOUT=${GUNICORN_TIMEOUT:-120}
+      - RAG_RETRIEVAL_MODE=${RAG_RETRIEVAL_MODE:-vector}
+      - RAG_RERANKER=${RAG_RERANKER:-keyword}
+      - RAG_CROSS_ENCODER_MODEL=${RAG_CROSS_ENCODER_MODEL:-}
     deploy:
       resources:
         limits:
