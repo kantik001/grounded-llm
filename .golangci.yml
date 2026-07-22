@@ -13,11 +13,10 @@ linters:
     - staticcheck
     - unused
     - misspell
-
-linters-settings:
-  errcheck:
-    exclude-functions:
-      - (io.Closer).Close
+  settings:
+    errcheck:
+      exclude-functions:
+        - (io.Closer).Close
 
 issues:
   max-issues-per-linter: 0
