@@ -5,6 +5,8 @@
 
 **Open platform to deploy cited, verified document assistants in days — templates, API, on-prem.**
 
+![Demo: chat with cited answer from knowledge base](docs/assets/demo.gif)
+
 Grounded LLM is the **reference implementation** of an open spec for **document-grounded** assistants: answers come **only from your knowledge base**, with **source citations**, **numeric verification**, and **measurable retrieval quality**. Not a generic chatbot builder.
 
 | | |
