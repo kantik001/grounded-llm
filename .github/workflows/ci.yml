@@ -285,8 +285,9 @@ jobs:
       - name: Build python image
         run: docker build -f Dockerfile.python -t grounded-llm-python:ci .
 
+      # Pin by commit SHA (v0.36.0); avoid mutable/missing numeric tags after trivy-action remediations.
       - name: Trivy scan server image
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           image-ref: grounded-llm-server:ci
           severity: CRITICAL,HIGH
@@ -294,7 +295,7 @@ jobs:
           ignore-unfixed: true
 
       - name: Trivy scan webapp image
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
           image-ref: grounded-llm-webapp:ci
           severity: CRITICAL,HIGH
@@ -331,6 +332,8 @@ jobs:
           TELEGRAM_AUTH_DISABLED: "true"
           LLM_MOCK: "true"
           RAG_MOCK: "true"
+          # Default is 30 req/min; concurrent load smoke exceeds that and returns 429.
+          RATE_LIMIT_REQUESTS_PER_MINUTE: "2000"
           PYTHON_RAG_URL: http://127.0.0.1:59999/rag/context
           PYTHON_BASE_URL: http://127.0.0.1:59999
           DOMAINS_CONFIG_PATH: ${{ github.workspace }}/config/domains.json
