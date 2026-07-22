@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Helm: configurable probes + Python `startupProbe` (model/index warm-up); timeouts/`failureThreshold` for server, python, postgres, webapp
+- `scripts/backup_postgres_smoke.sh` + `make backup-smoke` + CI job (pg_dump → restore round-trip)
+- Trivy scan for Python RAG image in CI (CRITICAL; torch stack often has unfixed HIGH)
 - HR paraphrase + adversarial near-miss retrieval cases (eval total **99**)
 - Local Compose default `RAG_RERANKER=keyword` for stronger demo ranking (override via env; CI stays `none` unless set)
 
