@@ -25,57 +25,13 @@ Organizations cannot use public ChatGPT for internal policies and handbooks. The
 
 Grounded LLM separates **orchestration** (Go: auth, sessions, LLM, verify) from **retrieval** (Python: hybrid search, pluggable vector backends) so teams can ship a new assistant from a **template pack** in days—not rebuild RAG from scratch.
 
+**Built for:** HR policy assistants · IT support bots · Legal FAQ systems · Internal knowledge bases
+
 ---
 
 ## Architecture
 
-```mermaid
-flowchart TB
-    subgraph clients [Clients]
-        Web[Web chat webapp]
-        SDK[Python SDK / REST]
-        TG[Telegram Mini App]
-    end
-
-    subgraph go [Go server :8080]
-        Auth[Auth: Telegram / API key / OIDC admin]
-        API[REST API v1]
-        LLM[LLM orchestration]
-        Verify[Verify numbers vs context]
-        Admin[Admin: upload, reindex, analytics]
-    end
-
-    subgraph py [Python RAG :5000]
-        Flask[Flask api/app.py]
-        RAG[rag/: hybrid BM25 + dense + RRF]
-        Vector[(Chroma / Qdrant / pgvector)]
-        Sparse[(BM25 sparse index)]
-    end
-
-    subgraph storage [Storage]
-        PG[(PostgreSQL sessions + audit)]
-        Files["data/{tenant}/{domain}/"]
-    end
-
-    LLMExt[External LLM API]
-
-    Web --> Auth
-    SDK --> Auth
-    TG --> Auth
-    Auth --> API
-    API --> LLM
-    LLM -->|POST /rag/context| Flask
-    Flask --> RAG
-    RAG --> Vector
-    RAG --> Sparse
-    Vector --> Files
-    Sparse --> Files
-    LLM --> LLMExt
-    LLM --> Verify
-    API --> PG
-    Admin --> Files
-    Admin -->|reindex| Flask
-```
+![Grounded LLM architecture](docs/assets/architecture.png)
 
 **Message flow:** client → Go auth/session → Python hybrid retrieval → Go LLM → numeric verify → citations → Postgres.
 
@@ -87,6 +43,33 @@ flowchart TB
 | **Template pack** | `config/`, `config/locales/{en,ru}/`, `data/{tenant}/{domain}/` | Prompts, branding, knowledge documents |
 
 See [PLATFORM_VISION.md](PLATFORM_VISION.md) for positioning and [docs/en/ARCHITECTURE.md](docs/en/ARCHITECTURE.md) for details.
+
+---
+
+## Benchmarks
+
+| Metric | Result |
+|--------|--------|
+| Retrieval accuracy (99 cases in CI) | **100%** |
+| Adversarial retrieval suite | **30** cases, **100%** gated |
+| Numeric verification tolerance | **±0.01** vs retrieved context |
+| CI eval gate | Required on every push/PR |
+
+Source and suites: [docs/en/BENCHMARK.md](docs/en/BENCHMARK.md).
+
+---
+
+## Why Grounded LLM vs alternatives
+
+| | Grounded LLM | LangChain | Vercel AI SDK |
+|--|-------------|-----------|---------------|
+| Cited answers with source links | ✅ Built-in | ❌ Manual | ❌ Manual |
+| Numeric fact verification | ✅ Built-in | ❌ | ❌ |
+| Hybrid retrieval eval gate in CI | ✅ 99 cases | ❌ | ❌ |
+| Multi-tenant on-prem deploy | ✅ Helm/K8s | ❌ | ❌ |
+| Open-source + MIT | ✅ | ✅ | ✅ |
+
+Honest deep-dive: [docs/en/COMPARISON.md](docs/en/COMPARISON.md).
 
 ---
 
@@ -198,7 +181,6 @@ python -m conformance spec     # Offline OpenAPI / spec check
 | [docs/en/COMPATIBILITY.md](docs/en/COMPATIBILITY.md) | Supported stack matrix |
 | [conformance/](conformance/) | API + retrieval conformance tests |
 | [docs/en/](docs/en/) | Architecture, deploy, roadmap, templates |
-| [docs/ru/](docs/ru/) | Russian docs (legacy locale) |
 | [GOOD_FIRST_ISSUES.md](GOOD_FIRST_ISSUES.md) | Starter contributions |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute |
 | [SECURITY.md](SECURITY.md) | Security policy and vulnerability reporting |
