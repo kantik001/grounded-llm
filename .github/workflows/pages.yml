@@ -19,7 +19,9 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  # Keep older deploys running: a cancelled "deploy" check shows as a red X
+  # on the commit even when a later deploy succeeds.
+  cancel-in-progress: false
 
 jobs:
   deploy:
