@@ -8,7 +8,7 @@ grpcio>=1.62.0
 grpcio-health-checking>=1.62.0
 protobuf>=4.25.0,<6
 
-langchain-core>=0.2.0
+langchain-core>=1.5.1
 langchain-community>=0.4.2
 langchain-text-splitters>=0.2.0
 langchain-huggingface>=1.2.2
