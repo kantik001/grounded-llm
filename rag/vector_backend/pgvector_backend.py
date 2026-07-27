@@ -6,8 +6,7 @@ import os
 import uuid
 from typing import Any
 
-from langchain_huggingface import HuggingFaceEmbeddings
-
+from rag.embedding_cache import CachedHuggingFaceEmbeddings
 from rag.indexing import split_kb_documents
 from rag.vector_backend.base import VectorBackend
 from rag.vector_backend.chroma_backend import EMBEDDING_MODEL
@@ -48,7 +47,7 @@ class PGVectorBackend(VectorBackend):
 
     def __init__(self) -> None:
         self._store = None
-        self._embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+        self._embeddings = CachedHuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
         self._collection = (
             os.environ.get("PGVECTOR_COLLECTION", "grounded_chunks").strip() or "grounded_chunks"
         )

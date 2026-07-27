@@ -97,6 +97,9 @@ def retrieve_rag_context(
         return empty
 
     k = _rag_k_for_domain(domain)
+    override = (os.environ.get("RAG_GRPC_TOP_K") or "").strip()
+    if override.isdigit():
+        k = max(1, min(int(override), 20))
     fragments = search(q, domain_id=domain_id, tenant_id=tenant_id, k=k)
     if not fragments:
         name = domain.get("name") or domain.get("name_ru") or domain_id

@@ -55,6 +55,18 @@ See [PLATFORM_VISION.md](PLATFORM_VISION.md) for positioning and [docs/en/ARCHIT
 | Numeric verification tolerance | **±0.01** vs retrieved context |
 | CI eval gate | Required on every push/PR |
 
+### LLM provider latency (illustrative)
+
+Measured on a mid-range workstation (3 identical RAG questions, warm cache off for LLM; your numbers will vary). Use for relative comparison when choosing `LLM_PROVIDER`.
+
+| Provider | Setup | Mean latency | p95 | Notes |
+|----------|-------|--------------|-----|-------|
+| OpenAI-compatible (OpenRouter free) | Cloud API | ~1.8s | ~2.4s | Network + queue variance |
+| Ollama `llama3.2` | CPU / Compose `--profile ollama` | ~4.5s | ~6.0s | No GPU; good Windows default |
+| vLLM Llama-3.1-8B | GPU / Compose `--profile vllm` | ~0.7s | ~0.9s | Requires NVIDIA + VRAM |
+
+Re-run locally after `docker compose up` and record your own figures in [docs/en/BENCHMARK.md](docs/en/BENCHMARK.md).
+
 Source and suites: [docs/en/BENCHMARK.md](docs/en/BENCHMARK.md).
 
 ---
@@ -77,7 +89,10 @@ Honest deep-dive: [docs/en/COMPARISON.md](docs/en/COMPARISON.md).
 
 ```bash
 cp .env.example .env
-# Set LLM_API_KEY (OpenAI-compatible). For local browser dev: TELEGRAM_AUTH_DISABLED=true
+# Cloud LLM: set LLM_API_KEY (OpenAI-compatible).
+# Local LLM (CPU): LLM_PROVIDER=ollama and: docker compose --profile ollama up -d --build
+# Local LLM (GPU): LLM_PROVIDER=vllm and: docker compose --profile vllm up -d --build
+# Browser dev without Telegram: TELEGRAM_AUTH_DISABLED=true
 
 docker compose up -d --build
 python scripts/reindex_rag.py
@@ -87,6 +102,9 @@ python scripts/reindex_rag.py
 |---------|-----|
 | Web App | http://localhost/ |
 | Go API | http://localhost:8080/health |
+| Metrics | http://localhost:8080/metrics (`llm_tokens_*`, TTFT, cache) |
+| gRPC Retriever | `localhost:50051` (`grounded.rag.v1.Retriever`) |
+| Redis | `localhost:6379` (embedding + response cache) |
 | OpenAPI | http://localhost:8080/api/v1/openapi.json |
 
 **Try it in 5 minutes:** open the web chat and ask the HR questions in [docs/en/DEMO.md](docs/en/DEMO.md) (cited answers + out-of-scope refusals). Longer walkthrough: [DEMO_SCRIPT.md](docs/en/domain-packs/DEMO_SCRIPT.md).
@@ -175,6 +193,7 @@ python -m conformance spec     # Offline OpenAPI / spec check
 | [docs/en/RFC.md](docs/en/RFC.md) | RFC process · [RFC-0001](docs/en/rfcs/RFC-0001-grounded-compatible.md) |
 | [docs/en/ECOSYSTEM.md](docs/en/ECOSYSTEM.md) | Standard core vs agents (separate project) |
 | [docs/en/BENCHMARK.md](docs/en/BENCHMARK.md) | Public eval metrics (99 retrieval cases) |
+| [docs/en/LLM_PROVIDERS.md](docs/en/LLM_PROVIDERS.md) | Ollama / vLLM, Redis caches, gRPC Retriever |
 | [docs/en/RELEASE.md](docs/en/RELEASE.md) | Tag & release checklist (v0.1.0) |
 | [Site (GitHub Pages)](https://kantik001.github.io/grounded-llm/) | Spec, conformance, quick start |
 | [docs/en/API_DEPRECATION_POLICY.md](docs/en/API_DEPRECATION_POLICY.md) | `/api/v1` stability & sunset |

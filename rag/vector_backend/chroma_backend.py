@@ -7,8 +7,8 @@ import shutil
 from typing import Any
 
 from langchain_chroma import Chroma
-from langchain_huggingface import HuggingFaceEmbeddings
 
+from rag.embedding_cache import CachedHuggingFaceEmbeddings
 from rag.indexing import split_kb_documents
 from rag.vector_backend.base import VectorBackend
 
@@ -24,7 +24,7 @@ def _persist_dir() -> str:
 class ChromaBackend(VectorBackend):
     def __init__(self) -> None:
         self._store: Chroma | None = None
-        self._embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+        self._embeddings = CachedHuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
 
     def reset(self) -> None:
         self._store = None

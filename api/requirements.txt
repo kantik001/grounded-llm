@@ -3,6 +3,10 @@ python-dotenv==1.2.2
 flask>=3.0.0
 flask-cors>=4.0.0
 gunicorn>=22.0.0
+redis>=5.0.0
+grpcio>=1.62.0
+grpcio-health-checking>=1.62.0
+protobuf>=4.25.0,<6
 
 langchain-core>=0.2.0
 langchain-community>=0.4.2

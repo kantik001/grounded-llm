@@ -44,6 +44,25 @@ python scripts/run_adversarial_e2e.py --base-url http://127.0.0.1:8080
 
 ---
 
+## LLM provider latency (local vs cloud)
+
+Illustrative numbers for README; re-measure on your hardware after enabling Compose profiles.
+
+| Provider | Command | Mean (3 asks) | p95 | Hardware note |
+|----------|---------|---------------|-----|---------------|
+| OpenRouter / OpenAI-compatible | `LLM_PROVIDER=openai` | ~1.8s | ~2.4s | Cloud RTT |
+| Ollama `llama3.2` | `docker compose --profile ollama up` + `LLM_PROVIDER=ollama` | ~4.5s | ~6.0s | CPU-friendly |
+| vLLM Llama-3.1-8B-Instruct | `docker compose --profile vllm up` + `LLM_PROVIDER=vllm` | ~0.7s | ~0.9s | NVIDIA GPU |
+
+Procedure:
+
+1. Warm retrieval index (`python scripts/reindex_rag.py`).
+2. Ask the same 3 DEMO questions via `/api/v1/.../message` (or web chat).
+3. Record wall-clock from request start to full assistant reply (or scrape `llm_latency_seconds_*` / `llm_ttft_seconds_*` from `/metrics`).
+4. Repeat with Redis response cache: second identical ask should return `X-Cache: HIT`.
+
+---
+
 ## Release reporting
 
 After each tag `v*.*.*`, maintainers SHOULD attach bench summary:

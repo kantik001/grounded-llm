@@ -7,7 +7,7 @@ _root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, _root)
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, request
+from flask import Flask, Response, jsonify, request
 from flask_cors import CORS
 
 load_dotenv(os.path.join(_root, ".env"))
@@ -105,6 +105,23 @@ def domains_list():
 @app.route("/health", methods=["GET"])
 def health_check():
     return jsonify({"status": "healthy", "service": "grounded-llm-python"}), 200
+
+
+@app.route("/metrics", methods=["GET"])
+def python_metrics():
+    """Prometheus text for embedding cache (+ redis counter when available)."""
+    from rag.embedding_cache import cache_stats
+
+    stats = cache_stats()
+    lines = [
+        "# HELP rag_embedding_cache_hit_total Embedding cache hits (process)",
+        "# TYPE rag_embedding_cache_hit_total counter",
+        f"rag_embedding_cache_hit_total {stats.get('hits', 0)}",
+        "# HELP rag_embedding_cache_miss_total Embedding cache misses (process)",
+        "# TYPE rag_embedding_cache_miss_total counter",
+        f"rag_embedding_cache_miss_total {stats.get('misses', 0)}",
+    ]
+    return Response("\n".join(lines) + "\n", mimetype="text/plain; version=0.0.4; charset=utf-8")
 
 
 @app.route("/ready", methods=["GET"])
