@@ -9,12 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Optional **grounded-guardrails** verify wire: `GUARDRAILS_MODE=local|remote|hybrid`, `GUARDRAILS_GRPC_ADDR`, `GUARDRAILS_PII_BLOCK`
-- Proto client stubs (`api/proto/guardrails.proto` → `server/gen/guardrails/v1`)
-- Compose override [`docker-compose.guardrails.yml`](docker-compose.guardrails.yml) for sibling `grounded-guardrails`
-- Docs: [docs/en/GUARDRAILS.md](docs/en/GUARDRAILS.md); architecture / deploy / network / verifier updated for optional `:50052`
-- Docs completeness: EN/RU knowledge-base verify path, regenerated `docs/assets/architecture.png` with optional guardrails `:50052`
-- Historical plan note: guardrails port is `:50052` (not `:50051`)
+- Docs: link sibling [grounded-bench](https://github.com/kantik001/grounded-bench) (offline NVR/CP/HR/RR) from ECOSYSTEM / BENCHMARK / README
 
 ## [0.3.0] - 2026-07-27
 
