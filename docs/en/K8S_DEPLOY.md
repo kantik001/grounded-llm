@@ -28,7 +28,8 @@ Ingress (optional)
     └── server (Go :8080)
             ├── postgres (StatefulSet)
             ├── python (RAG HTTP :5000 + gRPC :50051) → chroma PVC
-            └── redis (optional — bring-your-own; Compose always includes it)
+            ├── redis (optional — bring-your-own; Compose always includes it)
+            └── guardrails :50052 (optional external — not in Helm yet; see GUARDRAILS.md)
 ```
 
 > **Chart lag:** the Helm chart may not yet ship a Redis Deployment. For caches / `REDIS_URL`, deploy Redis in-cluster (or disable caches). Set `LLM_PROVIDER` / `LLM_BASE_URL` via secrets/env like Compose. See [LLM_PROVIDERS.md](./LLM_PROVIDERS.md).

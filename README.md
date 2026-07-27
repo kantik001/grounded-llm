@@ -38,9 +38,26 @@ Grounded LLM separates **orchestration** (Go: auth, sessions, LLM, verify) from 
 
 ![Grounded LLM architecture](docs/assets/architecture.png)
 
-**Message flow:** client → Go auth/session → Python hybrid retrieval → Go LLM → numeric verify → citations → Postgres.
+**Message flow (default):** client → Go auth/session → Python hybrid retrieval → Go LLM → **numeric verify (in-process)** → citations → Postgres.
 
-**Numeric verify:** after the LLM answer, Go extracts numbers from the reply and checks each appears in retrieved context (±0.01). Answers with unsupported numbers are rejected. Details: [rag-verifier.md](docs/en/knowledge-base/rag-verifier.md).
+**Optional remote verify:** same path, but after LLM Go calls [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) gRPC **`:50052`** (`GUARDRAILS_MODE=remote|hybrid`). Default remains `local` (Spec behavior, CI-safe). See [GUARDRAILS.md](docs/en/GUARDRAILS.md).
+
+```text
+  clients / agents
+        │
+        ▼
+  Go server :8080  ──►  Python RAG :5000 / Retriever :50051
+        │                        ▲
+        │ LLM                    │ retrieve
+        ▼                        │
+  verify ── local (default) ─────┘
+        └─ optional ──► grounded-guardrails :50052
+        │
+        ▼
+  citations → Postgres
+```
+
+**Numeric verify:** after the LLM answer, numbers in the reply must appear in retrieved context (±0.01). Unsupported numbers → reject. Details: [rag-verifier.md](docs/en/knowledge-base/rag-verifier.md).
 
 | Layer | Path | Purpose |
 |-------|------|---------|
@@ -109,6 +126,7 @@ python scripts/reindex_rag.py
 | Go API | http://localhost:8080/health |
 | Metrics | http://localhost:8080/metrics (`llm_tokens_*`, TTFT, cache) |
 | gRPC Retriever | `localhost:50051` (`grounded.rag.v1.Retriever`) |
+| Guardrails (optional) | `localhost:50052` — see [GUARDRAILS.md](docs/en/GUARDRAILS.md) |
 | Redis | `localhost:6379` (embedding + response cache) |
 | OpenAPI | http://localhost:8080/api/v1/openapi.json |
 

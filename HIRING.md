@@ -116,7 +116,7 @@ This document explains **why** Grounded LLM is built the way it is. Use it for t
 |------|----------------|
 | API / orchestration | Go, Gin, PostgreSQL |
 | Retrieval | Python, Flask + Gunicorn, LangChain, Chroma/Qdrant/pgvector, Redis embedding cache, gRPC Retriever |
-| Orchestration | Go (Gin), OpenAI-compatible LLM (`LLM_PROVIDER`), numeric verify, response cache |
+| Orchestration | Go (Gin), OpenAI-compatible LLM (`LLM_PROVIDER`), numeric verify (local Spec; optional remote guardrails `:50052`), response cache |
 | Embeddings | `intfloat/multilingual-e5-small` (in-container) |
 | LLM | OpenAI-compatible API (configurable endpoint) |
 | Deploy | Docker Compose, nginx |

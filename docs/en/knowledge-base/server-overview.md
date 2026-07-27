@@ -22,7 +22,8 @@
 | `config.go` | config from env |
 | `llm.go`, `llm_stream.go` | OpenAI-compatible chat/completions + stream |
 | `rag_chat.go`, `rag_pipeline.go` | RAG pipeline, citations |
-| `rag_verify.go` | number verify, disclaimer |
+| `rag_verify.go` | number verify (local Spec path) |
+| `guardrails_client.go` | optional remote verify → grounded-guardrails `:50052` |
 | `rag_log.go` | `[RAG]` logs |
 | `domains.go` | `domains.json` catalog |
 | `locale.go` | `config/locales/{ru,en}`, `X-Locale` |
@@ -57,6 +58,7 @@ flowchart TB
     Redis[(Redis caches)]
     Py[python RAG HTTP :5000 + gRPC :50051]
     LLM[OpenAI-compatible LLM\nOpenRouter / Ollama / vLLM]
+    GR[grounded-guardrails :50052\noptional]
 
     Web --> Go
     Agents -->|Retriever| Py
@@ -65,6 +67,7 @@ flowchart TB
     Go -->|/rag/context| Py
     Py -->|embedding cache| Redis
     Go -->|/v1/chat/completions| LLM
+    Go -.->|GUARDRAILS_MODE=remote/hybrid| GR
 ```
 
 ---
@@ -72,11 +75,12 @@ flowchart TB
 ## `main()` startup
 
 1. `loadConfig()` — `.env`
-2. Postgres + `runAllMigrations`
-3. `loadDomainCatalog()`, `initLocaleConfig()`
-4. `newChatStore`
-5. Gin routes + `localeMiddleware` + `startConfigReloadWatcher`
-6. Listen on `:8080`
+2. `initGuardrailsClient()` when `GUARDRAILS_MODE` is `remote` / `hybrid`
+3. Postgres + `runAllMigrations`
+4. `loadDomainCatalog()`, `initLocaleConfig()`
+5. `newChatStore`
+6. Gin routes + `localeMiddleware` + `startConfigReloadWatcher`
+7. Listen on `:8080`
 
 ---
 

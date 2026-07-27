@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Optional **grounded-guardrails** verify wire: `GUARDRAILS_MODE=local|remote|hybrid`, `GUARDRAILS_GRPC_ADDR`, `GUARDRAILS_PII_BLOCK`
 - Proto client stubs (`api/proto/guardrails.proto` → `server/gen/guardrails/v1`)
 - Compose override [`docker-compose.guardrails.yml`](docker-compose.guardrails.yml) for sibling `grounded-guardrails`
-- Docs: [docs/en/GUARDRAILS.md](docs/en/GUARDRAILS.md); ecosystem table updated
+- Docs: [docs/en/GUARDRAILS.md](docs/en/GUARDRAILS.md); architecture / deploy / network / verifier updated for optional `:50052`
 
 ## [0.3.0] - 2026-07-27
 

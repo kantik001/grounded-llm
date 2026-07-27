@@ -109,6 +109,7 @@ We win on **trust, deployability, and measured RAG quality**—not on feature co
 - Local LLM providers (`LLM_PROVIDER=openai|ollama|vllm`) + Compose profiles
 - Redis embedding + semantic response caches (`X-Cache`)
 - gRPC Retriever on Python `:50051`
+- Optional remote verify via [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) `:50052` (`GUARDRAILS_MODE`)
 - Prometheus LLM token / TTFT metrics — see [docs/en/LLM_PROVIDERS.md](docs/en/LLM_PROVIDERS.md)
 
 ### Later — scale (Phase C–D)

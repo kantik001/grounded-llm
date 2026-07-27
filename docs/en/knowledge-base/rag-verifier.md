@@ -2,7 +2,8 @@
 
 **Source:** `rag/verifier.py`  
 **Tests:** `tests/test_verifier.py`  
-**Production:** primary check in Go — `server/rag_verify.go` (`verifyRAGAnswer`, `appendRAGDisclaimer`)
+**Production:** primary check in Go — `server/rag_verify.go` (`verifyRAGAnswer`, default **local** Spec path).  
+**Optional:** remote gRPC to [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) `:50052` when `GUARDRAILS_MODE=remote|hybrid` — see [GUARDRAILS.md](../GUARDRAILS.md).
 
 ---
 
@@ -73,13 +74,13 @@ Used to verify **answer body** without trailing boilerplate.
 
 ## Python vs Go
 
-| | `rag/verifier.py` | `server/rag_verify.go` |
-|--|-------------------|------------------------|
-| Production | tests / reference | **yes**, after each RAG reply |
-| Number logic | same idea | `verifyRAGAnswer`, `extractNumbersFromText` |
-| Disclaimer | constant for strip | `appendRAGDisclaimer` |
+| | `rag/verifier.py` | `server/rag_verify.go` | grounded-guardrails |
+|--|-------------------|------------------------|---------------------|
+| Production | tests / reference | **default** after each RAG reply (`local`) | optional `remote` / `hybrid` |
+| Number logic | same idea | `verifyRAGAnswer` → local extract or gRPC `VerifyText` | Rust reference + Go host parity |
+| Disclaimer | constant for strip | `appendRAGDisclaimer` | n/a (runs on answer body) |
 
-Keep logic **in sync** when changing rules.
+Keep Spec tolerance (**±0.01**) in sync across local Go and guardrails.
 
 ---
 
@@ -113,4 +114,4 @@ Run: `pytest tests/test_verifier.py` (no Chroma, no LLM).
 
 ## Summary
 
-`verifier.py` — **anti-hallucination for numbers** and answer cleanup utilities. Production duplicate on Go; Python is reference for pytest and documentation.
+`verifier.py` — **anti-hallucination for numbers** and answer cleanup utilities. Production default is Go in-process verify; optional remote path is grounded-guardrails. Python remains reference for pytest.
