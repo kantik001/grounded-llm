@@ -8,6 +8,8 @@ ignore = ["E501"]
 
 [lint.per-file-ignores]
 "api/app.py" = ["E402"]
+"api/retriever_pb2.py" = ["E", "F", "I", "W"]
+"api/retriever_pb2_grpc.py" = ["E", "F", "I", "W"]
 
 [format]
 quote-style = "double"

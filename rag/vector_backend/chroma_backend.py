@@ -7,6 +7,7 @@ import shutil
 from typing import Any
 
 from langchain_chroma import Chroma
+
 from rag.embedding_cache import CachedHuggingFaceEmbeddings
 from rag.indexing import split_kb_documents
 from rag.vector_backend.base import VectorBackend

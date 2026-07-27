@@ -48,13 +48,3 @@ func resolveLLMProvider(cfg *Config) {
 		}
 	}
 }
-
-func llmAPIKeyConfigured() bool {
-	if config == nil {
-		return false
-	}
-	if config.LLMMock {
-		return true
-	}
-	return strings.TrimSpace(config.LLMAPIKey) != ""
-}

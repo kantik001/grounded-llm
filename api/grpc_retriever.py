@@ -8,7 +8,6 @@ from concurrent import futures
 
 import grpc
 from grpc_health.v1 import health, health_pb2, health_pb2_grpc
-
 from rag.retrieval import retrieve_rag_context
 
 logger = logging.getLogger(__name__)

@@ -27,10 +27,6 @@ type llmStreamDelta struct {
 	Usage *LLMUsage `json:"usage,omitempty"`
 }
 
-func callLLMCompletionStream(ctx context.Context, messages []Message, onDelta func(string) error) (string, error) {
-	return callLLMCompletionStreamForTenant(ctx, "default", messages, onDelta)
-}
-
 func callLLMCompletionStreamForTenant(ctx context.Context, tenantID string, messages []Message, onDelta func(string) error) (string, error) {
 	if llmMockEnabled() {
 		full, err := mockLLMCompletion(messages)
