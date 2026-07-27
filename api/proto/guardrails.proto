@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package guardrails.v1;
+
+option go_package = "grounded_llm_server/gen/guardrails/v1;guardrailsv1";
+
+// GuardrailsService verifies streaming tokens and complete text answers.
+// Listen address for this service: :50052 (Retriever stays on :50051).
+service GuardrailsService {
+  // Streaming verification: client sends token/text batches; server returns verdicts.
+  rpc VerifyStream(stream TokenBatch) returns (stream Verdict);
+
+  // Unary: verify a finished answer (optionally against retrieval context).
+  rpc VerifyText(TextRequest) returns (TextVerdict);
+}
+
+message TokenBatch {
+  repeated uint32 token_ids = 1;
+  string tenant_id = 2;
+  string session_id = 3;
+  // Decoded UTF-8 chunk from the inference server (preferred for PII/numeric).
+  string text_delta = 4;
+}
+
+message Verdict {
+  enum Action {
+    PASS = 0;
+    BLOCK = 1;
+    FLAG = 2;
+  }
+  Action action = 1;
+  string reason = 2;
+  repeated string matched_rules = 3;
+  float latency_ms = 4;
+}
+
+message TextRequest {
+  string text = 1;
+  string context = 2;
+  string tenant_id = 3;
+  // Empty means default rules: numeric_verify + pii_block.
+  repeated string rules = 4;
+}
+
+message TextVerdict {
+  bool passed = 1;
+  repeated string violations = 2;
+  float latency_ms = 3;
+}

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Optional **grounded-guardrails** verify wire: `GUARDRAILS_MODE=local|remote|hybrid`, `GUARDRAILS_GRPC_ADDR`, `GUARDRAILS_PII_BLOCK`
+- Proto client stubs (`api/proto/guardrails.proto` → `server/gen/guardrails/v1`)
+- Compose override [`docker-compose.guardrails.yml`](docker-compose.guardrails.yml) for sibling `grounded-guardrails`
+- Docs: [docs/en/GUARDRAILS.md](docs/en/GUARDRAILS.md); ecosystem table updated
+
 ## [0.3.0] - 2026-07-27
 
 Local inference, caching, and agent-facing retrieval for Staff AI Infra portfolio depth.

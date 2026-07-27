@@ -29,6 +29,7 @@ Success metric: **new grounded assistant from template in &lt;3 days**, eval pas
 |------------|------------------|---------------------------|
 | **ReAct / tool-calling agents** | [grounded-agent](https://github.com/kantik001/grounded-agent) | Calls gRPC Retriever / `POST /rag/context` + MCP Gateway tools |
 | **MCP gateway / registry** | [mcp-gateway](https://github.com/kantik001/mcp-gateway) | Proxies tools; retrieval stays in Grounded |
+| **Token-level / remote verify** | [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) | Optional `GUARDRAILS_MODE=remote` → gRPC `:50052` (`VerifyText`); default remains in-process Spec verify |
 | **Visual workflow builder** | Not planned | Out of scope per [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md) |
 | **General chatbot (no KB)** | Not planned | Out of scope |
 | **LLM inference serving (vLLM ops)** | Infra / MLOps stack | Grounded consumes OpenAI-compatible API |

@@ -1,0 +1,32 @@
+# Optional override: wire grounded-guardrails into the Go server verify path.
+#
+# Requires sibling clone:
+#   Desktop/grounded-llm
+#   Desktop/grounded-guardrails
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.guardrails.yml up -d --build
+#
+# Or without Docker for guardrails (run `go run ./cmd/server` there), set in .env:
+#   GUARDRAILS_MODE=remote
+#   GUARDRAILS_GRPC_ADDR=localhost:50052
+
+services:
+  guardrails:
+    build:
+      context: ../grounded-guardrails
+      dockerfile: Dockerfile
+    container_name: grounded_guardrails
+    ports:
+      - "50052:50052"
+    environment:
+      GRPC_PORT: "50052"
+    restart: unless-stopped
+
+  server:
+    environment:
+      - GUARDRAILS_MODE=${GUARDRAILS_MODE:-remote}
+      - GUARDRAILS_GRPC_ADDR=${GUARDRAILS_GRPC_ADDR:-guardrails:50052}
+      - GUARDRAILS_PII_BLOCK=${GUARDRAILS_PII_BLOCK:-false}
+    depends_on:
+      - guardrails

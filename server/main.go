@@ -29,6 +29,8 @@ func main() {
 		log.Fatalf("%v", err)
 	}
 	initRedis()
+	initGuardrailsClient(config)
+	defer closeGuardrailsClient()
 	logStartup(config)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
