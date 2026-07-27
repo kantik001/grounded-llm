@@ -31,6 +31,16 @@ updates:
       # Keep protobuf<6 for current grpcio/otel stack (see api/requirements.txt pin).
       - dependency-name: "protobuf"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "sentence-transformers"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "pypdf"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "gunicorn"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "redis"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "flask-cors"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: pip
     directory: /tests
