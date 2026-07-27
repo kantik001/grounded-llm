@@ -51,14 +51,19 @@
 ```mermaid
 flowchart TB
     Web[webapp / Telegram / API clients]
+    Agents[Agents gRPC]
     Go[server Go :8080]
     PG[(PostgreSQL)]
-    Py[python RAG :5000]
-    LLM[OpenRouter / LLM API]
+    Redis[(Redis caches)]
+    Py[python RAG HTTP :5000 + gRPC :50051]
+    LLM[OpenAI-compatible LLM\nOpenRouter / Ollama / vLLM]
 
     Web --> Go
+    Agents -->|Retriever| Py
     Go --> PG
+    Go -->|response cache| Redis
     Go -->|/rag/context| Py
+    Py -->|embedding cache| Redis
     Go -->|/v1/chat/completions| LLM
 ```
 
