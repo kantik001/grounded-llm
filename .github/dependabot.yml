@@ -28,6 +28,19 @@ updates:
       # Majors need a coordinated RAG-stack bump, not weekly spam.
       - dependency-name: "langchain*"
         update-types: ["version-update:semver-major"]
+      # Keep protobuf<6 for current grpcio/otel stack (see api/requirements.txt pin).
+      - dependency-name: "protobuf"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "sentence-transformers"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "pypdf"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "gunicorn"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "redis"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "flask-cors"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: pip
     directory: /tests
@@ -38,6 +51,19 @@ updates:
       tests-pip:
         patterns:
           - "*"
+    ignore:
+      - dependency-name: "langchain*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "protobuf"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "sentence-transformers"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "pypdf"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "gunicorn"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "redis"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
