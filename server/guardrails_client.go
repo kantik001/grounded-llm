@@ -11,6 +11,7 @@ import (
 	pb "grounded_llm_server/gen/guardrails/v1"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
@@ -43,10 +44,7 @@ func initGuardrailsClient(cfg *Config) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	conn, err := grpc.DialContext(ctx, addr,
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(),
-	)
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		if mode == GuardrailsModeRemote {
 			log.Fatalf("Guardrails remote mode: dial %s: %v", addr, err)
@@ -54,11 +52,32 @@ func initGuardrailsClient(cfg *Config) {
 		log.Printf("Guardrails hybrid: dial %s failed (%v); using local verify", addr, err)
 		return
 	}
+	if err := waitGuardrailsReady(ctx, conn); err != nil {
+		_ = conn.Close()
+		if mode == GuardrailsModeRemote {
+			log.Fatalf("Guardrails remote mode: connect %s: %v", addr, err)
+		}
+		log.Printf("Guardrails hybrid: connect %s failed (%v); using local verify", addr, err)
+		return
+	}
 	guardrailsMu.Lock()
 	guardrailsConn = conn
 	guardrailsClient = pb.NewGuardrailsServiceClient(conn)
 	guardrailsMu.Unlock()
 	log.Printf("Guardrails: %s mode via gRPC %s", mode, addr)
+}
+
+func waitGuardrailsReady(ctx context.Context, conn *grpc.ClientConn) error {
+	conn.Connect()
+	for {
+		state := conn.GetState()
+		if state == connectivity.Ready {
+			return nil
+		}
+		if !conn.WaitForStateChange(ctx, state) {
+			return fmt.Errorf("timeout waiting for Ready (last state=%s)", state.String())
+		}
+	}
 }
 
 func closeGuardrailsClient() {
