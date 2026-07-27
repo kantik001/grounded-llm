@@ -147,8 +147,9 @@ TELEGRAM_AUTH_DISABLED=true
 | webapp nginx | `http://server:8080` |
 | server | `postgres:5432` |
 | agents (optional) | `python:50051` gRPC Retriever |
+| guardrails (optional) | sibling compose override → `:50052` — [GUARDRAILS.md](../GUARDRAILS.md) |
 
-From host: `localhost:8080` (Go), `localhost/api/` (via nginx), `127.0.0.1:5000` / `:50051` / `:6379` (loopback only in local compose).
+From host: `localhost:8080` (Go), `localhost/api/` (via nginx), `127.0.0.1:5000` / `:50051` / `:6379` (loopback only in local compose); optional `:50052` with guardrails override.
 
 ---
 

@@ -10,11 +10,12 @@ Hardening guidance for production deployments.
 | Go server | 8080 | Prefer via nginx/ingress only (`127.0.0.1:8080` in prod compose) |
 | Python RAG (HTTP) | 5000 | **No** — internal / loopback only (`docker-compose.prod.yml` removes host publish) |
 | Python gRPC Retriever | 50051 | **No** — internal only (prod compose exposes without host publish) |
+| grounded-guardrails (optional) | 50052 | **No** — internal only; enable via `docker-compose.guardrails.yml` |
 | Redis | 6379 | **No** — internal only (local compose binds `127.0.0.1`) |
 | Postgres | 5432 | **No** — internal network only |
 | Ollama / vLLM | 11434 / 8000 | **No** — optional profiles; keep on internal network |
 
-In Kubernetes, use `NetworkPolicy` to allow server → python/postgres/redis only (and agents → python:50051 if needed).
+In Kubernetes, use `NetworkPolicy` to allow server → python/postgres/redis (and optionally server → guardrails:50052; agents → python:50051).
 
 **Production Compose:**
 
