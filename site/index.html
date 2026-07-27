@@ -4,17 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Grounded LLM &mdash; Open standard for verified document assistants</title>
-  <meta name="description" content="Grounded LLM &mdash; open spec for cited, verified document assistants. Local LLM (Ollama/vLLM), Redis caches, gRPC Retriever, hybrid BM25+RRF, 99 eval cases, on-prem deploy.">
+  <meta name="description" content="Grounded LLM v0.3.0 &mdash; cited RAG with local LLM (Ollama/vLLM), Redis caches, gRPC Retriever, hybrid BM25+RRF, 99 eval cases, on-prem deploy.">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
-    <p class="eyebrow">Open platform &middot; Spec v1 &middot; <span class="release-tag">main &rarr; v0.3</span></p>
+    <p class="eyebrow">Open platform &middot; Spec v1 &middot; <span class="release-tag">v0.3.0</span></p>
     <h1>Grounded LLM</h1>
     <p class="lead">Reference implementation of an <strong>open spec</strong> for document-grounded assistants: <strong>citations</strong>, <strong>numeric verify</strong>, and <strong>measurable retrieval quality</strong> &mdash; on your infrastructure.</p>
     <div class="actions">
       <a class="btn primary" href="https://github.com/kantik001/grounded-llm">GitHub</a>
-      <a class="btn release" href="https://github.com/kantik001/grounded-llm/releases/tag/v0.2.0">Latest tag v0.2.0</a>
+      <a class="btn release" href="https://github.com/kantik001/grounded-llm/releases/tag/v0.3.0">Release v0.3.0</a>
       <a class="btn" href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/spec/GROUNDED_SPEC_v1.md">Read Spec v1</a>
       <a class="btn sponsor" href="https://github.com/sponsors/kantik001">&#9829; Sponsor</a>
     </div>
@@ -22,7 +22,7 @@
 
   <main>
     <section>
-      <h2>What&apos;s on main (toward v0.3)</h2>
+      <h2>What&apos;s in v0.3.0</h2>
       <ul class="highlights">
         <li><strong>Local inference</strong> &mdash; <code>LLM_PROVIDER=openai|ollama|vllm</code> + Compose profiles (<code>--profile ollama</code> / <code>vllm</code>)</li>
         <li><strong>Redis caches</strong> &mdash; embedding vectors + semantic LLM responses; HTTP <code>X-Cache: HIT|MISS</code></li>
@@ -57,7 +57,7 @@ docker compose up -d --build
 pip install -r conformance/requirements.txt
 python -m conformance spec</code></pre>
       <p>Full guide: <a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/DEPLOY.md">Deploy</a> &middot; <a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/LLM_PROVIDERS.md">LLM providers</a> &middot; <a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/QUICKSTART_SDK.md">SDK</a></p>
-      <p class="muted-note">Latest tagged images: <code>ghcr.io/kantik001/grounded-llm-server:0.2.0</code> &middot; <code>-python</code> &middot; <code>-webapp</code> (main is ahead of the tag)</p>
+      <p class="muted-note">Tagged images on GHCR: <code>ghcr.io/kantik001/grounded-llm-server:0.3.0</code> &middot; <code>-python</code> &middot; <code>-webapp</code></p>
     </section>
 
     <section>
@@ -94,7 +94,7 @@ python -m conformance spec --json</code></pre>
   </main>
 
   <footer>
-    <p>MIT License &middot; <a href="https://github.com/kantik001/grounded-llm">kantik001/grounded-llm</a> &middot; latest tag <a href="https://github.com/kantik001/grounded-llm/releases/tag/v0.2.0">v0.2.0</a> &middot; main includes Unreleased v0.3</p>
+    <p>MIT License &middot; <a href="https://github.com/kantik001/grounded-llm">kantik001/grounded-llm</a> &middot; <a href="https://github.com/kantik001/grounded-llm/releases/tag/v0.3.0">v0.3.0</a> (2026-07-27)</p>
   </footer>
   <script>
     fetch('packs.json').then(r => r.json()).then(data => {
