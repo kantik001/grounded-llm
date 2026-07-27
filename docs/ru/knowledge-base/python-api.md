@@ -78,8 +78,6 @@ sh api/entrypoint.sh
 
 Docker: `CMD ["/app/api/entrypoint.sh"]` в `Dockerfile.python`. Актуальное описание: [../../en/knowledge-base/python-api.md](../../en/knowledge-base/python-api.md).
 
-Docker: `CMD ["python", "api/app.py"]` в `Dockerfile.python`.
-
 ---
 
 ## Дальше
