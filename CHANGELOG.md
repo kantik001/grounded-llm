@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Docs: link sibling [grounded-bench](https://github.com/kantik001/grounded-bench) (offline NVR/CP/HR/RR) from ECOSYSTEM / BENCHMARK / README
+- Docs: link sibling [grounded-vllm](https://github.com/kantik001/grounded-vllm) (serving-path verify proxy) from ECOSYSTEM / LLM_PROVIDERS
 
 ## [0.3.0] - 2026-07-27
 

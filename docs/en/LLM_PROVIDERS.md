@@ -24,6 +24,12 @@ docker compose exec ollama ollama pull llama3.2
 # + vLLM (NVIDIA GPU)
 docker compose --profile vllm up -d
 # .env: LLM_PROVIDER=vllm
+
+# Optional: serve through grounded-vllm verify proxy (sibling repo)
+# grounded-vllm serve --upstream http://127.0.0.1:8000 --guardrails 127.0.0.1:50052 --port 8001
+# .env: LLM_PROVIDER=vllm
+#       LLM_BASE_URL=http://127.0.0.1:8001/v1
+# See https://github.com/kantik001/grounded-vllm
 ```
 
 ## Caching
