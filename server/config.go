@@ -39,6 +39,11 @@ type Config struct {
 	MessageRetentionDays   int
 	SessionRetentionDays   int
 	RetentionIntervalHours int
+
+	// Guardrails (optional remote verify via grounded-guardrails :50052)
+	GuardrailsMode     string // local | remote | hybrid
+	GuardrailsGRPCAddr string
+	GuardrailsPIIBlock bool
 }
 
 var config *Config
@@ -98,6 +103,10 @@ func loadConfig() *Config {
 		MessageRetentionDays:   msgRetention,
 		SessionRetentionDays:   sessRetention,
 		RetentionIntervalHours: retentionHours,
+
+		GuardrailsMode:     getEnv("GUARDRAILS_MODE", "local"),
+		GuardrailsGRPCAddr: getEnv("GUARDRAILS_GRPC_ADDR", ""),
+		GuardrailsPIIBlock: isTruthyEnv("GUARDRAILS_PII_BLOCK"),
 	}
 	resolveLLMProvider(cfg)
 	return cfg
@@ -137,6 +146,14 @@ func logStartup(cfg *Config) {
 	if cfg.MessageRetentionDays > 0 || cfg.SessionRetentionDays > 0 {
 		log.Printf("Retention: messages=%d days, sessions=%d days, interval=%dh",
 			cfg.MessageRetentionDays, cfg.SessionRetentionDays, cfg.RetentionIntervalHours)
+	}
+	log.Printf("Guardrails mode: %s", normalizeGuardrailsMode(cfg.GuardrailsMode))
+	if normalizeGuardrailsMode(cfg.GuardrailsMode) != GuardrailsModeLocal {
+		addr := cfg.GuardrailsGRPCAddr
+		if addr == "" {
+			addr = "localhost:50052"
+		}
+		log.Printf("Guardrails gRPC: %s (pii_block=%v)", addr, cfg.GuardrailsPIIBlock)
 	}
 	if cfg.TelegramAuthDisabled {
 		log.Printf("Telegram auth: DISABLED (dev mode only)")

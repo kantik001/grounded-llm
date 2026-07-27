@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"regexp"
 	"strconv"
@@ -84,16 +85,51 @@ func verifyRAGAnswer(answer string, fragments []RAGFragment, locale string) (boo
 	if answer == "" {
 		return false, "Empty answer"
 	}
-	var ctx strings.Builder
+	var ctxBuilder strings.Builder
 	for _, f := range fragments {
-		ctx.WriteString(f.Content)
-		ctx.WriteByte('\n')
+		ctxBuilder.WriteString(f.Content)
+		ctxBuilder.WriteByte('\n')
 	}
-	numsAns := extractNumbersFromText(answerBodyForVerification(answer, locale))
+	contextText := ctxBuilder.String()
+	body := answerBodyForVerification(answer, locale)
+
+	mode := GuardrailsModeLocal
+	piiBlock := false
+	tenantID := "default"
+	if config != nil {
+		mode = normalizeGuardrailsMode(config.GuardrailsMode)
+		piiBlock = config.GuardrailsPIIBlock
+		if config.DefaultTenantID != "" {
+			tenantID = config.DefaultTenantID
+		}
+	}
+
+	switch mode {
+	case GuardrailsModeRemote:
+		ok, reason, err := verifyViaGuardrails(body, contextText, tenantID, piiBlock)
+		if err != nil {
+			return false, fmt.Sprintf("Guardrails unavailable: %v", err)
+		}
+		return ok, reason
+	case GuardrailsModeHybrid:
+		ok, reason, err := verifyViaGuardrails(body, contextText, tenantID, piiBlock)
+		if err == nil {
+			return ok, reason
+		}
+		log.Printf("Guardrails hybrid fallback to local: %v", err)
+		return verifyRAGAnswerLocal(body, contextText)
+	default:
+		return verifyRAGAnswerLocal(body, contextText)
+	}
+}
+
+// verifyRAGAnswerLocal is the in-process numeric check (Spec v1 behavior).
+func verifyRAGAnswerLocal(body, contextText string) (bool, string) {
+	numsAns := extractNumbersFromText(body)
 	if len(numsAns) == 0 {
 		return true, "Verification passed"
 	}
-	numsCtx := extractNumbersFromText(ctx.String())
+	numsCtx := extractNumbersFromText(contextText)
 	var missing []float64
 	for _, n := range numsAns {
 		found := false
