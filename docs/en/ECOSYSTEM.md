@@ -27,8 +27,8 @@ Success metric: **new grounded assistant from template in &lt;3 days**, eval pas
 
 | Capability | Separate project | Integration with Grounded |
 |------------|------------------|---------------------------|
-| **ReAct / tool-calling agents** | Agent runtime (future repo) | Calls `POST /api/v1/message` or `POST /rag/context` as a tool |
-| **MCP gateway / registry** | MCP adapter service | Proxies tools; retrieval stays in Grounded |
+| **ReAct / tool-calling agents** | [grounded-agent](https://github.com/kantik001/grounded-agent) | Calls gRPC Retriever / `POST /rag/context` + MCP Gateway tools |
+| **MCP gateway / registry** | [mcp-gateway](https://github.com/kantik001/mcp-gateway) | Proxies tools; retrieval stays in Grounded |
 | **Visual workflow builder** | Not planned | Out of scope per [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md) |
 | **General chatbot (no KB)** | Not planned | Out of scope |
 | **LLM inference serving (vLLM ops)** | Infra / MLOps stack | Grounded consumes OpenAI-compatible API |
@@ -68,16 +68,17 @@ Success metric: **new grounded assistant from template in &lt;3 days**, eval pas
 
 ---
 
-## Agent project (planned, separate repo)
+## Agent project (separate repo)
 
-**Working name:** grounded-agents (or similar)
+**Repo:** [github.com/kantik001/grounded-agent](https://github.com/kantik001/grounded-agent)
 
 **Scope:**
 
-- ReAct / LangGraph-style loops over **tools**
-- One canonical tool: `grounded_retrieve` → Grounded `POST /rag/context`
-- Optional: `grounded_chat` → `POST /api/v1/message`
-- BDD step-library search, IDE plugins, bank QA scenarios — **consumer use cases**, not platform core
+- Go ReAct loop over **tools** (max 5 steps)
+- Canonical tool: `retrieve[...]` → Grounded gRPC `Retriever` / HTTP `/rag/context`
+- MCP tools via [mcp-gateway](https://github.com/kantik001/mcp-gateway): `call_tool[server.tool, {...}]`
+- Redis session memory (`session:{id}`)
+- Optional: compose `--profile full` with Grounded LLM GHCR images
 
 **Non-goals for agent repo:**
 
@@ -85,7 +86,7 @@ Success metric: **new grounded assistant from template in &lt;3 days**, eval pas
 - Forking domain packs or eval harness
 - Claiming «Grounded-compatible» without running conformance against Grounded itself
 
-**Hiring note:** agent work strengthens AI Engineer profile; standard work strengthens Platform / RAG Engineer profile. Both are valid; only the standard path lives in `grounded-llm`.
+**Hiring note:** agent work strengthens AI Engineer / orchestration profile; standard work strengthens Platform / RAG Engineer profile. Both are valid; only the standard path lives in `grounded-llm`.
 
 ---
 
