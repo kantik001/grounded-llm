@@ -168,11 +168,13 @@ hn_frontpage: 2+            # uncontrollable
 
 ## 7. Immediate next step
 
-When user says go:
+**Status (2026-07-28):** Tier A shipped — `grounded-guardrails` (wired), `grounded-bench` v0, `grounded-vllm` v0 + overhead table + upstream docs PR.
 
-1. Create **`grounded-guardrails`** as a **separate** GitHub repo (not monorepo merge).
-2. Sprint 1.1: Rust crate init → `TokenRingBuffer` → tests → criterion benches.
-3. Fix port to **50052** in proto/docs from day one.
+When continuing:
+
+1. Land / iterate [vLLM docs PR #50051](https://github.com/vllm-project/vllm/pull/50051); keep engaging [RFC #43999](https://github.com/vllm-project/vllm/issues/43999).
+2. Optional: English case study (arch + [OVERHEAD.md](https://github.com/kantik001/grounded-vllm/blob/main/OVERHEAD.md) + bench numbers).
+3. Tier B: WASM sandboxed tools **inside** `mcp-gateway` (wazero / WASI).
 4. Keep `docs/plans/VERIFIABLE_AI_PLATFORM_INSTRUCTION_v1.md` as detailed backlog; **this file wins on priority**.
 
 ---

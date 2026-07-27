@@ -64,7 +64,7 @@ Each phase PR should state: **which pillar(s)** and **which horizon** it advance
 | Work | Pillar |
 |------|--------|
 | grounded.dev spec site | 1, 5 |
-| grounded-bench as cited benchmark | 2 |
+| grounded-bench as cited benchmark | 2 — **v0 shipped:** [grounded-bench](https://github.com/kantik001/grounded-bench) (expand toward 1000 + public leaderboard hosting) |
 | Partner certification program | 5 |
 | Enterprise module (SAML, DLP) — path B | 3 |
 
