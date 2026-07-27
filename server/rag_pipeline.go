@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -98,6 +99,22 @@ func finalizeRAGAnswer(raw string, p ragPrepared) RAGAnswerResult {
 }
 
 func answerWithRAG(q, tenantID, domainID, locale string, history []Message, sessionID string) RAGAnswerResult {
+	ctx := context.Background()
+	if len(history) == 0 {
+		if cached, ok := getCachedLLMAnswer(ctx, q, domainID, tenantID); ok {
+			metricCacheHits.Add(1)
+			return RAGAnswerResult{
+				Answer:        cached.Answer,
+				Citations:     cached.Citations,
+				OK:            true,
+				VerifyPass:    true,
+				CacheHit:      true,
+				FragmentCount: len(cached.Citations),
+			}
+		}
+		metricCacheMisses.Add(1)
+	}
+
 	prepared, err := prepareRAGMessages(q, domainID, tenantID, locale, history, sessionID)
 	if err != nil {
 		return RAGAnswerResult{ErrMsg: publicAPIError(err)}
@@ -109,10 +126,14 @@ func answerWithRAG(q, tenantID, domainID, locale string, history []Message, sess
 			FragmentCount: len(prepared.Fragments),
 		}
 	}
-	raw, err := callLLMCompletion(prepared.LLMMessages)
+	raw, err := callLLMCompletionForTenant(tenantID, prepared.LLMMessages)
 	if err != nil {
 		log.Printf("LLM chat error: %v", err)
 		return RAGAnswerResult{ErrMsg: publicAPIError(err)}
 	}
-	return finalizeRAGAnswer(raw, prepared)
+	result := finalizeRAGAnswer(raw, prepared)
+	if result.OK && result.VerifyPass && len(history) == 0 {
+		setCachedLLMAnswer(ctx, q, domainID, tenantID, result.Answer, result.Citations)
+	}
+	return result
 }

@@ -132,6 +132,11 @@ func handleTextMessage(c *gin.Context, sid, domainID, tenantID, locale string, t
 		return
 	}
 	ragResult := answerWithRAG(text, tenantID, domainID, locale, prior, sid)
+	if ragResult.CacheHit {
+		c.Header("X-Cache", "HIT")
+	} else {
+		c.Header("X-Cache", "MISS")
+	}
 
 	if _, err := chatStore.AppendMessage(ctx, sid, ChatMessage{Role: "user", Content: text, Kind: "text"}); err != nil {
 		log.Printf("AppendMessage user: %v", err)

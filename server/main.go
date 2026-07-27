@@ -28,6 +28,7 @@ func main() {
 	if err := validateProductionConfig(config); err != nil {
 		log.Fatalf("%v", err)
 	}
+	initRedis()
 	logStartup(config)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)

@@ -17,6 +17,58 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:7-alpine
+    container_name: grounded_llm_redis
+    ports:
+      - "127.0.0.1:6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # CPU-friendly local LLM (Windows / no GPU). Usage:
+  #   docker compose --profile ollama up -d
+  #   docker compose exec ollama ollama pull llama3.2
+  ollama:
+    profiles: ["ollama"]
+    image: ollama/ollama:latest
+    container_name: grounded_llm_ollama
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+  # GPU local inference (OpenAI-compatible). Usage:
+  #   docker compose --profile vllm up -d
+  # Requires NVIDIA Container Toolkit + enough VRAM for the model.
+  vllm:
+    profiles: ["vllm"]
+    image: vllm/vllm-openai:latest
+    container_name: grounded_llm_vllm
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN:-}
+    command:
+      - "--model"
+      - "${VLLM_MODEL:-meta-llama/Meta-Llama-3.1-8B-Instruct}"
+      - "--max-model-len"
+      - "${VLLM_MAX_MODEL_LEN:-4096}"
+      - "--gpu-memory-utilization"
+      - "${VLLM_GPU_MEMORY_UTILIZATION:-0.90}"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
   python:
     build:
       context: .
@@ -25,9 +77,13 @@ services:
     # Local debug only — bind to loopback (not LAN). Production: use docker-compose.prod.yml (no host port).
     ports:
       - "127.0.0.1:5000:5000"
+      - "127.0.0.1:50051:50051"
     restart: unless-stopped
     environment:
       - PYTHON_SERVICE_PORT=5000
+      - PYTHON_GRPC_PORT=50051
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - EMBEDDING_CACHE_TTL_SEC=${EMBEDDING_CACHE_TTL_SEC:-3600}
       - DOMAINS_CONFIG_PATH=/config/domains.json
       - FORCE_RAG_REINDEX=${FORCE_RAG_REINDEX:-false}
       - VECTOR_STORE=${VECTOR_STORE:-chroma}
@@ -49,6 +105,9 @@ services:
       - ./rag:/app/rag:ro
       - ./data:/app/data:ro
       - ./config:/config:ro
+    depends_on:
+      redis:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health')"]
       interval: 15s
@@ -65,9 +124,14 @@ services:
       - "8080:8080"
     environment:
       - PYTHON_RAG_URL=http://python:5000/rag/context
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - LLM_RESPONSE_CACHE_TTL_SEC=${LLM_RESPONSE_CACHE_TTL_SEC:-86400}
+      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
       - LLM_API_KEY=${LLM_API_KEY:-}
-      - LLM_BASE_URL=${LLM_BASE_URL:-https://openrouter.ai/api}
+      - LLM_BASE_URL=${LLM_BASE_URL:-}
       - LLM_MODEL=${LLM_MODEL:-openrouter/free}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
+      - VLLM_MODEL=${VLLM_MODEL:-meta-llama/Meta-Llama-3.1-8B-Instruct}
       - SERVER_PORT=8080
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
       - TELEGRAM_AUTH_DISABLED=${TELEGRAM_AUTH_DISABLED:-false}
@@ -99,6 +163,8 @@ services:
       - ./config:/config:ro
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       python:
         condition: service_healthy
@@ -141,3 +207,4 @@ volumes:
   chroma_data:
   postgres_data:
   uploads_data:
+  ollama_data:

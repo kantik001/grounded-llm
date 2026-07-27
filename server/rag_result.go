@@ -11,6 +11,7 @@ type RAGAnswerResult struct {
 	SoftFail      bool
 	VerifyPass    bool
 	FragmentCount int
+	CacheHit      bool // semantic LLM response cache
 }
 
 func publicCitations(fragments []RAGFragment) []RAGFragment {

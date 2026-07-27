@@ -24,9 +24,14 @@ type llmStreamDelta struct {
 			Content string `json:"content"`
 		} `json:"delta"`
 	} `json:"choices"`
+	Usage *LLMUsage `json:"usage,omitempty"`
 }
 
 func callLLMCompletionStream(ctx context.Context, messages []Message, onDelta func(string) error) (string, error) {
+	return callLLMCompletionStreamForTenant(ctx, "default", messages, onDelta)
+}
+
+func callLLMCompletionStreamForTenant(ctx context.Context, tenantID string, messages []Message, onDelta func(string) error) (string, error) {
 	if llmMockEnabled() {
 		full, err := mockLLMCompletion(messages)
 		if err != nil {
@@ -43,6 +48,7 @@ func callLLMCompletionStream(ctx context.Context, messages []Message, onDelta fu
 		return "", fmt.Errorf("LLM API key not configured")
 	}
 	metricLLMRequests.Add(1)
+	start := time.Now()
 	body, err := json.Marshal(&llmStreamRequest{
 		Model:    config.LLMModel,
 		Messages: messages,
@@ -71,7 +77,12 @@ func callLLMCompletionStream(ctx context.Context, messages []Message, onDelta fu
 	}
 
 	var full strings.Builder
+	var ttft time.Duration
+	var usage *LLMUsage
 	scanner := bufio.NewScanner(resp.Body)
+	// Allow larger SSE chunks from verbose models.
+	buf := make([]byte, 0, 64*1024)
+	scanner.Buffer(buf, 1024*1024)
 	for scanner.Scan() {
 		line := scanner.Text()
 		if !strings.HasPrefix(line, "data: ") {
@@ -85,12 +96,18 @@ func callLLMCompletionStream(ctx context.Context, messages []Message, onDelta fu
 		if err := json.Unmarshal([]byte(payload), &chunk); err != nil {
 			continue
 		}
+		if chunk.Usage != nil {
+			usage = chunk.Usage
+		}
 		if len(chunk.Choices) == 0 {
 			continue
 		}
 		delta := chunk.Choices[0].Delta.Content
 		if delta == "" {
 			continue
+		}
+		if ttft == 0 {
+			ttft = time.Since(start)
 		}
 		full.WriteString(delta)
 		if onDelta != nil {
@@ -106,5 +123,17 @@ func callLLMCompletionStream(ctx context.Context, messages []Message, onDelta fu
 	if out == "" {
 		return "", fmt.Errorf("empty streamed LLM response")
 	}
+	promptTok, completionTok := 0, 0
+	if usage != nil {
+		promptTok = usage.PromptTokens
+		completionTok = usage.CompletionTokens
+	}
+	if promptTok == 0 {
+		promptTok = estimateMessagesTokens(messages)
+	}
+	if completionTok == 0 {
+		completionTok = estimateTokens(out)
+	}
+	recordLLMUsage(tenantID, config.LLMModel, promptTok, completionTok, time.Since(start), ttft)
 	return out, nil
 }

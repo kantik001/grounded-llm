@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package grounded.rag.v1;
+
+// Retriever exposes hybrid/vector retrieval for agents over gRPC.
+service Retriever {
+  rpc Retrieve(RetrieveRequest) returns (RetrieveResponse);
+}
+
+message RetrieveRequest {
+  string query = 1;
+  string domain_id = 2;
+  string tenant_id = 3;
+  string locale = 4;
+  int32 top_k = 5;
+}
+
+message Chunk {
+  string id = 1;
+  string text = 2;
+  double score = 3;
+  string source = 4;
+}
+
+message RetrieveResponse {
+  repeated Chunk chunks = 1;
+  string context = 2;
+  bool success = 3;
+  string error = 4;
+}

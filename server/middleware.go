@@ -47,6 +47,7 @@ func corsMiddleware(allowedOrigins []string) gin.HandlerFunc {
 		}
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Requested-With, X-Telegram-Init-Data, Authorization, X-API-Key, X-Tenant-ID, X-Locale, X-Request-ID, Accept-Language")
+		c.Writer.Header().Set("Access-Control-Expose-Headers", "X-Cache, X-Request-ID")
 		c.Writer.Header().Set("Access-Control-Max-Age", "86400")
 
 		if c.Request.Method == http.MethodOptions {
@@ -105,4 +106,3 @@ func telegramAuthMiddleware(cfg *Config) gin.HandlerFunc {
 		c.Next()
 	}
 }
-

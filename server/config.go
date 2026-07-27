@@ -13,10 +13,10 @@ import (
 // Config — настройки приложения из переменных окружения.
 type Config struct {
 	PythonRAGURL string // POST JSON → retrieval (контекст) в Python
-	LLMAPIKey        string
-	LLMModel         string
-	LLMBaseURL       string
-	ServerPort       string
+	LLMAPIKey    string
+	LLMModel     string
+	LLMBaseURL   string
+	ServerPort   string
 
 	TelegramBotToken       string
 	TelegramAuthDisabled   bool
@@ -35,6 +35,7 @@ type Config struct {
 	LLMMock                bool
 	RAGMock                bool
 	RAGServiceToken        string
+	LLMProvider            string
 	MessageRetentionDays   int
 	SessionRetentionDays   int
 	RetentionIntervalHours int
@@ -69,12 +70,13 @@ func loadConfig() *Config {
 		retentionHours = 24
 	}
 
-	return &Config{
+	cfg := &Config{
 		PythonRAGURL: getEnv("PYTHON_RAG_URL", "http://python:5000/rag/context"),
-		LLMAPIKey:        getEnv("LLM_API_KEY", ""),
-		LLMBaseURL:       getEnv("LLM_BASE_URL", "https://openrouter.ai/api"),
-		LLMModel:         getEnv("LLM_MODEL", "openrouter/free"),
-		ServerPort:       getEnv("SERVER_PORT", "8080"),
+		LLMAPIKey:    getEnv("LLM_API_KEY", ""),
+		LLMBaseURL:   os.Getenv("LLM_BASE_URL"), // empty → resolveLLMProvider fills by LLM_PROVIDER
+		LLMModel:     getEnv("LLM_MODEL", "openrouter/free"),
+		LLMProvider:  getEnv("LLM_PROVIDER", "openai"),
+		ServerPort:   getEnv("SERVER_PORT", "8080"),
 
 		TelegramBotToken:       getEnv("TELEGRAM_BOT_TOKEN", ""),
 		TelegramAuthDisabled:   strings.EqualFold(getEnv("TELEGRAM_AUTH_DISABLED", "false"), "true"),
@@ -97,6 +99,8 @@ func loadConfig() *Config {
 		SessionRetentionDays:   sessRetention,
 		RetentionIntervalHours: retentionHours,
 	}
+	resolveLLMProvider(cfg)
+	return cfg
 }
 
 // Возвращает значение переменной окружения или defaultValue.
@@ -116,7 +120,7 @@ func logStartup(cfg *Config) {
 		log.Printf("Environment: development")
 	}
 	log.Printf("Python RAG context URL: %s", cfg.PythonRAGURL)
-	log.Printf("LLM Model: %s", cfg.LLMModel)
+	log.Printf("LLM provider: %s  base=%s  model=%s", cfg.LLMProvider, cfg.LLMBaseURL, cfg.LLMModel)
 	if cfg.LLMMock {
 		log.Printf("LLM: MOCK mode (deterministic responses for CI/smoke)")
 	} else if cfg.LLMAPIKey != "" {

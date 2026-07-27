@@ -21,13 +21,16 @@ services:
     ports: !reset []
 
   python:
-    # Internal network only — do not publish :5000
+    # Internal network only — do not publish :5000 / :50051
     ports: !reset []
     expose:
       - "5000"
+      - "50051"
     environment:
       - GROUNDED_ENV=production
       - PYTHON_SERVICE_PORT=5000
+      - PYTHON_GRPC_PORT=50051
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
       - DOMAINS_CONFIG_PATH=/config/domains.json
       - FORCE_RAG_REINDEX=${FORCE_RAG_REINDEX:-false}
       - VECTOR_STORE=${VECTOR_STORE:-chroma}
@@ -52,6 +55,8 @@ services:
     environment:
       - GROUNDED_ENV=production
       - PYTHON_RAG_URL=http://python:5000/rag/context
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
       - LLM_API_KEY=${LLM_API_KEY:?LLM_API_KEY is required}
       - LLM_BASE_URL=${LLM_BASE_URL:-https://openrouter.ai/api}
       - LLM_MODEL=${LLM_MODEL:-openrouter/free}

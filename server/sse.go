@@ -26,6 +26,50 @@ func sseMessageHandler(c *gin.Context, sid, domainID, tenantID string, telegramI
 	}
 
 	locale := ctxLocale(c)
+
+	if len(prior) == 0 {
+		if cached, ok := getCachedLLMAnswer(ctx, text, domainID, tenantID); ok {
+			metricCacheHits.Add(1)
+			c.Header("X-Cache", "HIT")
+			result := RAGAnswerResult{
+				Answer:        cached.Answer,
+				Citations:     cached.Citations,
+				OK:            true,
+				VerifyPass:    true,
+				CacheHit:      true,
+				FragmentCount: len(cached.Citations),
+			}
+			if _, err := chatStore.AppendMessage(ctx, sid, ChatMessage{Role: "user", Content: text, Kind: "text"}); err != nil {
+				writeSSE(c, "error", `{"error":"Save error"}`)
+				return
+			}
+			recordRAGAnalytics(ctx, telegramID, tenantID, domainID, text, result)
+			if _, err := chatStore.AppendMessage(ctx, sid, ChatMessage{
+				Role: "assistant", Content: result.Answer, Kind: "assistant", Citations: result.Citations,
+			}); err != nil {
+				writeSSE(c, "error", `{"error":"Failed to save assistant reply"}`)
+				return
+			}
+			msgs, err := chatStore.ListMessages(ctx, sid, telegramID)
+			if err != nil {
+				writeSSE(c, "error", `{"error":"Database error"}`)
+				return
+			}
+			writeSSE(c, "token", mustJSON(gin.H{"text": result.Answer}))
+			writeSSE(c, "done", mustJSON(gin.H{
+				"success":    true,
+				"session_id": sid,
+				"domain_id":  domainID,
+				"tenant_id":  tenantID,
+				"messages":   msgs,
+				"cache":      "HIT",
+			}))
+			return
+		}
+		metricCacheMisses.Add(1)
+	}
+	c.Header("X-Cache", "MISS")
+
 	prepared, err := prepareRAGMessages(text, domainID, tenantID, locale, prior, sid)
 	if err != nil {
 		writeSSE(c, "error", mustJSON(gin.H{"error": err.Error()}))
@@ -46,7 +90,7 @@ func sseMessageHandler(c *gin.Context, sid, domainID, tenantID string, telegramI
 		return
 	}
 
-	raw, err := callLLMCompletionStream(ctx, prepared.LLMMessages, func(delta string) error {
+	raw, err := callLLMCompletionStreamForTenant(ctx, tenantID, prepared.LLMMessages, func(delta string) error {
 		writeSSE(c, "token", mustJSON(gin.H{"text": delta}))
 		return nil
 	})
@@ -56,6 +100,9 @@ func sseMessageHandler(c *gin.Context, sid, domainID, tenantID string, telegramI
 	}
 
 	result := finalizeRAGAnswer(raw, prepared)
+	if result.OK && result.VerifyPass && len(prior) == 0 {
+		setCachedLLMAnswer(ctx, text, domainID, tenantID, result.Answer, result.Citations)
+	}
 	recordRAGAnalytics(ctx, telegramID, tenantID, domainID, text, result)
 	if _, err := chatStore.AppendMessage(ctx, sid, ChatMessage{
 		Role: "assistant", Content: result.Answer, Kind: "assistant", Citations: result.Citations,

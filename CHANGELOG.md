@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Local inference:** `LLM_PROVIDER=openai|ollama|vllm` with Compose profiles (`ollama`, `vllm`) and OpenAI-compatible endpoints
+- **Redis caches:** embedding vectors (`embedding:{md5}:{model}`) + semantic LLM responses (`response:{md5}:{model}`); HTTP `X-Cache: HIT|MISS`
+- **gRPC Retriever** on Python `:50051` (`grounded.rag.v1.Retriever/Retrieve`) for agents
+- Prometheus: `llm_tokens_input_total` / `llm_tokens_output_total`, `llm_latency_seconds_*`, `llm_ttft_seconds_*`, embedding cache hits
 - Helm: configurable probes + Python `startupProbe` (model/index warm-up); timeouts/`failureThreshold` for server, python, postgres, webapp
 - `scripts/backup_postgres_smoke.sh` + `make backup-smoke` + CI job (pg_dump → restore round-trip)
 - Trivy scan for Python RAG image in CI (CRITICAL; torch stack often has unfixed HIGH)
