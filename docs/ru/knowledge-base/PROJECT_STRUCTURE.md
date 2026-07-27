@@ -29,7 +29,8 @@
 |------|------|
 | `main.go`, `routes.go` | Старт, маршруты |
 | `domains.go`, `locale.go` | Домены и локали |
-| `rag_pipeline.go`, `rag_verify.go` | RAG + LLM + verify |
+| `rag_pipeline.go`, `rag_verify.go` | RAG + LLM + verify (local Spec path) |
+| `guardrails_client.go` | опциональный remote verify → grounded-guardrails `:50052` |
 | `sse.go`, `api_keys.go`, `tenant.go` | Streaming, API keys, tenant |
 | `postgres_store.go` | Postgres |
 | `admin.go` | Upload KB, reindex |

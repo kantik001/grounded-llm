@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Proto client stubs (`api/proto/guardrails.proto` → `server/gen/guardrails/v1`)
 - Compose override [`docker-compose.guardrails.yml`](docker-compose.guardrails.yml) for sibling `grounded-guardrails`
 - Docs: [docs/en/GUARDRAILS.md](docs/en/GUARDRAILS.md); architecture / deploy / network / verifier updated for optional `:50052`
+- Docs completeness: EN/RU knowledge-base verify path, regenerated `docs/assets/architecture.png` with optional guardrails `:50052`
+- Historical plan note: guardrails port is `:50052` (not `:50051`)
 
 ## [0.3.0] - 2026-07-27
 

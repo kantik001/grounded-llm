@@ -2,6 +2,10 @@
 ## Проект: Verifiable AI Infrastructure Platform
 ## Версия: 1.0 | Дата: 28 июля 2026
 
+> **Superseded for execution priority** by [`CAREER_OPTIMIZED_PLAN_v1.1.md`](./CAREER_OPTIMIZED_PLAN_v1.1.md).  
+> Keep this file as historical backlog only.  
+> **Port correction:** `grounded-guardrails` listens on **`:50052`** (not `:50051` — Retriever owns `:50051`).
+
 ---
 
 ## 0. МЕТАДАННЫЕ И ПРАВИЛА

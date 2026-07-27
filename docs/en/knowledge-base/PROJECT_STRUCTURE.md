@@ -32,7 +32,8 @@ Key files:
 | `domains.go`, `domain_resolve.go` | domain catalog, `domain_id` in API |
 | `locale.go` | locale bundles, `X-Locale` middleware |
 | `config_paths.go` | JSON lookup under `/config` |
-| `rag_pipeline.go`, `rag_verify.go` | RAG + LLM + verify |
+| `rag_pipeline.go`, `rag_verify.go` | RAG + LLM + verify (local Spec path) |
+| `guardrails_client.go` | optional remote verify → grounded-guardrails `:50052` |
 | `sse.go`, `llm_stream.go` | SSE streaming |
 | `api_keys.go`, `auth_combined.go` | `X-API-Key`, `/api/v1/*` |
 | `tenant.go` | `X-Tenant-ID`, KB path isolation |
