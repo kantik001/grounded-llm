@@ -24,6 +24,7 @@ docker compose up -d --build
 | Go metrics | http://localhost:8080/metrics |
 | Python RAG (HTTP) | http://127.0.0.1:5000/health (loopback only) |
 | gRPC Retriever | `localhost:50051` (`grounded.rag.v1.Retriever`) |
+| Guardrails (optional) | `localhost:50052` — [GUARDRAILS.md](./GUARDRAILS.md) |
 | Redis | `localhost:6379` (embedding + response cache) |
 
 After adding documents under `data/`:

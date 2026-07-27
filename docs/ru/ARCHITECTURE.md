@@ -36,12 +36,13 @@
 
 | Сервис | Роль |
 |--------|------|
-| **server** (Go) | Auth, сессии, LLM, numeric verify, citations, `/metrics` |
+| **server** (Go) | Auth, сессии, LLM, verify (local или remote), citations, `/metrics` |
 | **python** | HTTP RAG (`:5000`, Gunicorn) + **gRPC Retriever** (`:50051`) |
 | **postgres** | Сессии, сообщения; опционально pgvector |
 | **redis** | Кэш эмбеддингов + семантический кэш ответов LLM |
 | **webapp** | Reference UI (nginx → Go) |
 | **ollama** / **vllm** | Опциональный локальный LLM (`--profile ollama` / `vllm`) |
+| **guardrails** (опц.) | [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) gRPC `:50052` — см. [../en/GUARDRAILS.md](../en/GUARDRAILS.md) |
 
 ---
 
@@ -51,10 +52,15 @@
 2. При пустой истории: опциональный **semantic response cache** (Redis) → заголовок `X-Cache: HIT`
 3. Иначе Go → Python `POST /rag/context` (`domain_id`, `tenant_id`, `locale`)
 4. Python: эмбеддинги (с Redis при `REDIS_URL`) → vector store (Chroma / Qdrant / pgvector) → hybrid/rerank → фрагменты
-5. Go → OpenAI-совместимый LLM (`LLM_PROVIDER`) → проверка чисел → дисклеймер → Postgres (`citations[]`)
-6. Прошедшие verify ответы могут попасть в response cache (`X-Cache: MISS` на первый запрос)
+5. Go → OpenAI-совместимый LLM (`LLM_PROVIDER`)
+6. **Verify** после LLM:
+   - `GUARDRAILS_MODE=local` (по умолчанию): in-process проверка чисел в `server/rag_verify.go`
+   - `remote` / `hybrid`: gRPC `VerifyText` → grounded-guardrails `:50052` (hybrid при сбое сети откатывается на local)
+7. Дисклеймер → Postgres (`citations[]`); прошедшие verify ответы могут попасть в response cache
 
 **Агенты:** gRPC `grounded.rag.v1.Retriever/Retrieve` на Python `:50051` (metadata `x-rag-service-token`).
+
+**Порты:** Retriever `:50051` · Guardrails (опц.) `:50052`.
 
 Язык ответа и UI задаётся локалью (`ru` / `en`): см. `config/locales/`.
 

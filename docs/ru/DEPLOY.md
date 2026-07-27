@@ -23,6 +23,7 @@ docker compose up -d --build
 | Metrics | http://localhost:8080/metrics |
 | Python RAG (HTTP) | http://127.0.0.1:5000/health |
 | gRPC Retriever | `localhost:50051` |
+| Guardrails (опц.) | `localhost:50052` — [../en/GUARDRAILS.md](../en/GUARDRAILS.md) |
 | Redis | `localhost:6379` |
 
 После добавления документов в `data/`:

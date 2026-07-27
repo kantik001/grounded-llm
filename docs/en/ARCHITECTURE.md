@@ -25,7 +25,7 @@ Canonical ops for local LLMs and caches: [LLM_PROVIDERS.md](./LLM_PROVIDERS.md).
 |-------|-------|----------------|
 | **Core** | `server/`, `api/`, `rag/`, `migrations/`, `webapp/`, `scripts/` | No |
 | **Domain pack** | `config/domains.json`, `config/locales/{ru,en}/`, `data/*` | **Yes** |
-| **Optional runtime** | Redis (caches), Ollama / vLLM (local LLM) | As needed |
+| **Optional runtime** | Redis (caches), Ollama / vLLM (local LLM), grounded-guardrails (`:50052`) | As needed |
 
 **`domain_id`** — workspace / knowledge base identifier.  
 **`tenant_id`** — multi-tenant isolation.
@@ -36,12 +36,13 @@ Canonical ops for local LLMs and caches: [LLM_PROVIDERS.md](./LLM_PROVIDERS.md).
 
 | Service | Role |
 |---------|------|
-| **server** (Go) | Auth, sessions, LLM call, numeric verify, citations, `/metrics` |
+| **server** (Go) | Auth, sessions, LLM call, verify (local or remote), citations, `/metrics` |
 | **python** | HTTP RAG (`:5000`, Gunicorn) + **gRPC Retriever** (`:50051`) |
 | **postgres** | Sessions, messages, analytics; optional pgvector |
 | **redis** | Embedding cache + semantic LLM response cache |
 | **webapp** | Reference UI (nginx → Go) |
 | **ollama** / **vllm** | Optional local LLM (`--profile ollama` / `vllm`) |
+| **guardrails** (optional) | [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) gRPC `:50052` — `docker-compose.guardrails.yml` |
 
 ---
 
@@ -51,10 +52,15 @@ Canonical ops for local LLMs and caches: [LLM_PROVIDERS.md](./LLM_PROVIDERS.md).
 2. On empty chat history: optional **semantic response cache** (Redis) → `X-Cache: HIT` and return
 3. Else Go → Python `POST /rag/context` (`domain_id`, `tenant_id`, `locale`)
 4. Python: embeddings (Redis-backed when `REDIS_URL` set) → vector store (Chroma / Qdrant / pgvector) → optional hybrid BM25+RRF / rerank → fragments
-5. Go → OpenAI-compatible LLM (`LLM_PROVIDER` → OpenRouter / Ollama / vLLM) → numeric verify → disclaimer → Postgres (`citations[]`)
-6. Verified answers may be written to the response cache (`X-Cache: MISS` on first ask)
+5. Go → OpenAI-compatible LLM (`LLM_PROVIDER` → OpenRouter / Ollama / vLLM)
+6. **Verify** (after LLM):
+   - `GUARDRAILS_MODE=local` (default): in-process Spec numeric check in `server/rag_verify.go`
+   - `remote` / `hybrid`: gRPC `VerifyText` → grounded-guardrails `:50052` (hybrid falls back to local on transport errors)
+7. Disclaimer → Postgres (`citations[]`); verified answers may hit the response cache
 
 **Agent path:** call gRPC `grounded.rag.v1.Retriever/Retrieve` on Python `:50051` (metadata `x-rag-service-token` when configured).
+
+**Ports:** Retriever `:50051` · Guardrails (optional) `:50052` — see [GUARDRAILS.md](./GUARDRAILS.md) · [ECOSYSTEM.md](./ECOSYSTEM.md).
 
 ---
 
@@ -95,6 +101,9 @@ Typical MVP estimate: **2–5 days** with documents ready.
 ## Documentation
 
 - Providers / Redis / gRPC: [LLM_PROVIDERS.md](./LLM_PROVIDERS.md)
+- Optional remote verify: [GUARDRAILS.md](./GUARDRAILS.md)
+- Ecosystem map: [ECOSYSTEM.md](./ECOSYSTEM.md)
 - Deploy: [DEPLOY.md](./DEPLOY.md)
+- Network: [NETWORK_SECURITY.md](./NETWORK_SECURITY.md)
 - English KB: [knowledge-base/README.md](./knowledge-base/README.md)
 - Russian KB: [../ru/knowledge-base/README.md](../ru/knowledge-base/README.md)
