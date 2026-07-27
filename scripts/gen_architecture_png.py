@@ -1,4 +1,8 @@
-"""One-off: regenerate docs/assets/architecture.png for v0.3."""
+"""Simplified Pillow fallback for docs/assets/architecture.png.
+
+The canonical README diagram is the icon-rich PNG committed in docs/assets/.
+Run this only if you need a quick text-only variant without external image tools.
+"""
 from __future__ import annotations
 
 import math
