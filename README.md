@@ -194,7 +194,7 @@ python -m conformance spec     # Offline OpenAPI / spec check
 | [docs/en/ECOSYSTEM.md](docs/en/ECOSYSTEM.md) | Standard core vs agents (separate project) |
 | [docs/en/BENCHMARK.md](docs/en/BENCHMARK.md) | Public eval metrics (99 retrieval cases) |
 | [docs/en/LLM_PROVIDERS.md](docs/en/LLM_PROVIDERS.md) | Ollama / vLLM, Redis caches, gRPC Retriever |
-| [docs/en/RELEASE.md](docs/en/RELEASE.md) | Tag & release checklist (v0.1.0) |
+| [docs/en/RELEASE.md](docs/en/RELEASE.md) | Tag & release checklist (next: v0.3.0) |
 | [Site (GitHub Pages)](https://kantik001.github.io/grounded-llm/) | Spec, conformance, quick start |
 | [docs/en/API_DEPRECATION_POLICY.md](docs/en/API_DEPRECATION_POLICY.md) | `/api/v1` stability & sunset |
 | [docs/en/COMPATIBILITY.md](docs/en/COMPATIBILITY.md) | Supported stack matrix |

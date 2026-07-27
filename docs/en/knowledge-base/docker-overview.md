@@ -5,18 +5,21 @@
 
 ---
 
-## Four services
+## Services
 
 ```mermaid
 flowchart LR
-    subgraph host [Host ports]
+    subgraph host [Host ports local]
         P80[":80 webapp"]
         P8080[":8080 server"]
-        P5000[":5000 python"]
+        P5000[":5000 python HTTP"]
+        P50051[":50051 python gRPC"]
+        P6379[":6379 redis"]
     end
     webapp[Nginx webapp]
     server[Go server]
-    python[Python RAG]
+    python[Python RAG + gRPC]
+    redis[(Redis)]
     db[(PostgreSQL)]
 
     P80 --> webapp
@@ -24,25 +27,34 @@ flowchart LR
     P8080 --> server
     server --> db
     server --> python
+    server --> redis
+    python --> redis
     P5000 --> python
+    P50051 --> python
+    P6379 --> redis
 ```
 
 | Service | Image | Role |
 |---------|-------|------|
 | **postgres** | `pgvector/pgvector:pg16` | users, sessions, messages, feedback, analytics; optional pgvector |
-| **python** | `Dockerfile.python` | Flask: RAG retrieval, reindex, `/health` |
-| **server** | `Dockerfile.server` | API, LLM orchestration, verify, admin |
-| **webapp** | `Dockerfile.webapp` | Reference UI (Telegram Web App) + nginx → server |
+| **redis** | `redis:7-alpine` | embedding cache + semantic LLM response cache |
+| **python** | `Dockerfile.python` | Gunicorn HTTP RAG (`:5000`) + gRPC Retriever (`:50051`); Flask app module |
+| **server** | `Dockerfile.server` | API, LLM orchestration, verify, admin, `/metrics` |
+| **webapp** | `Dockerfile.webapp` | Reference UI + nginx → server |
+| **ollama** / **vllm** | optional profiles | Local OpenAI-compatible LLM (`--profile ollama` / `vllm`) |
 
 Compose project name: **`grounded_llm`** (`name:` in `docker-compose.yml`, `PROJECT_NAME` in `Makefile`).
+
+Local LLM / caches: [LLM_PROVIDERS.md](../LLM_PROVIDERS.md).
 
 ---
 
 ## Quick start
 
 ```bash
-cp .env.example .env   # LLM_API_KEY, ADMIN_PASSWORD, TELEGRAM_BOT_TOKEN
+cp .env.example .env   # LLM_API_KEY or LLM_PROVIDER=ollama, ADMIN_PASSWORD, TELEGRAM_BOT_TOKEN
 docker compose up -d --build
+# Optional: docker compose --profile ollama up -d
 python scripts/reindex_rag.py   # or POST /admin/reindex
 ```
 
@@ -91,10 +103,11 @@ Makefile: `make up`, `make logs`, `make smoke`, `make test`.
 
 ## Service `python` (RAG)
 
-- Port **5000**, entrypoint: `python api/app.py`
-- Env: `DOMAINS_CONFIG_PATH`, `LOCALES_ROOT`, `DEFAULT_LOCALE`, `ADMIN_SECRET`, `FORCE_RAG_REINDEX`, `PYTHON_SERVICE_PORT`
+- Ports **5000** (HTTP) and **50051** (gRPC); entrypoint: `api/entrypoint.sh` (Gunicorn + gRPC side-by-side)
+- Env: `DOMAINS_CONFIG_PATH`, `LOCALES_ROOT`, `DEFAULT_LOCALE`, `ADMIN_SECRET`, `FORCE_RAG_REINDEX`, `PYTHON_SERVICE_PORT`, `PYTHON_GRPC_PORT`, `REDIS_URL`, `RAG_SERVICE_TOKEN`
 - Healthcheck: `start_period: 180s` (first RAG / embeddings can be slow)
-- Endpoints: `/health`, `/rag/context`, `/domains`, `/admin/reindex`
+- HTTP: `/health`, `/ready`, `/metrics`, `/rag/context`, `/domains`, `/admin/reindex`
+- gRPC: `grounded.rag.v1.Retriever/Retrieve` (+ health)
 
 First RAG request may download embedding model `intfloat/multilingual-e5-small`.
 
@@ -130,10 +143,12 @@ TELEGRAM_AUTH_DISABLED=true
 | From | URL |
 |------|-----|
 | server | `http://python:5000/rag/context` |
+| server | `REDIS_URL` → `redis://redis:6379/0` |
 | webapp nginx | `http://server:8080` |
 | server | `postgres:5432` |
+| agents (optional) | `python:50051` gRPC Retriever |
 
-From host: `localhost:8080` (Go direct), `localhost/api/` (via nginx).
+From host: `localhost:8080` (Go), `localhost/api/` (via nginx), `127.0.0.1:5000` / `:50051` / `:6379` (loopback only in local compose).
 
 ---
 
@@ -141,8 +156,8 @@ From host: `localhost:8080` (Go direct), `localhost/api/` (via nginx).
 
 | File | Base | Notes |
 |------|------|-------|
-| `Dockerfile.server` | `golang:1.23-alpine` → `alpine:3.21` | multi-stage, `curl` for healthcheck |
-| `Dockerfile.python` | `python:3.11-slim` | RAG deps from `api/requirements.txt` |
+| `Dockerfile.server` | `golang:1.25-alpine` → `alpine:3.21` | multi-stage, `curl` for healthcheck |
+| `Dockerfile.python` | `python:3.11-slim` | Gunicorn + gRPC via `api/entrypoint.sh` |
 | `Dockerfile.webapp` | `nginx:alpine` | static + `nginx.conf` |
 
 ---

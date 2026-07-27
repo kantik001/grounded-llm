@@ -97,19 +97,27 @@ We win on **trust, deployability, and measured RAG quality**—not on feature co
 - English-first UI, locale packs, HR reference template
 - Eval baselines (EN + RU), smoke API in CI, **retrieval eval gate in CI**
 
-### Next — enterprise hardening (Phase B)
+### Done — enterprise hardening (former Phase B)
 
-- RBAC, audit log, SSO (OIDC/SAML)
+- RBAC, audit log, SSO (OIDC)
 - Async reindex with job status
-- Retrieval improvements (reranker) measured via eval
-- Helm chart, backup/restore runbooks
+- Retrieval improvements (hybrid BM25+RRF, keyword/cross-encoder rerank) with eval gate
+- Helm chart, backup/restore runbooks, Trivy + load smoke in CI
+
+### On main (toward v0.3)
+
+- Local LLM providers (`LLM_PROVIDER=openai|ollama|vllm`) + Compose profiles
+- Redis embedding + semantic response caches (`X-Cache`)
+- gRPC Retriever on Python `:50051`
+- Prometheus LLM token / TTFT metrics — see [docs/en/LLM_PROVIDERS.md](docs/en/LLM_PROVIDERS.md)
 
 ### Later — scale (Phase C–D)
 
 - Template catalog / marketplace (HR, IT, legal FAQ)
-- Connectors: SharePoint, Google Drive, Confluence
+- Connectors: SharePoint, Google Drive, Confluence (scaffolded)
 - Optional hosted multi-tenant tier
 - Open core: MIT platform + commercial enterprise modules
+- Coordinated LangChain 1.x stack bump (deferred from Dependabot majors)
 
 Success metric for the platform: **new grounded assistant from template in &lt;3 days**, with eval pass rate tracked on every release.
 

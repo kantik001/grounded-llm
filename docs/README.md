@@ -8,6 +8,9 @@
 | Hiring / portfolio | [HIRING.md](../HIRING.md) (repo root) |
 | Architecture | [ARCHITECTURE.md](en/ARCHITECTURE.md) |
 | Deploy | [DEPLOY.md](en/DEPLOY.md) |
+| LLM providers / Redis / gRPC | [LLM_PROVIDERS.md](en/LLM_PROVIDERS.md) |
+| Compatibility | [COMPATIBILITY.md](en/COMPATIBILITY.md) |
+| Benchmarks | [BENCHMARK.md](en/BENCHMARK.md) |
 | Roadmap (phases 1–11) | [ROADMAP.md](en/ROADMAP.md) |
 | Public launch | [LAUNCH.md](en/LAUNCH.md) · [RELEASE.md](en/RELEASE.md) |
 | Security | [SECURITY_BRIEF.md](en/SECURITY_BRIEF.md) |

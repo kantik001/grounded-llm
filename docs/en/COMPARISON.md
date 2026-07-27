@@ -51,7 +51,7 @@ Post-LLM check: numeric claims in answers must appear in retrieved chunks. Imper
 
 ### 3. Split Go / Python architecture
 
-Go: auth, sessions, LLM, verify, admin API. Python: embeddings + Chroma only. Clear trust boundary and scaling story.
+Go: auth, sessions, LLM, verify, admin API. Python: embeddings + pluggable vector stores (Chroma / Qdrant / pgvector) + optional Redis caches and gRPC Retriever. Clear trust boundary and scaling story.
 
 ### 4. Platform vs pack
 

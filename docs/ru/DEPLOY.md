@@ -1,7 +1,7 @@
 # Развёртывание
 
 Инструкция для **нового проекта** на каркасе Grounded LLM.  
-Архитектура: [ARCHITECTURE.md](./ARCHITECTURE.md). Дорожная карта: [ROADMAP.md](./ROADMAP.md).
+Архитектура: [ARCHITECTURE.md](./ARCHITECTURE.md). Провайдеры LLM / Redis / gRPC: [../en/LLM_PROVIDERS.md](../en/LLM_PROVIDERS.md). Дорожная карта: [ROADMAP.md](./ROADMAP.md).
 
 ---
 
@@ -9,16 +9,21 @@
 
 ```bash
 cp .env.example .env
-# LLM_API_KEY, TELEGRAM_BOT_TOKEN (или TELEGRAM_AUTH_DISABLED=true для разработки)
+# Облачный LLM: LLM_API_KEY
+# Локальный (CPU): LLM_PROVIDER=ollama → docker compose --profile ollama up -d --build
+# Без Telegram: TELEGRAM_AUTH_DISABLED=true
 
 docker compose up -d --build
 ```
 
-| Сервис | URL |
-|--------|-----|
+| Сервис | URL / порт |
+|--------|------------|
 | Web App | http://localhost/ |
 | Go API | http://localhost:8080/health |
-| Python RAG | http://localhost:5000/health |
+| Metrics | http://localhost:8080/metrics |
+| Python RAG (HTTP) | http://127.0.0.1:5000/health |
+| gRPC Retriever | `localhost:50051` |
+| Redis | `localhost:6379` |
 
 После добавления документов в `data/`:
 

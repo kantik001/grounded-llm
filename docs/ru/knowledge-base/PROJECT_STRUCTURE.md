@@ -9,7 +9,8 @@
 | Путь | Назначение |
 |------|------------|
 | `server/` | Go: auth, сессии, RAG+LLM, админка, verify |
-| `api/` | Python Flask: retrieval |
+| `api/` | Python: Gunicorn HTTP + gRPC Retriever |
+
 | `rag/` | Chroma, поиск, домены, загрузчики документов |
 | `config/` | Domain pack + `locales/{ru,en}/` |
 | `data/{tenant}/{domain}/` | База знаний: `.txt`, `.pdf`, `.docx` |

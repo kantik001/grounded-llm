@@ -2,7 +2,7 @@
 
 Supported stack for **Grounded LLM** reference implementation. Other versions may work but are not tested in CI.
 
-Last updated: Phase 11 / main (2026-07)
+Last updated: Unreleased toward v0.3 / main (2026-07)
 
 ---
 
@@ -10,9 +10,10 @@ Last updated: Phase 11 / main (2026-07)
 
 | Component | Supported | CI pin | Notes |
 |-----------|-----------|--------|-------|
-| **Go** | 1.23.x | `1.23` in `.github/workflows/ci.yml` | Server orchestration |
-| **Python** | 3.11 – 3.12 | `3.11` in CI | RAG service only |
+| **Go** | 1.25.x | `1.25` in `.github/workflows/ci.yml` | Server orchestration (`server/go.mod`) |
+| **Python** | 3.11 – 3.12 | `3.11` in CI | RAG HTTP (Gunicorn) + gRPC Retriever |
 | **PostgreSQL** | 16.x | `pgvector/pgvector:pg16` | Sessions, messages, audit; optional pgvector embeddings |
+| **Redis** | 7.x | `redis:7-alpine` in Compose | Embedding + LLM response caches |
 | **Node** | — | not required | Static webapp, no build step |
 
 ---
@@ -21,8 +22,9 @@ Last updated: Phase 11 / main (2026-07)
 
 | Component | Pin | Location |
 |-----------|-----|----------|
-| **Embedding model** | `intfloat/multilingual-e5-small` | `rag/vector_store.py` |
-| **Vector store** | Chroma (default), Qdrant, or pgvector (optional) | `VECTOR_STORE`, see [VECTOR_STORE.md](./docs/en/VECTOR_STORE.md) |
+| **Embedding model** | `intfloat/multilingual-e5-small` | vector backends under `rag/vector_backend/` |
+| **Vector store** | Chroma (default), Qdrant, or pgvector (optional) | `VECTOR_STORE`, see [VECTOR_STORE.md](./VECTOR_STORE.md) |
+| **Embedding cache** | Redis key `embedding:{md5}:{model}` | `REDIS_URL`, `EMBEDDING_CACHE_TTL_SEC` |
 | **Chunking** | 500 / overlap 50 | `RecursiveCharacterTextSplitter` |
 | **Hybrid rerank** | BM25 + dense + RRF | `RAG_RETRIEVAL_MODE=hybrid` |
 | **Keyword rerank** | Overlap on query tokens (optional) | `RAG_RERANKER=keyword` |
@@ -37,7 +39,7 @@ Changing the embedding model requires **full reindex** and eval gate re-run. Doc
 | Image | Base | Dockerfile |
 |-------|------|------------|
 | Server | `alpine:3.21` | `Dockerfile.server` |
-| Python RAG | project-specific | `Dockerfile.python` |
+| Python RAG | `python:3.11-slim` + Gunicorn/gRPC entrypoint | `Dockerfile.python` |
 | Webapp | nginx alpine | `Dockerfile.webapp` |
 
 Release tags `v*.*.*` publish to GHCR (see `.github/workflows/release.yml`).
@@ -46,14 +48,15 @@ Release tags `v*.*.*` publish to GHCR (see `.github/workflows/release.yml`).
 
 ## LLM providers (operator choice)
 
-Any **OpenAI-compatible** HTTPS endpoint:
+Any **OpenAI-compatible** `/v1/chat/completions` endpoint. Switch with env only — see [LLM_PROVIDERS.md](./LLM_PROVIDERS.md).
 
-| Variable | Example |
-|----------|---------|
-| `LLM_BASE_URL` | `https://openrouter.ai/api` |
-| `LLM_MODEL` | operator-selected |
+| `LLM_PROVIDER` | Default base | Notes |
+|----------------|--------------|-------|
+| `openai` (default) | `https://openrouter.ai/api` | Needs `LLM_API_KEY` |
+| `ollama` | `http://ollama:11434` | Compose `--profile ollama`; key auto `local` |
+| `vllm` | `http://vllm:8000` | Compose `--profile vllm`; NVIDIA |
 
-Not pinned — verify numeric grounding via built-in verify layer regardless of provider.
+Override anytime with `LLM_BASE_URL` / `LLM_MODEL`. Numeric grounding still applies via the verify layer.
 
 ---
 
@@ -62,7 +65,7 @@ Not pinned — verify numeric grounding via built-in verify layer regardless of 
 | Mode | Env | Use |
 |------|-----|-----|
 | Mock LLM + RAG | `LLM_MOCK=true`, `RAG_MOCK=true` | Unit tests, smoke, conformance |
-| Retrieval eval | Python :5000 + Chroma | `eval-retrieval-gate` job |
+| Retrieval eval | Python :5000 + vector store | `eval-retrieval-gate` job (**99** cases) |
 | LLM E2E nightly | real `LLM_API_KEY` | optional secret |
 
 ---
@@ -73,7 +76,7 @@ Not pinned — verify numeric grounding via built-in verify layer regardless of 
 |----|---------|
 | Linux (amd64) | Primary — Docker, K8s, CI |
 | macOS | Dev (Docker Desktop) |
-| Windows | Dev (Docker Desktop; native Go/Python for tests) |
+| Windows | Dev (Docker Desktop; prefer Ollama profile for local LLM; native Go/Python for tests) |
 
 ---
 
@@ -94,9 +97,16 @@ See [API_DEPRECATION_POLICY.md](./API_DEPRECATION_POLICY.md) for stability rules
 ```bash
 curl -sS http://localhost:8080/health
 curl -sS http://localhost:8080/ready
-curl -sS http://localhost:5000/health
-go version   # expect 1.23+
+curl -sS http://localhost:8080/metrics   # llm_tokens_*, TTFT, caches
+curl -sS http://127.0.0.1:5000/health
+go version   # expect 1.25.x
 python --version  # expect 3.11+
+```
+
+Optional gRPC (with `grpcurl`):
+
+```bash
+grpcurl -plaintext localhost:50051 list
 ```
 
 Report compatibility gaps via GitHub issues.

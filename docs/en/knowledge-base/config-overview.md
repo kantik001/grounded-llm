@@ -40,7 +40,7 @@ Go loads all bundles at startup (`initLocaleConfig`). Per request:
 - Query `?locale=en`
 - Telegram `language_code` when using Web App auth
 
-Env: `DEFAULT_LOCALE` (default `ru`), `LOCALES_ROOT`.
+Env: `DEFAULT_LOCALE` (default **`en`**), `LOCALES_ROOT`.
 
 ---
 

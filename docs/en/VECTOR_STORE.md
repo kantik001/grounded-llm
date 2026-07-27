@@ -20,6 +20,10 @@ Grounded LLM supports pluggable vector indexes for the Python RAG service. The r
 | `RAG_RERANKER` | `none` | `none`, `keyword`, or `cross_encoder` (optional second stage) |
 | `RAG_CROSS_ENCODER_MODEL` | `cross-encoder/ms-marco-MiniLM-L-6-v2` | Cross-encoder model name |
 | `FORCE_RAG_REINDEX` | `false` | Rebuild index on startup |
+| `REDIS_URL` | (unset) | Optional Redis for embedding cache (`embedding:{md5}:{model}`) |
+| `EMBEDDING_CACHE_TTL_SEC` | `3600` | Embedding cache TTL |
+
+Embedding cache details: [LLM_PROVIDERS.md](./LLM_PROVIDERS.md).
 
 ---
 
