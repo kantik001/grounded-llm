@@ -31,9 +31,9 @@ Success metric: **new grounded assistant from template in &lt;3 days**, eval pas
 | **MCP gateway / registry** | [mcp-gateway](https://github.com/kantik001/mcp-gateway) | Proxies tools; retrieval stays in Grounded |
 | **Token-level / remote verify** | [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) | Optional `GUARDRAILS_MODE=remote` → gRPC `:50052` (`VerifyText`); default remains in-process Spec verify |
 | **Verifiable-generation bench** | [grounded-bench](https://github.com/kantik001/grounded-bench) | Offline NVR / CP / HR / RR (dataset + predictions); retrieval gates stay in this repo `eval/` |
+| **vLLM serving-path verify** | [grounded-vllm](https://github.com/kantik001/grounded-vllm) | OpenAI proxy `:8001` → vLLM `:8000` + guardrails `:50052`; set `LLM_BASE_URL` to the proxy |
 | **Visual workflow builder** | Not planned | Out of scope per [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md) |
 | **General chatbot (no KB)** | Not planned | Out of scope |
-| **LLM inference serving (vLLM ops)** | Infra / MLOps stack | Grounded consumes OpenAI-compatible API |
 
 **Rule:** if a feature requires arbitrary tool use or agent graphs, it does **not** enter Grounded Spec v1 without a new RFC and a major version bump.
 

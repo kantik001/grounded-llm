@@ -216,10 +216,10 @@ python -m conformance spec     # Offline OpenAPI / spec check
 | [docs/en/STANDARD_STRATEGY.md](docs/en/STANDARD_STRATEGY.md) | Horizons, pillars, path A→B |
 | [docs/en/spec/GROUNDED_SPEC_v1.md](docs/en/spec/GROUNDED_SPEC_v1.md) | Normative API v1 spec |
 | [docs/en/RFC.md](docs/en/RFC.md) | RFC process · [RFC-0001](docs/en/rfcs/RFC-0001-grounded-compatible.md) |
-| [docs/en/ECOSYSTEM.md](docs/en/ECOSYSTEM.md) | Standard core vs agents / guardrails / bench |
+| [docs/en/ECOSYSTEM.md](docs/en/ECOSYSTEM.md) | Standard core vs agents / guardrails / bench / vllm |
 | [docs/en/GUARDRAILS.md](docs/en/GUARDRAILS.md) | Optional remote verify via grounded-guardrails `:50052` |
 | [docs/en/BENCHMARK.md](docs/en/BENCHMARK.md) | Retrieval bench + link to [grounded-bench](https://github.com/kantik001/grounded-bench) |
-| [docs/en/BENCHMARK.md](docs/en/BENCHMARK.md) | Public eval metrics (99 retrieval cases) |
+| [docs/en/LLM_PROVIDERS.md](docs/en/LLM_PROVIDERS.md) | OpenAI / Ollama / vLLM (+ optional [grounded-vllm](https://github.com/kantik001/grounded-vllm) proxy) |
 | [docs/en/LLM_PROVIDERS.md](docs/en/LLM_PROVIDERS.md) | Ollama / vLLM, Redis caches, gRPC Retriever |
 | [docs/en/RELEASE.md](docs/en/RELEASE.md) | Tag & release checklist (v0.3.0) |
 | [Site (GitHub Pages)](https://kantik001.github.io/grounded-llm/) | Spec, conformance, quick start |
