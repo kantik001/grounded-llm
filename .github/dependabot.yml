@@ -5,21 +5,46 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    groups:
+      go-modules:
+        patterns:
+          - "*"
 
   - package-ecosystem: pip
     directory: /api
     schedule:
       interval: weekly
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 5
+    groups:
+      langchain:
+        patterns:
+          - "langchain*"
+      api-misc:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "langchain*"
+    ignore:
+      # Majors need a coordinated RAG-stack bump, not weekly spam.
+      - dependency-name: "langchain*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: pip
     directory: /tests
     schedule:
       interval: weekly
     open-pull-requests-limit: 3
+    groups:
+      tests-pip:
+        patterns:
+          - "*"
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    groups:
+      github-actions:
+        patterns:
+          - "*"
