@@ -7,17 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-27
+
+Local inference, caching, and agent-facing retrieval for Staff AI Infra portfolio depth.
+
 ### Added
 
 - **Local inference:** `LLM_PROVIDER=openai|ollama|vllm` with Compose profiles (`ollama`, `vllm`) and OpenAI-compatible endpoints
 - **Redis caches:** embedding vectors (`embedding:{md5}:{model}`) + semantic LLM responses (`response:{md5}:{model}`); HTTP `X-Cache: HIT|MISS`
 - **gRPC Retriever** on Python `:50051` (`grounded.rag.v1.Retriever/Retrieve`) for agents
 - Prometheus: `llm_tokens_input_total` / `llm_tokens_output_total`, `llm_latency_seconds_*`, `llm_ttft_seconds_*`, embedding cache hits
+- Docs: [LLM_PROVIDERS.md](docs/en/LLM_PROVIDERS.md); site/ARCHITECTURE/DEPLOY/COMPATIBILITY refreshed for v0.3
 - Helm: configurable probes + Python `startupProbe` (model/index warm-up); timeouts/`failureThreshold` for server, python, postgres, webapp
 - `scripts/backup_postgres_smoke.sh` + `make backup-smoke` + CI job (pg_dump → restore round-trip)
 - Trivy scan for Python RAG image in CI (CRITICAL; torch stack often has unfixed HIGH)
 - HR paraphrase + adversarial near-miss retrieval cases (eval total **99**)
 - Local Compose default `RAG_RERANKER=keyword` for stronger demo ranking (override via env; CI stays `none` unless set)
+- Dependabot: grouped weekly updates; ignore selected majors (`langchain*`, `protobuf`, …)
 
 ## [0.2.0] - 2026-07-22
 
@@ -89,6 +95,7 @@ First tagged open-source release — reference implementation of the **Grounded*
 - English-first docs (`docs/en/`) + Russian hub (`docs/ru/`)
 - GitHub Pages landing (`site/`)
 
-[Unreleased]: https://github.com/kantik001/grounded-llm/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/kantik001/grounded-llm/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/kantik001/grounded-llm/releases/tag/v0.3.0
 [0.2.0]: https://github.com/kantik001/grounded-llm/releases/tag/v0.2.0
 [0.1.0]: https://github.com/kantik001/grounded-llm/releases/tag/v0.1.0

@@ -104,7 +104,7 @@ We win on **trust, deployability, and measured RAG quality**—not on feature co
 - Retrieval improvements (hybrid BM25+RRF, keyword/cross-encoder rerank) with eval gate
 - Helm chart, backup/restore runbooks, Trivy + load smoke in CI
 
-### On main (toward v0.3)
+### Done — v0.3.0 (local inference & agent surface)
 
 - Local LLM providers (`LLM_PROVIDER=openai|ollama|vllm`) + Compose profiles
 - Redis embedding + semantic response caches (`X-Cache`)

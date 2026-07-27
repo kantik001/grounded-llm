@@ -76,7 +76,7 @@ Example output:
 ```json
 {
   "reference_impl": "grounded-llm",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "suites": {
     "default_en": {"passed": 21, "total": 21, "pass_rate": 1.0},
     "it_support": {"passed": 16, "total": 16, "pass_rate": 1.0},

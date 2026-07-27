@@ -1,7 +1,12 @@
 # Grounded LLM
 
 [![CI](https://github.com/kantik001/grounded-llm/actions/workflows/ci.yml/badge.svg)](https://github.com/kantik001/grounded-llm/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/kantik001/grounded-llm)](https://github.com/kantik001/grounded-llm/releases)
+[![Release](https://img.shields.io/github/v/release/kantik001/grounded-llm)](https://github.com/kantik001/grounded-llm/releases/tag/v0.3.0)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go)](server/go.mod)
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](api/requirements.txt)
+[![Eval](https://img.shields.io/badge/eval-99%20cases-brightgreen)](docs/en/BENCHMARK.md)
+[![Pages](https://img.shields.io/badge/docs-GitHub%20Pages-222?logo=github)](https://kantik001.github.io/grounded-llm/)
 
 **Open platform to deploy cited, verified document assistants in days — templates, API, on-prem.**
 
@@ -194,7 +199,7 @@ python -m conformance spec     # Offline OpenAPI / spec check
 | [docs/en/ECOSYSTEM.md](docs/en/ECOSYSTEM.md) | Standard core vs agents (separate project) |
 | [docs/en/BENCHMARK.md](docs/en/BENCHMARK.md) | Public eval metrics (99 retrieval cases) |
 | [docs/en/LLM_PROVIDERS.md](docs/en/LLM_PROVIDERS.md) | Ollama / vLLM, Redis caches, gRPC Retriever |
-| [docs/en/RELEASE.md](docs/en/RELEASE.md) | Tag & release checklist (next: v0.3.0) |
+| [docs/en/RELEASE.md](docs/en/RELEASE.md) | Tag & release checklist (v0.3.0) |
 | [Site (GitHub Pages)](https://kantik001.github.io/grounded-llm/) | Spec, conformance, quick start |
 | [docs/en/API_DEPRECATION_POLICY.md](docs/en/API_DEPRECATION_POLICY.md) | `/api/v1` stability & sunset |
 | [docs/en/COMPATIBILITY.md](docs/en/COMPATIBILITY.md) | Supported stack matrix |
