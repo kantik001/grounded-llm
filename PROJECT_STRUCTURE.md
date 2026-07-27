@@ -3,7 +3,7 @@
 | Path | Purpose |
 |------|---------|
 | `server/` | Go: auth, sessions, RAG+LLM orchestration, admin, verify |
-| `api/` | Python Flask: `/rag/context`, `/health`, reindex |
+| `api/` | Python RAG: Flask app + Gunicorn HTTP + gRPC Retriever |
 | `rag/` | Chroma, retrieval, `domains_config`, `document_loaders` |
 | `config/` | Domain pack: `domains.json`, prompts, branding, RBAC/SSO |
 | `data/{tenant}/{domain}/` | Knowledge base: `.txt`, `.pdf`, `.docx` |

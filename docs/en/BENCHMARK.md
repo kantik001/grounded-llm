@@ -88,7 +88,7 @@ Example output:
 }
 ```
 
-Future: publish leaderboard on GitHub Pages after public launch ([LAUNCH.md](docs/en/LAUNCH.md)).
+Future: publish leaderboard on GitHub Pages after public launch ([LAUNCH.md](./LAUNCH.md)).
 
 ---
 

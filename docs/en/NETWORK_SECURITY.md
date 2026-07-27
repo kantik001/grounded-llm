@@ -8,10 +8,13 @@ Hardening guidance for production deployments.
 |---------|------|------------------|
 | webapp (nginx) | 80/443 | Yes — UI + `/api` proxy |
 | Go server | 8080 | Prefer via nginx/ingress only (`127.0.0.1:8080` in prod compose) |
-| Python RAG | 5000 | **No** — internal network only (`docker-compose.prod.yml` removes host publish; local compose binds `127.0.0.1` only) |
+| Python RAG (HTTP) | 5000 | **No** — internal / loopback only (`docker-compose.prod.yml` removes host publish) |
+| Python gRPC Retriever | 50051 | **No** — internal only (prod compose exposes without host publish) |
+| Redis | 6379 | **No** — internal only (local compose binds `127.0.0.1`) |
 | Postgres | 5432 | **No** — internal network only |
+| Ollama / vLLM | 11434 / 8000 | **No** — optional profiles; keep on internal network |
 
-In Kubernetes, use `NetworkPolicy` to allow server → python/postgres only.
+In Kubernetes, use `NetworkPolicy` to allow server → python/postgres/redis only (and agents → python:50051 if needed).
 
 **Production Compose:**
 
@@ -27,6 +30,7 @@ When `RAG_SERVICE_TOKEN` is set (required in production):
 
 - Go sends `X-RAG-Service-Token` on `/rag/context` and readiness probes
 - Python rejects `/rag/context` and `/ready` without a valid token
+- gRPC Retriever expects the same token in metadata `x-rag-service-token` (or `Authorization: Bearer …`)
 - `/health` stays unauthenticated for container liveness checks
 
 Generate a strong random token (≥32 bytes) and store in your secrets manager.

@@ -69,10 +69,14 @@ Few-shot из `config/locales/{locale}/few_shot.json`.
 
 ```bash
 # из корня репозитория
-python api/app.py
+# from repo root — HTTP only (dev)
+python -m flask --app api.app run -p 5000
+
+# production-shaped: Gunicorn + gRPC
+sh api/entrypoint.sh
 ```
 
-Docker: `CMD ["python", "api/app.py"]` в `Dockerfile.python`.
+Docker: `CMD ["/app/api/entrypoint.sh"]` в `Dockerfile.python`. Актуальное описание: [../../en/knowledge-base/python-api.md](../../en/knowledge-base/python-api.md).
 
 ---
 

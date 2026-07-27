@@ -5,34 +5,18 @@
 
 ---
 
-## Четыре сервиса
+## Сервисы
 
-```mermaid
-flowchart LR
-    subgraph host [Host ports]
-        P80[":80 webapp"]
-        P8080[":8080 server"]
-        P5000[":5000 python"]
-    end
-    webapp[Nginx webapp]
-    server[Go server]
-    python[Python RAG]
-    db[(PostgreSQL)]
-
-    P80 --> webapp
-    webapp -->|/api/ proxy| server
-    P8080 --> server
-    server --> db
-    server --> python
-    P5000 --> python
-```
+Локальные LLM / Redis / gRPC: см. [../en/LLM_PROVIDERS.md](../en/LLM_PROVIDERS.md) и актуальную EN-версию [docker-overview](../../en/knowledge-base/docker-overview.md).
 
 | Сервис | Образ | Роль |
-|------------------|---------------|-------------|
-| **postgres** | `postgres:16-alpine` | users, sessions, messages, feedback, analytics |
-| **python** | `Dockerfile.python` | Flask: RAG retrieval, reindex, `/health` |
-| **server** | `Dockerfile.server` | API, LLM orchestration, verify, admin |
-| **webapp** | `Dockerfile.webapp` | Эталонный UI (Telegram Web App) + nginx → server |
+|--------|-------|------|
+| **postgres** | `pgvector/pgvector:pg16` | сессии, сообщения; опционально pgvector |
+| **redis** | `redis:7-alpine` | кэш эмбеддингов + ответов LLM |
+| **python** | `Dockerfile.python` | Gunicorn HTTP `:5000` + gRPC Retriever `:50051` |
+| **server** | `Dockerfile.server` | API, LLM, verify, admin, `/metrics` |
+| **webapp** | `Dockerfile.webapp` | UI + nginx → server |
+| **ollama** / **vllm** | optional profiles | локальный LLM |
 
 Имя проекта Compose: **`grounded_llm`**
 
@@ -91,7 +75,7 @@ Makefile: `make up`, `make logs`, `make smoke`, `make test`.
 
 ## Сервис `python` (RAG)
 
-- Порт **5000**, entrypoint: `python api/app.py`
+- Порты **5000** (HTTP) и **50051** (gRPC); entrypoint: `api/entrypoint.sh` (Gunicorn + gRPC)
 - Env: `DOMAINS_CONFIG_PATH`, `LOCALES_ROOT`, `DEFAULT_LOCALE`, `ADMIN_SECRET`, `FORCE_RAG_REINDEX`, `PYTHON_SERVICE_PORT`
 - Healthcheck: `start_period: 180s` (первый RAG / embeddings может быть долгим)
 - Endpoints: `/health`, `/rag/context`, `/domains`, `/admin/reindex`
@@ -141,7 +125,8 @@ TELEGRAM_AUTH_DISABLED=true
 
 | Файл | База | Заметки |
 |------|------|---------|
-| `Dockerfile.server` | `golang:1.23-alpine` → `alpine:3.21` | multi-stage, `curl` для healthcheck |
+| `Dockerfile.server` | `golang:1.25-alpine` → `alpine:3.21` | multi-stage, `curl` для healthcheck |
+| `Dockerfile.python` | `python:3.11-slim` | Gunicorn + gRPC (`api/entrypoint.sh`) |
 | `Dockerfile.python` | `python:3.11-slim` | RAG deps из `api/requirements.txt` |
 | `Dockerfile.webapp` | `nginx:alpine` | статика + `nginx.conf` |
 

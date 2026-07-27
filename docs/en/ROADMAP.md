@@ -84,7 +84,7 @@ See also: [PLATFORM_VISION.md](../../PLATFORM_VISION.md) · [HIRING.md](../../HI
 | Item | Status | Artifact |
 |------|--------|----------|
 | Webapp i18n | ✅ | `/branding`, locale bundles |
-| Expand eval | ✅ | `eval/rag_default_en_baseline.jsonl` (18 cases) |
+| Expand eval | ✅ | `eval/rag_default_en_baseline.jsonl` (21 cases); total retrieval suites **99** |
 | Retrieval eval gate in CI | ✅ | job `eval-retrieval-gate` |
 | Smoke E2E in CI | ✅ | job `smoke-api` |
 | OpenAPI examples | ✅ | [API_EXAMPLES.md](./API_EXAMPLES.md) |
@@ -393,7 +393,7 @@ Numbered delivery phases **1–11 are complete**. Next work is **operator choice
 
 | Track | Focus | Doc |
 |-------|-------|-----|
-| **Launch** | Public repo, `v0.3.0` tag, GitHub Pages, dev.to / HN | [LAUNCH.md](./LAUNCH.md), [RELEASE.md](./RELEASE.md) |
+| **Launch** | Public repo, `v0.3.0` tag (local LLM, Redis caches, gRPC Retriever), GitHub Pages, dev.to / HN | [LAUNCH.md](./LAUNCH.md), [RELEASE.md](./RELEASE.md), [LLM_PROVIDERS.md](./LLM_PROVIDERS.md) |
 | **Hosted beta** | Email creds, Stripe Customer Portal, staging deploy | [SAAS.md](./SAAS.md), [BILLING.md](./BILLING.md) |
 | **Enterprise pilot** | SAML, trust center refresh, first on-prem customer | [PARTNER_CERTIFICATION.md](./PARTNER_CERTIFICATION.md), [TRUST_CENTER.md](./TRUST_CENTER.md) |
 

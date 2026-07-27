@@ -14,7 +14,7 @@ Grounded LLM is an **on-premise or private-cloud** knowledge assistant. Employee
 |----------|--------|
 | Deployment | Docker Compose or Kubernetes (client infrastructure) |
 | Data residency | Documents, chat history, and vector index stay in **your** environment |
-| LLM usage | Optional external LLM API (OpenAI-compatible); prompts include retrieved excerpts only |
+| LLM usage | OpenAI-compatible endpoint via `LLM_PROVIDER` (cloud OpenRouter/OpenAI **or** on-prem Ollama/vLLM); prompts include retrieved excerpts only; Redis may cache embeddings/answers on-prem |
 | Auth | Telegram Web App signature, API keys, admin Basic Auth |
 
 ---

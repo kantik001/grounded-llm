@@ -59,7 +59,7 @@ This document explains **why** Grounded LLM is built the way it is. Use it for t
 
 **Trade-off:** Does not catch bad phrasing from the LLM. Roadmap: E2E eval with LLM on staging.
 
-**Interview hook:** `python scripts/run_rag_eval.py --suite default_en` — 18 cases, EN HR demo.
+**Interview hook:** `python scripts/run_rag_eval.py --suite default_en` — 21 EN HR cases (total retrieval gate: **99**).
 
 ---
 
@@ -115,7 +115,8 @@ This document explains **why** Grounded LLM is built the way it is. Use it for t
 | Area | Technologies |
 |------|----------------|
 | API / orchestration | Go, Gin, PostgreSQL |
-| Retrieval | Python, Flask, LangChain, Chroma |
+| Retrieval | Python, Flask + Gunicorn, LangChain, Chroma/Qdrant/pgvector, Redis embedding cache, gRPC Retriever |
+| Orchestration | Go (Gin), OpenAI-compatible LLM (`LLM_PROVIDER`), numeric verify, response cache |
 | Embeddings | `intfloat/multilingual-e5-small` (in-container) |
 | LLM | OpenAI-compatible API (configurable endpoint) |
 | Deploy | Docker Compose, nginx |

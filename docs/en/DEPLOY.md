@@ -1,7 +1,7 @@
 # Deployment
 
 Guide for running a **new project** on the Grounded LLM scaffold.  
-Architecture: [ARCHITECTURE.md](./ARCHITECTURE.md).
+Architecture: [ARCHITECTURE.md](./ARCHITECTURE.md) · Local LLM / caches: [LLM_PROVIDERS.md](./LLM_PROVIDERS.md).
 
 ---
 
@@ -9,16 +9,22 @@ Architecture: [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 ```bash
 cp .env.example .env
-# LLM_API_KEY, TELEGRAM_BOT_TOKEN (or TELEGRAM_AUTH_DISABLED=true for dev)
+# Cloud LLM: set LLM_API_KEY (OpenAI-compatible)
+# Local LLM (CPU): LLM_PROVIDER=ollama  →  docker compose --profile ollama up -d --build
+# Local LLM (GPU): LLM_PROVIDER=vllm    →  docker compose --profile vllm up -d --build
+# Browser without Telegram: TELEGRAM_AUTH_DISABLED=true
 
 docker compose up -d --build
 ```
 
-| Service | URL |
-|---------|-----|
+| Service | URL / port |
+|---------|------------|
 | Web App | http://localhost/ |
 | Go API | http://localhost:8080/health |
-| Python RAG | http://localhost:5000/health |
+| Go metrics | http://localhost:8080/metrics |
+| Python RAG (HTTP) | http://127.0.0.1:5000/health (loopback only) |
+| gRPC Retriever | `localhost:50051` (`grounded.rag.v1.Retriever`) |
+| Redis | `localhost:6379` (embedding + response cache) |
 
 After adding documents under `data/`:
 
@@ -28,6 +34,14 @@ python scripts/reindex_rag.py
 ```
 
 Supported KB formats: **`.txt`**, **`.pdf`**, **`.docx`**.
+
+**Production-shaped Compose** (required secrets, no public Python/Postgres/gRPC ports):
+
+```bash
+# GROUNDED_ENV=production, ADMIN_PASSWORD, ADMIN_SECRET, RAG_SERVICE_TOKEN,
+# POSTGRES_PASSWORD, DATABASE_URL, CORS_ALLOWED_ORIGINS, LLM_API_KEY (or local provider)
+make up-prod
+```
 
 ---
 
@@ -39,9 +53,11 @@ The `./config` directory is mounted into containers as `/config` (read-only).
 |----------|-------------|
 | `DOMAINS_CONFIG_PATH` | `domains.json` |
 | `LOCALES_ROOT` | `config/locales` (`ru/`, `en/`) |
-| `DEFAULT_LOCALE` | `ru` or `en` |
+| `DEFAULT_LOCALE` | `en` or `ru` (code default: **`en`**) |
 | `DEFAULT_TENANT_ID` | default tenant for KB paths |
-| `API_KEYS` or `API_KEYS_FILE` | integrator API keys (Phase 2) |
+| `LLM_PROVIDER` | `openai` (default) \| `ollama` \| `vllm` |
+| `REDIS_URL` | e.g. `redis://redis:6379/0` |
+| `API_KEYS` or `API_KEYS_FILE` | integrator API keys |
 
 **Reload Go without restart:**
 
@@ -57,9 +73,13 @@ Python `rag/domains_config.py` reloads `domains.json` when mtime changes.
 
 ## Local development (without Docker)
 
-1. Postgres + `.env` with `DATABASE_URL`.
+1. Postgres + Redis + `.env` (`DATABASE_URL`, optional `REDIS_URL`).
 2. `cd server && go run .`
-3. Python: `python api/app.py` (from repo root).
+3. Python RAG: from repo root, prefer the same entrypoint as Docker:
+   ```bash
+   # HTTP only (dev): python -m flask --app api.app run -p 5000
+   # Or full stack (Gunicorn + gRPC): sh api/entrypoint.sh
+   ```
 4. Web: nginx or `webapp/` + `TELEGRAM_AUTH_DISABLED=true`, API on `:8080`.
 
 ---
@@ -75,7 +95,7 @@ make eval-retrieval
 
 Results: `eval/results/YYYYMMDD_HHMMSS.json`.
 
-Run after: reindex, locale prompt changes, `LLM_MODEL` change.
+Run after: reindex, locale prompt changes, `LLM_MODEL` / embedding model change.
 
 ---
 
@@ -109,12 +129,12 @@ python scripts/run_rag_eval.py --suite default
 
 ### 4. Secrets
 
-`.env`: `LLM_API_KEY`, `DATABASE_URL`, `CORS`, Telegram, `ADMIN_PASSWORD`, `ADMIN_SECRET`, optional `API_KEYS`.
+`.env`: `LLM_API_KEY` (or local `LLM_PROVIDER`), `REDIS_URL`, `DATABASE_URL`, `CORS`, Telegram, `ADMIN_PASSWORD`, `ADMIN_SECRET`, `RAG_SERVICE_TOKEN` (prod), optional `API_KEYS`.
 
 ### 5. Pilot metrics
 
-Verify pass rate, “not in materials” rate, thumbs up/down, latency p95.  
-Prometheus: `GET /metrics`.
+Verify pass rate, “not in materials” rate, thumbs up/down, latency p95 / TTFT.  
+Prometheus: `GET /metrics` (`llm_tokens_*`, `llm_ttft_*`, cache counters).
 
 ---
 
@@ -131,6 +151,7 @@ make smoke
 
 - volume `chroma_data` (recreated by reindex).
 - `postgres_data` / production sessions.
+- Redis cache volume data (optional — caches are ephemeral by design).
 - `.env` secrets — only `.env.example` as template.
 
 ---
@@ -140,3 +161,5 @@ make smoke
 **Vision / CV** — separate domain pack, not part of platform core.
 
 **Hosted SaaS signup** — disabled by default. To enable self-serve tenant creation + Stripe billing, see [SAAS.md](./SAAS.md) and [BILLING.md](./BILLING.md). Not required for on-prem pilots.
+
+**Kubernetes:** see [K8S_DEPLOY.md](./K8S_DEPLOY.md). Helm chart may lag Compose for Redis/gRPC — bring Redis via your cluster or extend the chart.

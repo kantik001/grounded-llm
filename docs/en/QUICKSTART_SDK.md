@@ -6,7 +6,8 @@ Use the Python SDK or CLI against a local Grounded LLM deployment.
 
 ```bash
 cp .env.example .env
-# LLM_API_KEY=... (OpenAI-compatible). For smoke without LLM bill: LLM_MOCK=true RAG_MOCK=true
+# LLM_API_KEY=... (OpenAI-compatible) or LLM_PROVIDER=ollama|vllm — see [LLM_PROVIDERS.md](./LLM_PROVIDERS.md)
+# For smoke without LLM bill: LLM_MOCK=true RAG_MOCK=true
 # TELEGRAM_AUTH_DISABLED=true
 
 docker compose up -d --build

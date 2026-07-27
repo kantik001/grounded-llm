@@ -42,9 +42,11 @@ For deployment and data-flow details, see [docs/en/SECURITY_BRIEF.md](docs/en/SE
 | Component | Notes |
 |-----------|-------|
 | **Go server** | Public API; Telegram HMAC, API keys, admin Basic Auth / OIDC |
-| **Python RAG** | Internal service; protect with `RAG_SERVICE_TOKEN` (`X-RAG-Service-Token`). Set `GROUNDED_ENV=production` so the token is **required** at startup. Do not publish port `5000` publicly — use `docker-compose.prod.yml` |
+| **Python RAG** | Internal HTTP `:5000` + gRPC `:50051`; protect with `RAG_SERVICE_TOKEN` (`X-RAG-Service-Token` / gRPC metadata). Set `GROUNDED_ENV=production` so the token is **required** at startup. Do not publish `5000`/`50051` publicly — use `docker-compose.prod.yml` |
+| **Redis** | Internal `:6379` — embedding + response caches; do not publish publicly in production |
 | **PostgreSQL / Chroma / data/** | Client-side storage; stays in your infrastructure |
 | **`/metrics`** | Unauthenticated by default — restrict via network policy in production |
+| **Local LLM (Ollama/vLLM)** | Optional Compose profiles; treat as trusted internal inference |
 
 ### Out of scope for this repository
 
@@ -68,7 +70,8 @@ Before production:
 - [ ] Set `GROUNDED_ENV=production` (enforces fail-fast checks in Go + Python)
 - [ ] Change Postgres password (`POSTGRES_PASSWORD` / `DATABASE_URL` — not `grounded:grounded`)
 - [ ] Set strong `ADMIN_PASSWORD`, `ADMIN_SECRET`, and `RAG_SERVICE_TOKEN`
-- [ ] Do not expose Python RAG port (`5000`) on the public interface
+- [ ] Do not expose Python RAG HTTP (`5000`) or gRPC (`50051`) on the public interface
+- [ ] Keep Redis (`6379`) internal-only
 - [ ] Keep `TELEGRAM_AUTH_DISABLED=false` (never in production)
 - [ ] Never enable `LLM_MOCK` / `RAG_MOCK` in production
 - [ ] Restrict `/metrics` to internal network
@@ -78,4 +81,4 @@ Before production:
 
 ## Dependencies
 
-We track dependency updates via [Dependabot](../.github/dependabot.yml). Report supply-chain concerns through the same private channels above.
+We track dependency updates via [Dependabot](https://github.com/kantik001/grounded-llm/blob/main/.github/dependabot.yml) (grouped weekly PRs; major bumps for `langchain*`, `protobuf`, etc. are ignored until a coordinated upgrade). Report supply-chain concerns through the same private channels above.

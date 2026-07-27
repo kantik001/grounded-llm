@@ -3,6 +3,8 @@
 Репозиторий — **ядро платформы** для ассистентов с ответами по документам (RAG) в любой отрасли.  
 Отраслевые пакеты (HR, юриспруденция, поддержка и т.д.) — это **domain pack**: `config/` + `data/{tenant_id}/{domain_id}/`.
 
+Локальные LLM и кэши: [../en/LLM_PROVIDERS.md](../en/LLM_PROVIDERS.md) (EN).
+
 ---
 
 ## Слои
@@ -10,7 +12,7 @@
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  Ядро платформы (этот репозиторий)                      │
-│  Go · Python RAG · verify · админка · CI                │
+│  Go · Python RAG · Redis · verify · админка · CI        │
 └───────────────────────────┬─────────────────────────────┘
                             │
               ┌─────────────┴─────────────┐
@@ -23,19 +25,36 @@
 |------|-------|-----------------|
 | **Ядро** | `server/`, `api/`, `rag/`, `migrations/`, `webapp/`, `scripts/` | Нет |
 | **Domain pack** | `config/domains.json`, `config/locales/{ru,en}/`, `data/*` | **Да** |
-| **Опционально** | Vision/CV (вне ядра) | По задаче |
+| **Опционально** | Redis (кэши), Ollama / vLLM (локальный LLM) | По задаче |
 
 - **`domain_id`** — идентификатор домена / базы знаний.
-- **`tenant_id`** — изоляция арендаторов (мультитенантность, фаза 2).
+- **`tenant_id`** — изоляция арендаторов (мультитенантность).
+
+---
+
+## Сервисы Compose
+
+| Сервис | Роль |
+|--------|------|
+| **server** (Go) | Auth, сессии, LLM, numeric verify, citations, `/metrics` |
+| **python** | HTTP RAG (`:5000`, Gunicorn) + **gRPC Retriever** (`:50051`) |
+| **postgres** | Сессии, сообщения; опционально pgvector |
+| **redis** | Кэш эмбеддингов + семантический кэш ответов LLM |
+| **webapp** | Reference UI (nginx → Go) |
+| **ollama** / **vllm** | Опциональный локальный LLM (`--profile ollama` / `vllm`) |
 
 ---
 
 ## Поток текстового чата
 
-1. Клиент → Go `POST /message` (опционально `?stream=1` для потокового ответа)
-2. Go → Python `POST /rag/context` (`domain_id`, `tenant_id`, `locale`)
-3. Chroma → фрагменты документов + few-shot для выбранного языка
-4. Go → LLM → проверка чисел → дисклеймер → Postgres (с `citations[]`)
+1. Клиент → Go `POST /message` (опционально `?stream=1`)
+2. При пустой истории: опциональный **semantic response cache** (Redis) → заголовок `X-Cache: HIT`
+3. Иначе Go → Python `POST /rag/context` (`domain_id`, `tenant_id`, `locale`)
+4. Python: эмбеддинги (с Redis при `REDIS_URL`) → vector store (Chroma / Qdrant / pgvector) → hybrid/rerank → фрагменты
+5. Go → OpenAI-совместимый LLM (`LLM_PROVIDER`) → проверка чисел → дисклеймер → Postgres (`citations[]`)
+6. Прошедшие verify ответы могут попасть в response cache (`X-Cache: MISS` на первый запрос)
+
+**Агенты:** gRPC `grounded.rag.v1.Retriever/Retrieve` на Python `:50051` (metadata `x-rag-service-token`).
 
 Язык ответа и UI задаётся локалью (`ru` / `en`): см. `config/locales/`.
 
@@ -43,7 +62,7 @@
 
 ## Документы базы знаний
 
-Форматы: **`.txt`**, **`.pdf`**, **`.docx`** → `rag/document_loaders.py` → разбиение на фрагменты → Chroma.
+Форматы: **`.txt`**, **`.pdf`**, **`.docx`** → `rag/document_loaders.py` → чанки → выбранный vector backend.
 
 Рекомендуемый путь: `data/{tenant_id}/{domain_id}/`.  
 Старый layout `data/{domain_id}/` по-прежнему поддерживается.
@@ -56,30 +75,14 @@
 
 ```bash
 python scripts/init_pack.py list
-python scripts/init_pack.py install it_support   # или: hr, legal_faq
+python scripts/init_pack.py install it_support
 python scripts/reindex_rag.py
 ```
-
-Реестр: `packs/registry.yaml` — `python scripts/init_pack.py registry --validate`
-
----
-
-## Чеклист нового домена (вручную)
-
-1. Запись в `config/domains.json` (поля `names.ru` / `names.en` для UI)
-2. Документы в `data/{tenant_id}/{domain_id}/`
-3. Файлы в `config/locales/ru/` и `config/locales/en/` (prompts, few_shot, onboarding, branding)
-4. `python scripts/reindex_rag.py` или `scripts/init_domain.ps1`
-5. `eval/rag_{domain}_baseline.jsonl` + `make eval-retrieval`
-
-Оценка MVP: **2–5 дней** при готовых документах.
 
 ---
 
 ## Документация
 
-| Документация | [knowledge-base/README.md](./knowledge-base/README.md) |
-| Указатель RU | [README.md](./README.md) |
-| English | [../en/knowledge-base/README.md](../en/knowledge-base/README.md) |
-
-Общий указатель: [../README.md](../README.md).
+- Провайдеры / Redis / gRPC: [../en/LLM_PROVIDERS.md](../en/LLM_PROVIDERS.md)
+- Деплой: [DEPLOY.md](./DEPLOY.md)
+- Knowledge base: [knowledge-base/README.md](./knowledge-base/README.md)
