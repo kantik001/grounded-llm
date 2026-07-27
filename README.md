@@ -38,6 +38,8 @@ Grounded LLM separates **orchestration** (Go: auth, sessions, LLM, verify) from 
 
 ![Grounded LLM architecture](docs/assets/architecture.png)
 
+_Diagram includes optional [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) on **`:50052`** (dashed path). Default verify stays in-process (`GUARDRAILS_MODE=local`)._
+
 **Message flow (default):** client → Go auth/session → Python hybrid retrieval → Go LLM → **numeric verify (in-process)** → citations → Postgres.
 
 **Optional remote verify:** same path, but after LLM Go calls [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) gRPC **`:50052`** (`GUARDRAILS_MODE=remote|hybrid`). Default remains `local` (Spec behavior, CI-safe). See [GUARDRAILS.md](docs/en/GUARDRAILS.md).

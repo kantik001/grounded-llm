@@ -2,7 +2,8 @@
 
 **Исходник:** `rag/verifier.py`  
 **Тесты:** `tests/test_verifier.py`  
-**В проде:** основная проверка в Go — `server/rag_verify.go`
+**В проде (по умолчанию):** проверка в Go — `server/rag_verify.go` (`GUARDRAILS_MODE=local`)  
+**Опционально:** gRPC → [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) `:50052` при `GUARDRAILS_MODE=remote|hybrid` — см. [../en/GUARDRAILS.md](../en/GUARDRAILS.md)
 
 ---
 
@@ -42,14 +43,14 @@
 
 ---
 
-## Python vs Go
+## Python vs Go vs guardrails
 
-| | Python | Go |
-|--|--------|-----|
-| Прод | эталон для тестов | **да**, после каждого RAG-ответа |
-| Логика | та же идея | `verifyRAGAnswer` |
+| | Python | Go (local) | grounded-guardrails |
+|--|--------|------------|---------------------|
+| Прод | эталон для тестов | **default** после RAG-ответа | опционально `remote` / `hybrid` |
+| Логика | та же идея Spec ±0.01 | `verifyRAGAnswer` | Rust reference + Go host parity |
 
-При изменениях держите логику **согласованной**.
+При изменениях держите tolerance **±0.01** согласованным.
 
 ---
 
@@ -65,3 +66,4 @@
 |------|------|
 | Промпт | [server-rag_chat.md](./server-rag_chat.md) |
 | Фрагменты | [rag-retrieval.md](./rag-retrieval.md) |
+| Remote verify | [../en/GUARDRAILS.md](../en/GUARDRAILS.md) |

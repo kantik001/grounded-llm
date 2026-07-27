@@ -22,7 +22,8 @@
 | `config.go` | Настройки из env |
 | `llm.go`, `llm_stream.go` | OpenAI-compatible API + поток |
 | `rag_chat.go`, `rag_pipeline.go` | RAG, citations |
-| `rag_verify.go` | Проверка чисел, дисклеймер |
+| `rag_verify.go` | Проверка чисел (local Spec path), дисклеймер |
+| `guardrails_client.go` | Опциональный remote verify → grounded-guardrails `:50052` |
 | `rag_log.go` | Логи `[RAG]` |
 | `domains.go` | Каталог `domains.json` |
 | `locale.go` | `config/locales/{ru,en}`, middleware `X-Locale` |
@@ -55,6 +56,7 @@ flowchart TB
     Redis[(Redis caches)]
     Py[python RAG HTTP :5000 + gRPC :50051]
     LLM[OpenAI-compatible LLM\nOpenRouter / Ollama / vLLM]
+    GR[grounded-guardrails :50052\nопционально]
 
     Web --> Go
     Agents -->|Retriever| Py
@@ -63,6 +65,7 @@ flowchart TB
     Go -->|/rag/context| Py
     Py -->|embedding cache| Redis
     Go -->|/v1/chat/completions| LLM
+    Go -.->|GUARDRAILS_MODE=remote/hybrid| GR
 ```
 
 ---
@@ -70,11 +73,12 @@ flowchart TB
 ## Старт `main()`
 
 1. `loadConfig()` — `.env`
-2. Postgres + `runAllMigrations`
-3. `loadDomainCatalog()`, `initLocaleConfig()`
-4. `newChatStore`
-5. Gin routes + `localeMiddleware` + `startConfigReloadWatcher`
-6. Слушает `:8080`
+2. `initGuardrailsClient()` при `GUARDRAILS_MODE=remote|hybrid`
+3. Postgres + `runAllMigrations`
+4. `loadDomainCatalog()`, `initLocaleConfig()`
+5. `newChatStore`
+6. Gin routes + `localeMiddleware` + `startConfigReloadWatcher`
+7. Слушает `:8080`
 
 ---
 
@@ -92,6 +96,11 @@ flowchart TB
 | `API_KEYS`, `API_KEYS_FILE` | Ключи интеграторов |
 | `DEFAULT_TENANT_ID`, `ALLOWED_TENANTS` | Мультитенантность |
 | `ADMIN_PASSWORD`, `ADMIN_SECRET` | Админка |
+| `GUARDRAILS_MODE` | `local` (default) / `remote` / `hybrid` |
+| `GUARDRAILS_GRPC_ADDR` | адрес guardrails (напр. `localhost:50052`) |
+| `GUARDRAILS_PII_BLOCK` | включить `pii_block` при remote verify |
+
+Подробнее: [../en/GUARDRAILS.md](../en/GUARDRAILS.md).
 
 ---
 
@@ -102,3 +111,4 @@ flowchart TB
 | RAG | [server-rag_chat.md](./server-rag_chat.md) |
 | Python RAG | [python-api.md](./python-api.md) |
 | Docker | [docker-overview.md](./docker-overview.md) |
+| Guardrails | [../en/GUARDRAILS.md](../en/GUARDRAILS.md) |

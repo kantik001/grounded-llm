@@ -98,6 +98,11 @@ flowchart TB
 | `API_KEYS`, `API_KEYS_FILE` | integrator keys |
 | `DEFAULT_TENANT_ID`, `ALLOWED_TENANTS` | multi-tenant |
 | `ADMIN_PASSWORD`, `ADMIN_SECRET` | admin |
+| `GUARDRAILS_MODE` | `local` (default) / `remote` / `hybrid` |
+| `GUARDRAILS_GRPC_ADDR` | guardrails address (e.g. `localhost:50052`) |
+| `GUARDRAILS_PII_BLOCK` | enable `pii_block` on remote verify |
+
+See [../GUARDRAILS.md](../GUARDRAILS.md).
 
 ---
 
@@ -108,3 +113,4 @@ flowchart TB
 | RAG flow | [server-rag_chat.md](./server-rag_chat.md) |
 | Python RAG | [python-api.md](./python-api.md) |
 | Docker | [docker-overview.md](./docker-overview.md) |
+| Guardrails | [../GUARDRAILS.md](../GUARDRAILS.md) |

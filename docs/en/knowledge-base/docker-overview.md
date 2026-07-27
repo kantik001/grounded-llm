@@ -42,10 +42,12 @@ flowchart LR
 | **server** | `Dockerfile.server` | API, LLM orchestration, verify, admin, `/metrics` |
 | **webapp** | `Dockerfile.webapp` | Reference UI + nginx → server |
 | **ollama** / **vllm** | optional profiles | Local OpenAI-compatible LLM (`--profile ollama` / `vllm`) |
+| **guardrails** (optional) | sibling `docker-compose.guardrails.yml` | [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) gRPC `:50052` — [GUARDRAILS.md](../GUARDRAILS.md) |
 
 Compose project name: **`grounded_llm`** (`name:` in `docker-compose.yml`, `PROJECT_NAME` in `Makefile`).
 
-Local LLM / caches: [LLM_PROVIDERS.md](../LLM_PROVIDERS.md).
+Local LLM / caches: [LLM_PROVIDERS.md](../LLM_PROVIDERS.md).  
+Optional remote verify: [GUARDRAILS.md](../GUARDRAILS.md).
 
 ---
 
@@ -55,6 +57,8 @@ Local LLM / caches: [LLM_PROVIDERS.md](../LLM_PROVIDERS.md).
 cp .env.example .env   # LLM_API_KEY or LLM_PROVIDER=ollama, ADMIN_PASSWORD, TELEGRAM_BOT_TOKEN
 docker compose up -d --build
 # Optional: docker compose --profile ollama up -d
+# Optional remote verify (sibling repo grounded-guardrails):
+# docker compose -f docker-compose.yml -f docker-compose.guardrails.yml up -d --build
 python scripts/reindex_rag.py   # or POST /admin/reindex
 ```
 

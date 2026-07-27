@@ -2,7 +2,7 @@
 
 Documentation for the **Grounded LLM** platform core.
 
-**See also:** [../ARCHITECTURE.md](../ARCHITECTURE.md), [../DEPLOY.md](../DEPLOY.md), [../../eval/README.md](../../eval/README.md).  
+**See also:** [../ARCHITECTURE.md](../ARCHITECTURE.md), [../DEPLOY.md](../DEPLOY.md), [../GUARDRAILS.md](../GUARDRAILS.md), [../../eval/README.md](../../eval/README.md).  
 Russian docs: [../../ru/knowledge-base/README.md](../../ru/knowledge-base/README.md).
 
 ---
@@ -28,7 +28,7 @@ Russian docs: [../../ru/knowledge-base/README.md](../../ru/knowledge-base/README
 | [rag-domains_config.md](./rag-domains_config.md) | `domains.json`, tenants |
 | [rag-vector_store.md](./rag-vector_store.md) | Chroma, reindex |
 | [rag-retrieval.md](./rag-retrieval.md) | `POST /rag/context` |
-| [rag-verifier.md](./rag-verifier.md) | Answer verification |
+| [rag-verifier.md](./rag-verifier.md) | Answer verification (local Go + optional remote `:50052`) |
 
 ### Go backend
 
@@ -37,7 +37,7 @@ Russian docs: [../../ru/knowledge-base/README.md](../../ru/knowledge-base/README
 | [server-overview.md](./server-overview.md) | `server/*.go` overview |
 | [server-auth-and-limits.md](./server-auth-and-limits.md) | Auth, API keys, CORS |
 | [server-chat-and-db.md](./server-chat-and-db.md) | Sessions, Postgres, citations |
-| [server-rag_chat.md](./server-rag_chat.md) | RAG + LLM + streaming |
+| [server-rag_chat.md](./server-rag_chat.md) | RAG + LLM + verify (`GUARDRAILS_MODE`) |
 | [server-admin-and-ux-api.md](./server-admin-and-ux-api.md) | Admin, metrics, OpenAPI |
 
 ### UI, scripts, quality

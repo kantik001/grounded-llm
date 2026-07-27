@@ -17,6 +17,7 @@
 | **server** | `Dockerfile.server` | API, LLM, verify, admin, `/metrics` |
 | **webapp** | `Dockerfile.webapp` | UI + nginx → server |
 | **ollama** / **vllm** | optional profiles | локальный LLM |
+| **guardrails** (опц.) | sibling `docker-compose.guardrails.yml` | grounded-guardrails gRPC `:50052` — [../en/GUARDRAILS.md](../en/GUARDRAILS.md) |
 
 Имя проекта Compose: **`grounded_llm`**
 
@@ -27,6 +28,8 @@
 ```bash
 cp .env.example .env   # LLM_API_KEY, ADMIN_PASSWORD, TELEGRAM_BOT_TOKEN
 docker compose up -d --build
+# optional remote verify (sibling repo grounded-guardrails):
+# docker compose -f docker-compose.yml -f docker-compose.guardrails.yml up -d --build
 python scripts/reindex_rag.py   # или POST /admin/reindex
 ```
 

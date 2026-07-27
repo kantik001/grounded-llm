@@ -1,7 +1,8 @@
 ﻿# RAG and LLM — `server/rag_pipeline.go`
 
-**Sources:** `server/rag_pipeline.go`, `server/rag_chat.go`, `server/rag_verify.go`  
+**Sources:** `server/rag_pipeline.go`, `server/rag_chat.go`, `server/rag_verify.go`, `server/guardrails_client.go`  
 **Python:** [rag-retrieval.md](./rag-retrieval.md), [rag-verifier.md](./rag-verifier.md)  
+**Remote verify (optional):** [../GUARDRAILS.md](../GUARDRAILS.md)  
 **Called from:** `handleTextMessage` (`message_handlers.go`), `sse.go` (streaming)
 
 ---
@@ -12,7 +13,9 @@
 2. `buildRAGUserPrompt` + `config/locales/{locale}/prompts.json`
 3. `callLLMCompletion` or `streamLLMCompletion` — OpenAI-compatible API
 4. `cleanRAGAnswer`, `appendRAGDisclaimer`
-5. `verifyRAGAnswer` — numbers must appear in `fragments`
+5. `verifyRAGAnswer` — Spec numeric check (±0.01 vs fragments):
+   - **`GUARDRAILS_MODE=local` (default):** in-process extract/compare in `rag_verify.go`
+   - **`remote` / `hybrid`:** gRPC `VerifyText` → [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) `:50052` (`guardrails_client.go`); hybrid falls back to local on transport errors
 
 On verify failure — warning to user, not a silent hallucination.
 
@@ -36,6 +39,8 @@ POST PYTHON_RAG_URL
 
 `POST /message?stream=1` — Server-Sent Events with incremental tokens.  
 Web App uses streaming when supported, falls back to JSON response.
+
+Verify still runs on the **final** assembled answer (same `finalizeRAGAnswer` path).
 
 ---
 
