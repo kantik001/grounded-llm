@@ -90,6 +90,10 @@ Example output:
 
 Future: publish leaderboard on GitHub Pages after public launch ([LAUNCH.md](./LAUNCH.md)).
 
+Public **verifiable-generation** metrics (NVR / CP / HR / RR) live in the sibling repo
+[grounded-bench](https://github.com/kantik001/grounded-bench) (offline track, 280 cases, seed 42).
+This document remains the retrieval / release-bench story for grounded-llm.
+
 ---
 
 ## Related
