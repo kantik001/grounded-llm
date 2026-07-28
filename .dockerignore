@@ -1,9 +1,31 @@
+# VCS / local secrets (never send to docker daemon)
 .git
 .gitignore
-*.md
-!README.md
 .env
 .env.example
+
+# Docs and marketing — not copied by any Dockerfile
+*.md
+.github
+docs
+site
+deploy
+
+# Dev / CI / SDK — not part of runtime images
+sdk
+conformance
+eval
+examples
+tests
+packs
+connectors
+
+# Eval artifacts only (keep data/*.jsonl available if added later)
+eval/results
+eval/**/*.jsonl
+packs/**/eval.jsonl
+
+# Python caches and local venvs
 __pycache__
 *.pyc
 *.pyo
@@ -15,11 +37,20 @@ env
 .venv-*
 **/.venv
 **/.venv-*
+
+# OS / editor noise
 .DS_Store
 Thumbs.db
+
+# Local build outputs
 server/main
 *.exe
+
+# Heavy local artifacts (vector DB, model weights)
 chroma_db
-eval/results
-*.jsonl
 models/*.pth
+
+# Coverage reports
+coverage
+htmlcov
+.coverage
