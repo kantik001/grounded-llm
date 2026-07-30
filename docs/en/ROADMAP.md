@@ -4,7 +4,7 @@ Strategy: **open platform for document-grounded assistants** — templates, API,
 Default language for docs and templates is **English**; Russian locale remains as a legacy locale pack.  
 No country-specific logic in core — new languages ship as locale packs.
 
-See also: [PLATFORM_VISION.md](../../PLATFORM_VISION.md) · [HIRING.md](../../HIRING.md)
+See also: [PLATFORM_VISION.md](../../PLATFORM_VISION.md) · [ARCHITECTURE.md](./ARCHITECTURE.md)
 
 ---
 
@@ -76,7 +76,7 @@ See also: [PLATFORM_VISION.md](../../PLATFORM_VISION.md) · [HIRING.md](../../HI
 | **Security brief** | ✅ | [SECURITY_BRIEF.md](./SECURITY_BRIEF.md) |
 | **HR reference template** | ✅ | [domain-packs/HR.md](./domain-packs/HR.md), `data/default/*_en.txt` |
 | **IT support template** | ✅ | [domain-packs/IT_SUPPORT.md](./domain-packs/IT_SUPPORT.md), `data/default/it_support/` |
-| **Platform positioning** | ✅ | [PLATFORM_VISION.md](../../PLATFORM_VISION.md), [HIRING.md](../../HIRING.md) |
+| **Platform positioning** | ✅ | [PLATFORM_VISION.md](../../PLATFORM_VISION.md), [ARCHITECTURE.md](./ARCHITECTURE.md) |
 | **Locale extensibility** | ✅ | [LOCALE_GUIDE.md](./LOCALE_GUIDE.md) |
 
 ### Engineering

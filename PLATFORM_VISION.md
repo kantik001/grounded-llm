@@ -134,7 +134,7 @@ Success metric for the platform: **new grounded assistant from template in &lt;3
 
 ## Related docs
 
-- [HIRING.md](HIRING.md) — design decisions for technical interviews
+- [docs/en/ARCHITECTURE.md](docs/en/ARCHITECTURE.md) — system design and trade-offs
 - [docs/en/ARCHITECTURE.md](docs/en/ARCHITECTURE.md)
 - [docs/en/ROADMAP.md](docs/en/ROADMAP.md)
 - [docs/en/SECURITY_BRIEF.md](docs/en/SECURITY_BRIEF.md)

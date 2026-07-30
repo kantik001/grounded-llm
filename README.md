@@ -232,7 +232,7 @@ python -m conformance spec     # Offline OpenAPI / spec check
 | [SECURITY.md](SECURITY.md) | Security policy and vulnerability reporting |
 | [CHANGELOG.md](CHANGELOG.md) | Release history |
 
-Design decisions and architecture trade-offs: [HIRING.md](HIRING.md)
+Design decisions and architecture trade-offs: [docs/en/ARCHITECTURE.md](docs/en/ARCHITECTURE.md) · [PLATFORM_VISION.md](PLATFORM_VISION.md)
 
 ---
 

@@ -5,7 +5,6 @@
 | Topic | English |
 |-------|---------|
 | Platform vision | [PLATFORM_VISION.md](../PLATFORM_VISION.md) (repo root) |
-| Hiring / portfolio | [HIRING.md](../HIRING.md) (repo root) |
 | Architecture | [ARCHITECTURE.md](en/ARCHITECTURE.md) |
 | Deploy | [DEPLOY.md](en/DEPLOY.md) |
 | LLM providers / Redis / gRPC | [LLM_PROVIDERS.md](en/LLM_PROVIDERS.md) |

@@ -147,7 +147,7 @@ This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.
 ## Questions
 
 - **Bug reports and features:** [GitHub Issues](https://github.com/kantik001/grounded-llm/issues)
-- **Architecture and design:** See [HIRING.md](HIRING.md) and [docs/en/ARCHITECTURE.md](docs/en/ARCHITECTURE.md)
+- **Architecture and design:** See [docs/en/ARCHITECTURE.md](docs/en/ARCHITECTURE.md) and [PLATFORM_VISION.md](PLATFORM_VISION.md)
 - **Security:** [SECURITY.md](SECURITY.md)
 
 ## License
