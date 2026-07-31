@@ -54,7 +54,7 @@ grounded-llm chat "How many vacation days?"   # after server is up
 | `secret-scan` | gitleaks secret detection |
 | `conformance-spec` | OpenAPI conformance (offline spec tests) |
 
-Dependabot opens **grouped** weekly PRs (Go modules, pip `langchain` / `api-misc`, GitHub Actions, tests pip). Major bumps for `langchain*`, `protobuf`, `gunicorn`, `redis`, etc. are ignored until a coordinated upgrade — see `.github/dependabot.yml`.
+Dependabot opens **grouped** weekly PRs (Go modules; pip for `api/`, `tests/`, `conformance/`, `sdk/python`; GitHub Actions). Major bumps for `langchain*`, `protobuf`/`grpcio`, `chromadb`, `gunicorn`, `redis`, etc. are ignored until a coordinated upgrade — see `.github/dependabot.yml`.
 
 > **CodeQL:** optional manual/weekly workflow (`.github/workflows/codeql.yml`). Not gated on PRs. Turn on [Code scanning](https://docs.github.com/en/code-security/code-scanning) in repo settings, then set `upload: true` and add `pull_request` trigger if desired.
 
