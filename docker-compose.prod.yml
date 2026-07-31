@@ -20,6 +20,12 @@ services:
     # Never publish Postgres to the host in production
     ports: !reset []
 
+  redis:
+    # Internal Docker network only — do not publish :6379 on the host
+    ports: !reset []
+    expose:
+      - "6379"
+
   python:
     # Internal network only — do not publish :5000 / :50051
     ports: !reset []
