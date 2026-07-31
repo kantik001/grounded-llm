@@ -64,7 +64,7 @@ Dependabot opens **grouped** weekly PRs (Go modules, pip `langchain` / `api-misc
 
 ```bash
 cd server && golangci-lint run ./...
-ruff check rag api tests scripts
+ruff check rag api tests scripts sdk/python conformance connectors
 make test
 make eval-retrieval-ci   # if you changed retrieval, config, eval, or KB data
 bash scripts/smoke.sh http://127.0.0.1:8080   # with server running; set LLM_MOCK=true RAG_MOCK=true

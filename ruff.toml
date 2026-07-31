@@ -1,6 +1,7 @@
 target-version = "py311"
 line-length = 120
-src = ["rag", "api", "tests", "scripts", "sdk/python"]
+# Paths covered by `ruff check` in CI (python-lint job)
+src = ["rag", "api", "tests", "scripts", "sdk/python", "conformance", "connectors"]
 
 [lint]
 select = ["E", "F", "I", "W"]
