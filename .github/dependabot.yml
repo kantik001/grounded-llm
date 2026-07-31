@@ -1,5 +1,7 @@
+# Dependabot — weekly grouped updates (see CONTRIBUTING.md / SECURITY.md)
 version: 2
 updates:
+  # Go server
   - package-ecosystem: gomod
     directory: /server
     schedule:
@@ -10,6 +12,7 @@ updates:
         patterns:
           - "*"
 
+  # Python RAG service (+ requirements-*.txt extras in the same directory)
   - package-ecosystem: pip
     directory: /api
     schedule:
@@ -28,10 +31,16 @@ updates:
       # Majors need a coordinated RAG-stack bump, not weekly spam.
       - dependency-name: "langchain*"
         update-types: ["version-update:semver-major"]
-      # Keep protobuf<6 for current grpcio/otel stack (see api/requirements.txt pin).
+      # Keep protobuf<6 for current grpcio stack (see api/requirements.txt).
       - dependency-name: "protobuf"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "grpcio"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "grpcio-health-checking"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "sentence-transformers"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "chromadb"
         update-types: ["version-update:semver-major"]
       - dependency-name: "pypdf"
         update-types: ["version-update:semver-major"]
@@ -39,9 +48,12 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "redis"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "flask"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "flask-cors"
         update-types: ["version-update:semver-major"]
 
+  # Pytest / test deps (often pins overlap with api — same major policy)
   - package-ecosystem: pip
     directory: /tests
     schedule:
@@ -58,6 +70,8 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "sentence-transformers"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "chromadb"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "pypdf"
         update-types: ["version-update:semver-major"]
       - dependency-name: "gunicorn"
@@ -65,6 +79,32 @@ updates:
       - dependency-name: "redis"
         update-types: ["version-update:semver-major"]
 
+  # Spec / OpenAPI conformance CLI
+  - package-ecosystem: pip
+    directory: /conformance
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      conformance-pip:
+        patterns:
+          - "*"
+    ignore:
+      - dependency-name: "openapi-spec-validator"
+        update-types: ["version-update:semver-major"]
+
+  # Python SDK + CLI (pyproject.toml)
+  - package-ecosystem: pip
+    directory: /sdk/python
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      sdk-pip:
+        patterns:
+          - "*"
+
+  # GitHub Actions used in .github/workflows
   - package-ecosystem: github-actions
     directory: /
     schedule:

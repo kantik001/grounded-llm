@@ -59,4 +59,6 @@ Message (one line):
 ## Related
 
 - [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md)
-- [HIRING.md](../../HIRING.md)
+- [ARCHITECTURE.md](./ARCHITECTURE.md)
+- [PLATFORM_VISION.md](../../PLATFORM_VISION.md)
+- [RELEASE.md](./RELEASE.md)

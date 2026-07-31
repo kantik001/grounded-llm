@@ -54,7 +54,7 @@ grounded-llm chat "How many vacation days?"   # after server is up
 | `secret-scan` | gitleaks secret detection |
 | `conformance-spec` | OpenAPI conformance (offline spec tests) |
 
-Dependabot opens **grouped** weekly PRs (Go modules, pip `langchain` / `api-misc`, GitHub Actions, tests pip). Major bumps for `langchain*`, `protobuf`, `gunicorn`, `redis`, etc. are ignored until a coordinated upgrade — see `.github/dependabot.yml`.
+Dependabot opens **grouped** weekly PRs (Go modules; pip for `api/`, `tests/`, `conformance/`, `sdk/python`; GitHub Actions). Major bumps for `langchain*`, `protobuf`/`grpcio`, `chromadb`, `gunicorn`, `redis`, etc. are ignored until a coordinated upgrade — see `.github/dependabot.yml`.
 
 > **CodeQL:** optional manual/weekly workflow (`.github/workflows/codeql.yml`). Not gated on PRs. Turn on [Code scanning](https://docs.github.com/en/code-security/code-scanning) in repo settings, then set `upload: true` and add `pull_request` trigger if desired.
 
@@ -64,7 +64,7 @@ Dependabot opens **grouped** weekly PRs (Go modules, pip `langchain` / `api-misc
 
 ```bash
 cd server && golangci-lint run ./...
-ruff check rag api tests scripts
+ruff check rag api tests scripts sdk/python conformance connectors
 make test
 make eval-retrieval-ci   # if you changed retrieval, config, eval, or KB data
 bash scripts/smoke.sh http://127.0.0.1:8080   # with server running; set LLM_MOCK=true RAG_MOCK=true
@@ -147,7 +147,7 @@ This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.
 ## Questions
 
 - **Bug reports and features:** [GitHub Issues](https://github.com/kantik001/grounded-llm/issues)
-- **Architecture and design:** See [HIRING.md](HIRING.md) and [docs/en/ARCHITECTURE.md](docs/en/ARCHITECTURE.md)
+- **Architecture and design:** See [docs/en/ARCHITECTURE.md](docs/en/ARCHITECTURE.md) and [PLATFORM_VISION.md](PLATFORM_VISION.md)
 - **Security:** [SECURITY.md](SECURITY.md)
 
 ## License

@@ -94,8 +94,9 @@ We win on **trust, deployability, and measured RAG quality**—not on feature co
 
 - Platform core: RAG pipeline, citations, verify, admin, migrations
 - Multi-tenant API, streaming, OpenAPI, observability
-- English-first UI, locale packs, HR reference template
-- Eval baselines (EN + RU), smoke API in CI, **retrieval eval gate in CI**
+- English-first UI, locale packs; domain packs **HR / IT Support / Legal FAQ** + `packs/registry.yaml`
+- Eval baselines (EN + RU), smoke API in CI, **retrieval eval gate in CI** (99 cases)
+- Ingest connectors (SharePoint, Google Drive, Confluence) — see [CONNECTORS.md](docs/en/CONNECTORS.md)
 
 ### Done — enterprise hardening (former Phase B)
 
@@ -111,12 +112,13 @@ We win on **trust, deployability, and measured RAG quality**—not on feature co
 - gRPC Retriever on Python `:50051`
 - Optional remote verify via [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) `:50052` (`GUARDRAILS_MODE`)
 - Prometheus LLM token / TTFT metrics — see [docs/en/LLM_PROVIDERS.md](docs/en/LLM_PROVIDERS.md)
+- Adjacent ecosystem (separate repos): agent, MCP gateway, bench, vllm proxy — [ECOSYSTEM.md](docs/en/ECOSYSTEM.md)
 
 ### Later — scale (Phase C–D)
 
-- Template catalog / marketplace (HR, IT, legal FAQ)
-- Connectors: SharePoint, Google Drive, Confluence (scaffolded)
-- Optional hosted multi-tenant tier
+- **Pack catalog UX / discovery** — browse/install experience on top of existing packs (not “create HR/IT/Legal from scratch”)
+- **Connector depth** — more sources, production runbooks, larger customer KB sync paths
+- Optional hosted multi-tenant tier (signup/Stripe remain off by default)
 - Open core: MIT platform + commercial enterprise modules
 - Coordinated LangChain 1.x stack bump (deferred from Dependabot majors)
 
@@ -134,8 +136,8 @@ Success metric for the platform: **new grounded assistant from template in &lt;3
 
 ## Related docs
 
-- [HIRING.md](HIRING.md) — design decisions for technical interviews
-- [docs/en/ARCHITECTURE.md](docs/en/ARCHITECTURE.md)
+- [docs/en/ARCHITECTURE.md](docs/en/ARCHITECTURE.md) — system design and trade-offs
+- [docs/en/ECOSYSTEM.md](docs/en/ECOSYSTEM.md) — standard core vs agents / guardrails / bench
 - [docs/en/ROADMAP.md](docs/en/ROADMAP.md)
 - [docs/en/SECURITY_BRIEF.md](docs/en/SECURITY_BRIEF.md)
-- [docs/en/ECOSYSTEM.md](docs/en/ECOSYSTEM.md) — standard core vs agent projects
+- [docs/en/BENCHMARK.md](docs/en/BENCHMARK.md)

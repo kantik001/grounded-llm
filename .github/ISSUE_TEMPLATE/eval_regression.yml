@@ -8,6 +8,7 @@ body:
       value: |
         Use this template when `make eval-retrieval-ci` or CI job `eval-retrieval-gate` fails,
         or when retrieval quality regresses for a domain pack.
+        See [BENCHMARK.md](https://github.com/kantik001/grounded-llm/blob/main/docs/en/BENCHMARK.md).
 
   - type: dropdown
     id: suite
@@ -17,6 +18,10 @@ body:
         - eval/rag_default_en_baseline.jsonl
         - eval/rag_default_baseline.jsonl (RU)
         - eval/rag_it_support_baseline.jsonl
+        - eval/rag_legal_faq_baseline.jsonl
+        - eval/rag_adversarial_baseline.jsonl
+        - eval/rag_hybrid_baseline.jsonl
+        - eval/rag_adversarial_e2e.jsonl
         - Custom / new suite
     validations:
       required: true
@@ -59,6 +64,7 @@ body:
       options:
         - default / HR
         - it_support
+        - legal_faq
         - Custom tenant/domain
     validations:
       required: true
