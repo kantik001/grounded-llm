@@ -39,7 +39,7 @@
 | `postgres_store.go` | SQL, migrations |
 | `analytics_store.go`, `feedback.go` | analytics, thumbs up/down |
 | `onboarding.go`, `branding.go` | localized UX API |
-| `metrics.go`, `request_id.go` | `/metrics`, request IDs |
+| `metrics.go`, `request_id.go`, `request_path_trace.go` | `/metrics`, request IDs, RAG path step logs |
 | `openapi.go` | `/api/v1/openapi.json` |
 | `routes.go`, `health.go`, `config_reload.go` | routes, health, hot reload |
 

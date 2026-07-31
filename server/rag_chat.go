@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -27,10 +28,17 @@ type pythonRAGContextResponse struct {
 	Fragments []RAGFragment `json:"fragments,omitempty"`
 }
 
-func fetchRAGContext(question, tenantID, domainID, locale string) (*pythonRAGContextResponse, error) {
+func fetchRAGContext(ctx context.Context, question, tenantID, domainID, locale string) (*pythonRAGContextResponse, error) {
 	if ragMockEnabled() {
-		return mockRAGContextResponse(question, domainID), nil
+		out := mockRAGContextResponse(question, domainID)
+		if tr := pathTraceFrom(ctx); tr != nil {
+			tr.step("retrieve", map[string]any{
+				"ms": 0, "fragments": len(out.Fragments), "ok": out.Success, "mock": true,
+			})
+		}
+		return out, nil
 	}
+	start := time.Now()
 	body := map[string]string{
 		"question":  question,
 		"domain_id": domainID,
@@ -41,15 +49,21 @@ func fetchRAGContext(question, tenantID, domainID, locale string) (*pythonRAGCon
 	if err != nil {
 		return nil, fmt.Errorf("marshal RAG request: %w", err)
 	}
-	req, err := http.NewRequest("POST", config.PythonRAGURL, bytes.NewBuffer(jsonBody))
+	req, err := http.NewRequestWithContext(ctx, "POST", config.PythonRAGURL, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return nil, fmt.Errorf("create RAG request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 	setPythonServiceHeaders(req)
+	if tr := pathTraceFrom(ctx); tr != nil && tr.reqID != "" {
+		req.Header.Set("X-Request-ID", tr.reqID)
+	}
 	client := &http.Client{Timeout: 120 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
+		if tr := pathTraceFrom(ctx); tr != nil {
+			tr.step("retrieve", map[string]any{"ms": msSince(start), "ok": false, "error": "transport"})
+		}
 		return nil, fmt.Errorf("RAG request failed: %w", err)
 	}
 	defer resp.Body.Close()
@@ -60,6 +74,11 @@ func fetchRAGContext(question, tenantID, domainID, locale string) (*pythonRAGCon
 	var out pythonRAGContextResponse
 	if err := json.Unmarshal(responseBody, &out); err != nil {
 		return nil, fmt.Errorf("parse RAG response: %w: %s", err, string(responseBody))
+	}
+	if tr := pathTraceFrom(ctx); tr != nil {
+		tr.step("retrieve", map[string]any{
+			"ms": msSince(start), "fragments": len(out.Fragments), "ok": out.Success && resp.StatusCode == http.StatusOK,
+		})
 	}
 	if resp.StatusCode != http.StatusOK {
 		if out.Error != "" {

@@ -96,6 +96,12 @@ func handleMessage(c *gin.Context) {
 
 	logRequest(c, "message_sent", map[string]any{"domain_id": sessionDomain, "session_id": sid})
 
+	tr := beginPathTrace(ctxRequestID(c), tenantID)
+	tr.step("message.accept", map[string]any{
+		"domain_id": sessionDomain, "session_id": sid, "stream": wantsStream(c),
+	})
+	c.Request = c.Request.WithContext(contextWithPathTrace(ctx, tr))
+
 	if wantsStream(c) {
 		sseMessageHandler(c, sid, sessionDomain, tenantID, tgUser.ID, text)
 		return
@@ -120,7 +126,7 @@ func respondWithMessages(c *gin.Context, sid, domainID, tenantID string, telegra
 	for k, v := range extra {
 		body[k] = v
 	}
-	c.JSON(status, body)
+	c.JSON(status, attachRequestID(c, body))
 }
 
 func handleTextMessage(c *gin.Context, sid, domainID, tenantID, locale string, telegramID int64, text string) {
@@ -128,10 +134,10 @@ func handleTextMessage(c *gin.Context, sid, domainID, tenantID, locale string, t
 	prior, err := chatStore.HistoryForLLM(ctx, sid, telegramID, 0)
 	if err != nil {
 		log.Printf("HistoryForLLM: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "History error"})
+		c.JSON(http.StatusInternalServerError, attachRequestID(c, gin.H{"success": false, "error": "History error"}))
 		return
 	}
-	ragResult := answerWithRAG(text, tenantID, domainID, locale, prior, sid)
+	ragResult := answerWithRAG(ctx, text, tenantID, domainID, locale, prior, sid)
 	if ragResult.CacheHit {
 		c.Header("X-Cache", "HIT")
 	} else {
@@ -140,7 +146,7 @@ func handleTextMessage(c *gin.Context, sid, domainID, tenantID, locale string, t
 
 	if _, err := chatStore.AppendMessage(ctx, sid, ChatMessage{Role: "user", Content: text, Kind: "text"}); err != nil {
 		log.Printf("AppendMessage user: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Save error"})
+		c.JSON(http.StatusInternalServerError, attachRequestID(c, gin.H{"success": false, "error": "Save error"}))
 		return
 	}
 
@@ -166,7 +172,7 @@ func handleTextMessage(c *gin.Context, sid, domainID, tenantID, locale string, t
 		Role: "assistant", Content: ragResult.Answer, Kind: "assistant", Citations: ragResult.Citations,
 	}); err != nil {
 		log.Printf("AppendMessage assistant: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Save error"})
+		c.JSON(http.StatusInternalServerError, attachRequestID(c, gin.H{"success": false, "error": "Save error"}))
 		return
 	}
 	logRequest(c, "rag_answer", map[string]any{"domain_id": domainID, "soft_fail": false})

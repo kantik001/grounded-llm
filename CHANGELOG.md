@@ -9,10 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Docs: ecosystem sync across sibling READMEs; CAREER plan §7 + STANDARD_STRATEGY note grounded-bench/vllm shipped
+- Request path trace MVP: `req=` / `step=` logs across message → retrieve → LLM → verify → done; `request_id` in JSON/SSE; `X-Request-ID` forwarded to Python `/rag/context`
 
 ### Changed
 
+- Docs: ecosystem sync across sibling READMEs; CAREER plan §7 + STANDARD_STRATEGY note grounded-bench/vllm shipped
 - Prod Compose: do not publish Redis `:6379` on the host (`docker-compose.prod.yml`)
 
 ## [0.3.0] - 2026-07-27

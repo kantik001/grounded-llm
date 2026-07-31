@@ -2,6 +2,7 @@
 
 import os
 import sys
+import time
 
 _root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, _root)
@@ -78,6 +79,8 @@ def _rag_service_authorized() -> bool:
 def rag_context():
     if not _rag_service_authorized():
         return jsonify({"success": False, "error": "forbidden"}), 403
+    req_id = (request.headers.get("X-Request-ID") or "").strip()
+    t0 = time.perf_counter()
     try:
         data = request.get_json(silent=True) or {}
         question = (data.get("question") or "").strip()
@@ -90,10 +93,32 @@ def rag_context():
         payload = retrieve_rag_context(
             question, domain_id=domain_id, tenant_id=tenant_id, locale=locale
         )
+        ms = int((time.perf_counter() - t0) * 1000)
+        frags = payload.get("fragments") if isinstance(payload, dict) else None
+        n = len(frags) if isinstance(frags, list) else 0
+        ok = bool(payload.get("success")) if isinstance(payload, dict) else False
+        app.logger.info(
+            "req=%s step=retrieve ms=%s fragments=%s ok=%s domain_id=%s tenant_id=%s",
+            req_id or "-",
+            ms,
+            n,
+            ok,
+            domain_id,
+            tenant_id,
+        )
         resp = jsonify(payload)
         resp.headers.set("Content-Type", "application/json; charset=utf-8")
+        if req_id:
+            resp.headers.set("X-Request-ID", req_id)
         return resp, 200
     except Exception as e:
+        ms = int((time.perf_counter() - t0) * 1000)
+        app.logger.info(
+            "req=%s step=retrieve ms=%s ok=False error=%s",
+            req_id or "-",
+            ms,
+            type(e).__name__,
+        )
         return jsonify({"success": False, "error": str(e)}), 500
 
 

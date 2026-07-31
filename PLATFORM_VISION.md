@@ -118,6 +118,7 @@ We win on **trust, deployability, and measured RAG quality**—not on feature co
 
 - **Pack catalog UX / discovery** — browse/install experience on top of existing packs (not “create HR/IT/Legal from scratch”)
 - **Connector depth** — more sources, production runbooks, larger customer KB sync paths
+- **Request path tracing (MVP)** — step timeline on `request_id` (logs + client id); OpenTelemetry + Jaeger/Tempo still later — see [docs/en/ROADMAP.md](docs/en/ROADMAP.md#whats-next-post-phase-11)
 - Optional hosted multi-tenant tier (signup/Stripe remain off by default)
 - Open core: MIT platform + commercial enterprise modules
 - Coordinated LangChain 1.x stack bump (deferred from Dependabot majors)

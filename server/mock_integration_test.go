@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -45,6 +46,7 @@ func TestAnswerWithRAG_MockMode(t *testing.T) {
 	wd, _ := os.Getwd()
 	_ = wd
 	result := answerWithRAG(
+		context.Background(),
 		"How many paid vacation days do employees get?",
 		"default",
 		"default",
@@ -68,7 +70,7 @@ func TestFetchRAGContext_MockSkipsHTTP(t *testing.T) {
 	if !ragMockEnabled() {
 		t.Fatal("RAG mock should be enabled")
 	}
-	out, err := fetchRAGContext("vacation", "default", "default", "en")
+	out, err := fetchRAGContext(context.Background(), "vacation", "default", "default", "en")
 	if err != nil {
 		t.Fatal(err)
 	}

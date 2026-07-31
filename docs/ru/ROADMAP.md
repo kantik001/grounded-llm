@@ -239,6 +239,8 @@ MVP+i18n → EN product + HR pack → RBAC, audit, SSO,     → SaaS + billing +
 | **Launch** | Public repo, `v0.3.0`, Pages, dev.to / HN | [LAUNCH.md](./LAUNCH.md) |
 | **Hosted beta** | Email creds, Stripe Portal, staging | [SAAS.md](./SAAS.md) |
 | **Enterprise pilot** | SAML, trust center, первый клиент | [PARTNER_CERTIFICATION.md](../en/PARTNER_CERTIFICATION.md), [TRUST_CENTER.md](../en/TRUST_CENTER.md) |
+| **Observability (скоро)** | **MVP готов:** сквозной **трейс пути** — `request_id` на HTTP → cache → retrieve → LLM → verify → ответ; шаги + latency в логах; id в JSON/SSE. Дальше: OTel. | EN: [ROADMAP](../en/ROADMAP.md#whats-next-post-phase-11), [server-rag_chat.md](../en/knowledge-base/server-rag_chat.md) |
+| **Observability (позже)** | Те же шаги как **OpenTelemetry** spans; опционально **Jaeger** / **Tempo** в Compose/Helm. | Phase C в EN ROADMAP |
 
 ---
 

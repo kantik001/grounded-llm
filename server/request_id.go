@@ -53,6 +53,8 @@ func formatLogValue(v any) string {
 		return strconv.Itoa(x)
 	case int64:
 		return strconv.FormatInt(x, 10)
+	case float64:
+		return strconv.FormatFloat(x, 'f', -1, 64)
 	case bool:
 		return strconv.FormatBool(x)
 	default:
