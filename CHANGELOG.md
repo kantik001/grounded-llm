@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Docs: ecosystem sync across sibling READMEs; CAREER plan §7 + STANDARD_STRATEGY note grounded-bench/vllm shipped
 - Prod Compose: do not publish Redis `:6379` on the host (`docker-compose.prod.yml`)
 
+### Changed
+
+- Prod Compose: do not publish Redis `:6379` on the host (`docker-compose.prod.yml`)
+
 ## [0.3.0] - 2026-07-27
 
 Local inference, caching, and agent-facing retrieval for Staff AI Infra portfolio depth.
