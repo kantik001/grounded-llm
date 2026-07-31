@@ -135,7 +135,7 @@ Success metric for the platform: **new grounded assistant from template in &lt;3
 ## Related docs
 
 - [docs/en/ARCHITECTURE.md](docs/en/ARCHITECTURE.md) — system design and trade-offs
-- [docs/en/ARCHITECTURE.md](docs/en/ARCHITECTURE.md)
+- [docs/en/ECOSYSTEM.md](docs/en/ECOSYSTEM.md) — standard core vs agents / guardrails / bench
 - [docs/en/ROADMAP.md](docs/en/ROADMAP.md)
 - [docs/en/SECURITY_BRIEF.md](docs/en/SECURITY_BRIEF.md)
-- [docs/en/ECOSYSTEM.md](docs/en/ECOSYSTEM.md) — standard core vs agent projects
+- [docs/en/BENCHMARK.md](docs/en/BENCHMARK.md)
