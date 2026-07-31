@@ -219,8 +219,7 @@ python -m conformance spec     # Offline OpenAPI / spec check
 | [docs/en/ECOSYSTEM.md](docs/en/ECOSYSTEM.md) | Standard core vs agents / guardrails / bench / vllm |
 | [docs/en/GUARDRAILS.md](docs/en/GUARDRAILS.md) | Optional remote verify via grounded-guardrails `:50052` |
 | [docs/en/BENCHMARK.md](docs/en/BENCHMARK.md) | Retrieval bench + link to [grounded-bench](https://github.com/kantik001/grounded-bench) |
-| [docs/en/LLM_PROVIDERS.md](docs/en/LLM_PROVIDERS.md) | OpenAI / Ollama / vLLM (+ optional [grounded-vllm](https://github.com/kantik001/grounded-vllm) proxy) |
-| [docs/en/LLM_PROVIDERS.md](docs/en/LLM_PROVIDERS.md) | Ollama / vLLM, Redis caches, gRPC Retriever |
+| [docs/en/LLM_PROVIDERS.md](docs/en/LLM_PROVIDERS.md) | OpenAI / Ollama / vLLM, Redis caches, gRPC Retriever (+ optional [grounded-vllm](https://github.com/kantik001/grounded-vllm) proxy) |
 | [docs/en/RELEASE.md](docs/en/RELEASE.md) | Tag & release checklist (v0.3.0) |
 | [Site (GitHub Pages)](https://kantik001.github.io/grounded-llm/) | Spec, conformance, quick start |
 | [docs/en/API_DEPRECATION_POLICY.md](docs/en/API_DEPRECATION_POLICY.md) | `/api/v1` stability & sunset |
