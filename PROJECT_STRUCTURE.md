@@ -1,18 +1,26 @@
 ﻿# Project structure — Grounded LLM
 
+High-level map of this repository. Deeper map (per-folder files): [docs/en/knowledge-base/PROJECT_STRUCTURE.md](docs/en/knowledge-base/PROJECT_STRUCTURE.md).
+
 | Path | Purpose |
 |------|---------|
-| `server/` | Go: auth, sessions, RAG+LLM orchestration, admin, verify |
-| `api/` | Python RAG: Flask app + Gunicorn HTTP + gRPC Retriever |
-| `rag/` | Chroma, retrieval, `domains_config`, `document_loaders` |
-| `config/` | Domain pack: `domains.json`, prompts, branding, RBAC/SSO |
-| `data/{tenant}/{domain}/` | Knowledge base: `.txt`, `.pdf`, `.docx` |
-| `packs/` | Official template packs (HR, IT Support) |
-| `webapp/` | Reference Telegram Web App UI |
+| `server/` | Go: auth, sessions, RAG+LLM orchestration, admin, verify, optional guardrails client |
+| `api/` | Python RAG: Flask + Gunicorn HTTP `:5000` + gRPC Retriever `:50051` |
+| `rag/` | Retrieval engine: vector backends, hybrid/BM25, rerank, loaders, domains config |
+| `config/` | Runtime config: `domains.json`, locales, RBAC/SSO, plans, quotas |
+| `data/{tenant}/{domain}/` | Knowledge base documents (`.txt`, `.pdf`, `.docx`) |
+| `packs/` | Official template packs (HR, IT Support, Legal FAQ) + registry |
+| `webapp/` | Reference UI: chat, admin, embed widget (nginx) |
 | `migrations/` | PostgreSQL schema |
-| `eval/` | RAG baseline eval suites (JSONL) |
-| `scripts/` | Reindex, eval runner, smoke tests, pack CLI |
+| `eval/` | Retrieval eval baselines (JSONL) + adversarial suites |
+| `scripts/` | Reindex, eval runner, smoke/load/backup, pack CLI |
+| `sdk/python/` | Python SDK + CLI (`grounded-llm`) |
+| `connectors/` | Optional ingest: SharePoint, Google Drive, Confluence |
+| `conformance/` | Spec / OpenAPI conformance CLI |
+| `deploy/` | Helm chart + Terraform references |
 | `docs/en/` | Primary documentation (architecture, deploy, knowledge base) |
 | `docs/ru/` | Russian docs (legacy locale mirror) |
 
-Documentation index: [README.md](README.md) · [docs/en/ARCHITECTURE.md](docs/en/ARCHITECTURE.md) · [docs/en/knowledge-base/README.md](docs/en/knowledge-base/README.md)
+**Compose / images (repo root):** `docker-compose*.yml`, `Dockerfile.{server,python,webapp}`, `Makefile`.
+
+Documentation index: [README.md](README.md) · [docs/en/ARCHITECTURE.md](docs/en/ARCHITECTURE.md) · [docs/en/knowledge-base/README.md](docs/en/knowledge-base/README.md) · [docs/en/ECOSYSTEM.md](docs/en/ECOSYSTEM.md)
