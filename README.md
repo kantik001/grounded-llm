@@ -40,33 +40,18 @@ Grounded LLM separates **orchestration** (Go: auth, sessions, LLM, verify) from 
 
 _Diagram includes optional [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) on **`:50052`** (dashed path). Default verify stays in-process (`GUARDRAILS_MODE=local`)._
 
-**Message flow (default):** client → Go auth/session → Python hybrid retrieval → Go LLM → **numeric verify (in-process)** → citations → Postgres.
+**Message flow (default):** client → Go auth/session → Python hybrid retrieval (`:5000` / gRPC `:50051`) → Go LLM → **numeric verify (in-process)** → citations → Postgres.
 
-**Optional remote verify:** same path, but after LLM Go calls [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) gRPC **`:50052`** (`GUARDRAILS_MODE=remote|hybrid`). Default remains `local` (Spec behavior, CI-safe). See [GUARDRAILS.md](docs/en/GUARDRAILS.md).
+**Optional remote verify:** after LLM, Go calls guardrails gRPC `:50052` (`GUARDRAILS_MODE=remote|hybrid`). See [GUARDRAILS.md](docs/en/GUARDRAILS.md).
 
-```text
-  clients / agents
-        │
-        ▼
-  Go server :8080  ──►  Python RAG :5000 / Retriever :50051
-        │                        ▲
-        │ LLM                    │ retrieve
-        ▼                        │
-  verify ── local (default) ─────┘
-        └─ optional ──► grounded-guardrails :50052
-        │
-        ▼
-  citations → Postgres
-```
-
-**Numeric verify:** after the LLM answer, numbers in the reply must appear in retrieved context (±0.01). Unsupported numbers → reject. Details: [rag-verifier.md](docs/en/knowledge-base/rag-verifier.md).
+**Numeric verify:** numbers in the reply must appear in retrieved context (±0.01); otherwise reject. Details: [rag-verifier.md](docs/en/knowledge-base/rag-verifier.md).
 
 | Layer | Path | Purpose |
 |-------|------|---------|
 | **Platform core** | `server/`, `api/`, `rag/`, `migrations/`, `webapp/` | Orchestration, retrieval, reference UI |
 | **Template pack** | `config/`, `config/locales/{en,ru}/`, `data/{tenant}/{domain}/` | Prompts, branding, knowledge documents |
 
-See [PLATFORM_VISION.md](PLATFORM_VISION.md) for positioning and [docs/en/ARCHITECTURE.md](docs/en/ARCHITECTURE.md) for details.
+See [PLATFORM_VISION.md](PLATFORM_VISION.md) · [docs/en/ARCHITECTURE.md](docs/en/ARCHITECTURE.md) · [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md).
 
 ---
 
@@ -197,41 +182,27 @@ python -m conformance spec     # Offline OpenAPI / spec check
 
 ## Documentation
 
+Full index: **[docs/README.md](docs/README.md)** · site: [GitHub Pages](https://kantik001.github.io/grounded-llm/)
+
 | Doc | Description |
 |-----|-------------|
 | [PLATFORM_VISION.md](PLATFORM_VISION.md) | What we are (and are not) |
-| [docs/en/DEMO.md](docs/en/DEMO.md) | 5-minute HR demo (clone → ask) |
-| [docs/en/QUICKSTART_SDK.md](docs/en/QUICKSTART_SDK.md) | SDK + CLI in 5 minutes |
-| [docs/en/COMPARISON.md](docs/en/COMPARISON.md) | vs alternatives (honest) |
-| [docs/en/CASE_STUDY_HR_PILOT.md](docs/en/CASE_STUDY_HR_PILOT.md) | HR pilot KPI template |
-| [docs/en/K8S_DEPLOY.md](docs/en/K8S_DEPLOY.md) | Helm / Kubernetes deploy |
-| [docs/en/TRUST_CENTER.md](docs/en/TRUST_CENTER.md) | Security review summary |
-| [docs/en/BACKUP_RESTORE.md](docs/en/BACKUP_RESTORE.md) | Postgres, Chroma, data backup |
-| [docs/en/PHASE_4.md](docs/en/PHASE_4.md) | Spec, conformance, tenant purge |
-| [docs/en/PHASE_5.md](docs/en/PHASE_5.md) | Standard publication (Spec v1, site) |
-| [docs/en/CONNECTORS.md](docs/en/CONNECTORS.md) | SharePoint, Drive, Confluence ingest |
-| [docs/en/SAAS.md](docs/en/SAAS.md) · [BILLING.md](docs/en/BILLING.md) | Optional hosted signup + Stripe |
-| [docs/en/LAUNCH.md](docs/en/LAUNCH.md) | Public launch playbook |
-| [docs/en/ROADMAP.md](docs/en/ROADMAP.md) | Phases 1–11 complete; what's next |
-| [docs/en/STANDARD_STRATEGY.md](docs/en/STANDARD_STRATEGY.md) | Horizons, pillars, path A→B |
-| [docs/en/spec/GROUNDED_SPEC_v1.md](docs/en/spec/GROUNDED_SPEC_v1.md) | Normative API v1 spec |
-| [docs/en/RFC.md](docs/en/RFC.md) | RFC process · [RFC-0001](docs/en/rfcs/RFC-0001-grounded-compatible.md) |
-| [docs/en/ECOSYSTEM.md](docs/en/ECOSYSTEM.md) | Standard core vs agents / guardrails / bench / vllm |
-| [docs/en/GUARDRAILS.md](docs/en/GUARDRAILS.md) | Optional remote verify via grounded-guardrails `:50052` |
-| [docs/en/BENCHMARK.md](docs/en/BENCHMARK.md) | Retrieval bench + link to [grounded-bench](https://github.com/kantik001/grounded-bench) |
-| [docs/en/LLM_PROVIDERS.md](docs/en/LLM_PROVIDERS.md) | OpenAI / Ollama / vLLM, Redis caches, gRPC Retriever (+ optional [grounded-vllm](https://github.com/kantik001/grounded-vllm) proxy) |
-| [docs/en/RELEASE.md](docs/en/RELEASE.md) | Tag & release checklist (v0.3.0) |
-| [Site (GitHub Pages)](https://kantik001.github.io/grounded-llm/) | Spec, conformance, quick start |
-| [docs/en/API_DEPRECATION_POLICY.md](docs/en/API_DEPRECATION_POLICY.md) | `/api/v1` stability & sunset |
-| [docs/en/COMPATIBILITY.md](docs/en/COMPATIBILITY.md) | Supported stack matrix |
-| [conformance/](conformance/) | API + retrieval conformance tests |
-| [docs/en/](docs/en/) | Architecture, deploy, roadmap, templates |
-| [GOOD_FIRST_ISSUES.md](GOOD_FIRST_ISSUES.md) | Starter contributions |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute |
-| [SECURITY.md](SECURITY.md) | Security policy and vulnerability reporting |
-| [CHANGELOG.md](CHANGELOG.md) | Release history |
+| [docs/en/ARCHITECTURE.md](docs/en/ARCHITECTURE.md) | System design |
+| [docs/en/DEMO.md](docs/en/DEMO.md) | 5-minute HR demo |
+| [docs/en/DEPLOY.md](docs/en/DEPLOY.md) · [K8S_DEPLOY.md](docs/en/K8S_DEPLOY.md) | Compose / Helm |
+| [docs/en/LLM_PROVIDERS.md](docs/en/LLM_PROVIDERS.md) | OpenAI / Ollama / vLLM, Redis, gRPC |
+| [docs/en/ECOSYSTEM.md](docs/en/ECOSYSTEM.md) | Agents, guardrails, bench, vllm |
+| [docs/en/GUARDRAILS.md](docs/en/GUARDRAILS.md) | Optional remote verify `:50052` |
+| [docs/en/BENCHMARK.md](docs/en/BENCHMARK.md) | Retrieval eval + [grounded-bench](https://github.com/kantik001/grounded-bench) |
+| [docs/en/QUICKSTART_SDK.md](docs/en/QUICKSTART_SDK.md) | SDK + CLI |
+| [docs/en/COMPARISON.md](docs/en/COMPARISON.md) | vs alternatives |
+| [docs/en/spec/GROUNDED_SPEC_v1.md](docs/en/spec/GROUNDED_SPEC_v1.md) | Normative API Spec v1 |
+| [docs/en/ROADMAP.md](docs/en/ROADMAP.md) · [RELEASE.md](docs/en/RELEASE.md) | Phases done; how to cut a release |
+| [CONTRIBUTING.md](CONTRIBUTING.md) · [GOOD_FIRST_ISSUES.md](GOOD_FIRST_ISSUES.md) | Contribute |
+| [SECURITY.md](SECURITY.md) · [CHANGELOG.md](CHANGELOG.md) | Security policy · release history |
+| [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) | Repository map |
 
-Design decisions and architecture trade-offs: [docs/en/ARCHITECTURE.md](docs/en/ARCHITECTURE.md) · [PLATFORM_VISION.md](PLATFORM_VISION.md)
+Phase history, SaaS/billing, RFC, connectors, trust center, and more → [docs/README.md](docs/README.md).
 
 ---
 
