@@ -48,7 +48,7 @@ See also: [PLATFORM_VISION.md](../../PLATFORM_VISION.md) · [ARCHITECTURE.md](./
 - **API keys** — `X-API-Key`, `API_KEYS` / `API_KEYS_FILE`
 - **API v1** — `/api/v1/*` + OpenAPI
 - **Multi-tenant** — `X-Tenant-ID`, `data/{tenant}/{domain}/`, Chroma filter
-- **Observability** — `X-Request-ID`, `/metrics`, structured logs
+- **Observability** — `X-Request-ID`, `/metrics`, structured logs; RAG path step trace MVP (`request_path_trace.go`; OTel later)
 - **Admin feedback** — `GET /admin/feedback`
 - **Domain scaffold** — `scripts/init_domain.sh` / `.ps1`
 
@@ -160,6 +160,7 @@ See also: [PLATFORM_VISION.md](../../PLATFORM_VISION.md) · [ARCHITECTURE.md](./
 | Multi-region deploy docs | Client chooses region |
 | E2E eval with LLM | Quality gate on staging |
 | SLA monitoring | Uptime and latency per tenant |
+| OpenTelemetry → Jaeger/Tempo | Distributed traces once step-level request tracing exists |
 
 ### Adoption
 
@@ -396,6 +397,8 @@ Numbered delivery phases **1–11 are complete**. Next work is **operator choice
 | **Launch** | Public repo, `v0.3.0` tag (local LLM, Redis caches, gRPC Retriever), GitHub Pages, dev.to / HN | [LAUNCH.md](./LAUNCH.md), [RELEASE.md](./RELEASE.md), [LLM_PROVIDERS.md](./LLM_PROVIDERS.md) |
 | **Hosted beta** | Email creds, Stripe Customer Portal, staging deploy | [SAAS.md](./SAAS.md), [BILLING.md](./BILLING.md) |
 | **Enterprise pilot** | SAML, trust center refresh, first on-prem customer | [PARTNER_CERTIFICATION.md](./PARTNER_CERTIFICATION.md), [TRUST_CENTER.md](./TRUST_CENTER.md) |
+| **Observability (near-term)** | **MVP done:** end-to-end **request path trace** — same `request_id` across HTTP → cache → retrieve → LLM → verify → response; step logs with latency; id in JSON/SSE `done`. Next polish: more handlers, redaction guidelines. | `server/request_path_trace.go`, [server-rag_chat.md](./knowledge-base/server-rag_chat.md) |
+| **Observability (later)** | Export the same steps as **OpenTelemetry** spans; optional **Jaeger** or **Tempo** in Compose/Helm for operators who want a trace UI. | Phase C engineering above |
 
 Long-term horizons B–D remain in the strategic sections above.
 

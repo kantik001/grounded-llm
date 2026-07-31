@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 )
 
 type ragPrepared struct {
@@ -17,7 +18,7 @@ type ragPrepared struct {
 	Locale      string
 }
 
-func prepareRAGMessages(q, domainID, tenantID, locale string, history []Message, sessionID string) (ragPrepared, error) {
+func prepareRAGMessages(ctx context.Context, q, domainID, tenantID, locale string, history []Message, sessionID string) (ragPrepared, error) {
 	var fail ragPrepared
 	metricRAGRequests.Add(1)
 	q = strings.TrimSpace(strings.ReplaceAll(strings.ReplaceAll(q, "\r", " "), "\n", " "))
@@ -36,7 +37,7 @@ func prepareRAGMessages(q, domainID, tenantID, locale string, history []Message,
 		return fail, nil
 	}
 
-	ragOut, err := fetchRAGContext(q, tenantID, domainID, locale)
+	ragOut, err := fetchRAGContext(ctx, q, tenantID, domainID, locale)
 	if err != nil {
 		log.Printf("RAG fetch error: %v", err)
 		msg := publicAPIError(err)
@@ -47,7 +48,7 @@ func prepareRAGMessages(q, domainID, tenantID, locale string, history []Message,
 		return fail, nil
 	}
 	if !ragOut.Success {
-		logRAGOutcome(domainID, q, len(ragOut.Fragments), false, ragOut.Error, sessionID, true)
+		logRAGOutcome(ctx, domainID, q, len(ragOut.Fragments), false, ragOut.Error, sessionID, true)
 		fail.ErrMsg = ragOut.Error
 		fail.SoftFail = true
 		return fail, nil
@@ -73,11 +74,21 @@ func prepareRAGMessages(q, domainID, tenantID, locale string, history []Message,
 	}, nil
 }
 
-func finalizeRAGAnswer(raw string, p ragPrepared) RAGAnswerResult {
+func finalizeRAGAnswer(ctx context.Context, raw string, p ragPrepared) RAGAnswerResult {
 	answer := cleanRAGAnswer(raw)
 	answer = appendRAGDisclaimer(answer, p.Locale)
+	start := time.Now()
 	passed, reason := verifyRAGAnswer(answer, p.Fragments, p.Locale)
-	logRAGOutcome(p.DomainID, "", len(p.Fragments), passed, reason, "", !passed)
+	mode := "local"
+	if config != nil {
+		mode = string(normalizeGuardrailsMode(config.GuardrailsMode))
+	}
+	if tr := pathTraceFrom(ctx); tr != nil {
+		tr.step("verify", map[string]any{
+			"ms": msSince(start), "pass": passed, "mode": mode,
+		})
+	}
+	logRAGOutcome(ctx, p.DomainID, "", len(p.Fragments), passed, reason, "", !passed)
 	citations := publicCitations(p.Fragments)
 	fragmentCount := len(p.Fragments)
 	if !passed {
@@ -98,11 +109,19 @@ func finalizeRAGAnswer(raw string, p ragPrepared) RAGAnswerResult {
 	}
 }
 
-func answerWithRAG(q, tenantID, domainID, locale string, history []Message, sessionID string) RAGAnswerResult {
-	ctx := context.Background()
+func answerWithRAG(ctx context.Context, q, tenantID, domainID, locale string, history []Message, sessionID string) RAGAnswerResult {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	if len(history) == 0 {
 		if cached, ok := getCachedLLMAnswer(ctx, q, domainID, tenantID); ok {
 			metricCacheHits.Add(1)
+			if tr := pathTraceFrom(ctx); tr != nil {
+				tr.step("cache", map[string]any{"hit": true})
+				tr.step("done", map[string]any{
+					"ms": tr.elapsedMS(), "verify_pass": true, "cache": true,
+				})
+			}
 			return RAGAnswerResult{
 				Answer:        cached.Answer,
 				Citations:     cached.Citations,
@@ -113,27 +132,47 @@ func answerWithRAG(q, tenantID, domainID, locale string, history []Message, sess
 			}
 		}
 		metricCacheMisses.Add(1)
+		if tr := pathTraceFrom(ctx); tr != nil {
+			tr.step("cache", map[string]any{"hit": false})
+		}
 	}
 
-	prepared, err := prepareRAGMessages(q, domainID, tenantID, locale, history, sessionID)
+	prepared, err := prepareRAGMessages(ctx, q, domainID, tenantID, locale, history, sessionID)
 	if err != nil {
 		return RAGAnswerResult{ErrMsg: publicAPIError(err)}
 	}
 	if !prepared.OK {
+		if tr := pathTraceFrom(ctx); tr != nil {
+			tr.step("done", map[string]any{
+				"ms": tr.elapsedMS(), "ok": false, "soft_fail": prepared.SoftFail,
+			})
+		}
 		return RAGAnswerResult{
 			ErrMsg:        prepared.ErrMsg,
 			SoftFail:      prepared.SoftFail,
 			FragmentCount: len(prepared.Fragments),
 		}
 	}
+	llmStart := time.Now()
 	raw, err := callLLMCompletionForTenant(tenantID, prepared.LLMMessages)
+	if tr := pathTraceFrom(ctx); tr != nil {
+		tr.step("llm", map[string]any{"ms": msSince(llmStart), "ok": err == nil, "stream": false})
+	}
 	if err != nil {
 		log.Printf("LLM chat error: %v", err)
+		if tr := pathTraceFrom(ctx); tr != nil {
+			tr.step("done", map[string]any{"ms": tr.elapsedMS(), "ok": false})
+		}
 		return RAGAnswerResult{ErrMsg: publicAPIError(err)}
 	}
-	result := finalizeRAGAnswer(raw, prepared)
+	result := finalizeRAGAnswer(ctx, raw, prepared)
 	if result.OK && result.VerifyPass && len(history) == 0 {
 		setCachedLLMAnswer(ctx, q, domainID, tenantID, result.Answer, result.Citations)
+	}
+	if tr := pathTraceFrom(ctx); tr != nil {
+		tr.step("done", map[string]any{
+			"ms": tr.elapsedMS(), "ok": result.OK, "verify_pass": result.VerifyPass,
+		})
 	}
 	return result
 }

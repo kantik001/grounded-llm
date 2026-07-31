@@ -9,7 +9,7 @@
 
 ## Pipeline
 
-1. `fetchRAGContext` → Python `POST /rag/context` (`domain_id`, `tenant_id`, `locale`)
+1. `fetchRAGContext` → Python `POST /rag/context` (`domain_id`, `tenant_id`, `locale`) + `X-Request-ID`
 2. `buildRAGUserPrompt` + `config/locales/{locale}/prompts.json`
 3. `callLLMCompletion` or `streamLLMCompletion` — OpenAI-compatible API
 4. `cleanRAGAnswer`, `appendRAGDisclaimer`
@@ -18,6 +18,23 @@
    - **`remote` / `hybrid`:** gRPC `VerifyText` → [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) `:50052` (`guardrails_client.go`); hybrid falls back to local on transport errors
 
 On verify failure — warning to user, not a silent hallucination.
+
+---
+
+## Request path trace (MVP)
+
+Same `X-Request-ID` / `request_id` across the chat path for debug/tuning (`server/request_path_trace.go`):
+
+| Step log | Meaning |
+|----------|---------|
+| `step=message.accept` | `POST /message` accepted |
+| `step=cache` | response cache hit/miss |
+| `step=retrieve` | Python `/rag/context` (Go + Python logs) |
+| `step=llm` | completion (stream true/false) |
+| `step=verify` | local/remote/hybrid + pass |
+| `step=done` | total `ms`, outcome |
+
+Client sees `request_id` in JSON / SSE `done` (and `X-Request-ID` response header). Grep logs: `req=<id>`.
 
 ---
 
@@ -46,7 +63,7 @@ Verify still runs on the **final** assembled answer (same `finalizeRAGAnswer` pa
 
 ## Logging
 
-`logRAGOutcome` — structured `[RAG]` log without LLM body.
+Path-trace steps (`req=… step=…`) plus `logRAGOutcome` — structured `[RAG]` log without LLM body.
 
 See [quality-eval-and-rag-logs.md](./quality-eval-and-rag-logs.md).
 
