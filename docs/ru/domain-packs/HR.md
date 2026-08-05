@@ -27,7 +27,7 @@
 
 | Актив | Путь |
 |-------|------|
-| Demo KB (EN) | `data/default/*_en.txt` |
+| Demo KB (EN + RU) | `data/default/default/` |
 | Промпты RAG | `config/locales/en/prompts.json` |
 | Onboarding | `config/locales/en/onboarding.json` |
 | UI branding | `config/locales/en/branding.json` |

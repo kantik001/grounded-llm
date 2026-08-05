@@ -22,16 +22,16 @@ def test_is_supported_filename():
 
 def test_load_txt_file():
     root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    path = os.path.join(root, "data", "default", "policy_vacation.txt")
+    path = os.path.join(root, "data", "default", "default", "vacation_policy_en.txt")
     if not os.path.isfile(path):
-        pytest.skip("demo policy_vacation.txt not found")
+        pytest.skip("demo vacation_policy_en.txt not found")
 
     docs = load_file("default", path)
     assert len(docs) >= 1
-    assert docs[0].metadata["filename"] == "policy_vacation.txt"
+    assert docs[0].metadata["filename"] == "vacation_policy_en.txt"
     assert docs[0].metadata["domain_id"] == "default"
     assert docs[0].metadata["file_type"] == "txt"
-    assert "отпуск" in docs[0].page_content.lower()
+    assert "vacation" in docs[0].page_content.lower()
 
 
 def test_unsupported_extension_raises():

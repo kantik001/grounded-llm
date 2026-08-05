@@ -41,12 +41,12 @@ Admin upload filename: **Latin** letters, digits, `_`, `-`, up to **10 MB**.
 ## Step 1 — prepare documents
 
 ```
-data/default/default/policy_vacation.txt
+data/default/default/vacation_policy_en.txt
 data/default/default/handbook.pdf
 data/acme/legal/contract_template.docx
 ```
 
-Demo domain `default`: HR policies in `data/default/default/` (legacy `data/default/` also works).
+Demo domain `default`: HR policies in `data/default/default/` (legacy flat `data/default/*.txt` still discovered if present).
 
 ---
 

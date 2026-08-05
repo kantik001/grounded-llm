@@ -27,7 +27,7 @@ A ready-to-run **policy Q&A assistant** grounded in company documents:
 
 | Asset | Path |
 |-------|------|
-| Demo knowledge base (EN) | `data/default/*_en.txt` |
+| Demo knowledge base (EN + RU) | `data/default/default/` |
 | RAG prompts | `config/locales/en/prompts.json` |
 | Onboarding chips | `config/locales/en/onboarding.json` |
 | UI branding | `config/locales/en/branding.json` |

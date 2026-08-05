@@ -34,9 +34,9 @@ def test_load_hr_manifest_domain_id():
     assert manifest["eval"]["suite"] == "default_en"
 
 
-def test_data_target_dir_legacy_hr():
+def test_data_target_dir_hr_nested():
     path = pack_installer.data_target_dir("default", "default")
-    assert path == _ROOT / "data" / "default"
+    assert path == _ROOT / "data" / "default" / "default"
 
 
 def test_data_target_dir_nested_it():
