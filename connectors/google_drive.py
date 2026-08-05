@@ -60,7 +60,7 @@ class GoogleDriveConnector(Connector):
             from googleapiclient.discovery import build
         except ImportError as exc:
             raise RuntimeError(
-                "Google Drive connector requires: pip install -r api/requirements-connectors.txt"
+                "Google Drive connector requires: pip install -r connectors/requirements.txt"
             ) from exc
 
         creds = service_account.Credentials.from_service_account_file(

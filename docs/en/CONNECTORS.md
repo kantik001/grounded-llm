@@ -36,7 +36,7 @@ Examples:
 
 ```bash
 python scripts/sync_connector.py confluence --domain it_support --dry-run
-pip install -r api/requirements-connectors.txt
+pip install -r connectors/requirements.txt
 python scripts/sync_connector.py google_drive --domain default --dry-run
 ```
 
@@ -69,7 +69,7 @@ python scripts/run_rag_eval.py --suite it_support
 | `GOOGLE_DRIVE_FOLDER_ID` | Shared folder id |
 | `GOOGLE_DRIVE_IMPERSONATE_USER` | Optional domain-wide delegation |
 
-Install: `pip install -r api/requirements-connectors.txt`
+Install: `pip install -r connectors/requirements.txt`
 
 Share the target folder with the service account email.
 

@@ -15,7 +15,7 @@ High-level map of this repository. Deeper map (per-folder files): [docs/en/knowl
 | `eval/` | Retrieval eval baselines (JSONL) + adversarial suites |
 | `scripts/` | Reindex, eval runner, smoke/load/backup, pack CLI |
 | `sdk/python/` | Python SDK + CLI (`grounded-llm`) |
-| `connectors/` | Optional ingest: SharePoint, Google Drive, Confluence |
+| `connectors/` | Optional ingest (SharePoint, Drive, Confluence) — see `connectors/README.md` |
 | `conformance/` | Spec / OpenAPI conformance CLI |
 | `deploy/` | Helm chart + Terraform references |
 | `.github/` | CI, Dependabot, CODEOWNERS, issue/PR templates — see `.github/AUTOMATION.md` |

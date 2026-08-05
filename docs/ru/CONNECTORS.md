@@ -16,7 +16,7 @@ python scripts/sync_connector.py <connector> --domain <domain_id> [options]
 |-----------|----------|------------|
 | `local_folder` | Путь к папке | Универсальный |
 | `sharepoint` | Microsoft Graph | Live API |
-| `google_drive` | Google Drive API | `pip install -r api/requirements-connectors.txt` |
+| `google_drive` | Google Drive API | `pip install -r connectors/requirements.txt` |
 | `confluence` | Confluence REST | Страницы + вложения |
 | `sharepoint_export` | Папка экспорта | Офлайн |
 | `google_drive_export` | Takeout | Офлайн |

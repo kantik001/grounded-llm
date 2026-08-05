@@ -93,6 +93,17 @@ updates:
       - dependency-name: "openapi-spec-validator"
         update-types: ["version-update:semver-major"]
 
+  # Optional ingest connectors (Google Drive API extras)
+  - package-ecosystem: pip
+    directory: /connectors
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      connectors-pip:
+        patterns:
+          - "*"
+
   # Python SDK + CLI (pyproject.toml)
   - package-ecosystem: pip
     directory: /sdk/python
