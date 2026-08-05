@@ -9,7 +9,7 @@ High-level map of the repository. Detailed articles: [README.md](./README.md).
 | Path | Purpose |
 |------|---------|
 | `server/` | Go: auth, sessions, RAG+LLM, admin, verify |
-| `api/` | Python Flask: RAG retrieval |
+| `api/` | Python RAG **service** (internal HTTP+gRPC); see `api/README.md` |
 | `rag/` | Chroma, retrieval, domains, document loaders |
 | `config/` | Domain pack defaults + `locales/{ru,en}/` |
 | `data/{tenant}/{domain}/` | KB: `.txt`, `.pdf`, `.docx` |

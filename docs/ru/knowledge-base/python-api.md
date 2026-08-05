@@ -1,89 +1,14 @@
-﻿# `api/app.py` — Python RAG API
+﻿# `api/` — Python RAG service
 
-**Исходник:** `api/app.py`  
-**Связанные модули:** `rag/retrieval.py`, `rag/vector_store.py`, `rag/domains_config.py`  
-**Вызывает:** Go (`server/rag_chat.go`, `server/admin.go`)
+**Актуальное описание:** [../../en/knowledge-base/python-api.md](../../en/knowledge-base/python-api.md)  
+**Карта пакета:** [`api/README.md`](../../../api/README.md)
 
----
-
-## Назначение
-
-Отдельный **Python HTTP-сервис** (порт **5000**, сервис Compose **`python`**).
-
-| Эндпоинт | Назначение |
-|----------|------------|
-| `POST /rag/context` | Retrieval: фрагменты для вопроса (без LLM) |
-| `GET /domains` | Каталог из `domains.json` |
-| `GET /health` | Healthcheck |
-| `GET /admin/index-stats` | Chunks по файлам (`?domain_id=&tenant_id=`, `X-Admin-Secret`) |
-| `POST /admin/reindex` | Пересборка Chroma |
-
-Go: `PYTHON_RAG_URL` → `http://python:5000/rag/context`.
-
-**CV / classify в ядре нет** — только RAG retrieval.
-
----
-
-## `POST /rag/context`
-
-Тело JSON:
-
-```json
-{
-  "question": "...",
-  "domain_id": "default",
-  "tenant_id": "default",
-  "locale": "ru"
-}
-```
-
-Ответ: `success`, `context`, `few_shot`, `fragments[]`, `category`, `error`.
-
-Few-shot из `config/locales/{locale}/few_shot.json`.
-
----
-
-## `POST /admin/reindex`
-
-Заголовок `X-Admin-Secret` = env `ADMIN_SECRET`.
-
-Индексирует `data/{tenant_id}/{domain_id}/`: `.txt`, `.pdf`, `.docx`.
-
----
-
-## Переменные окружения
-
-| Переменная | Назначение |
-|------------|------------|
-| `PYTHON_SERVICE_PORT` | Порт (5000) |
-| `DOMAINS_CONFIG_PATH` | `domains.json` |
-| `LOCALES_ROOT` | Путь к локалям |
-| `DEFAULT_LOCALE` | Локаль few-shot по умолчанию |
-| `DEFAULT_TENANT_ID` | Tenant по умолчанию |
-| `ADMIN_SECRET` | Защита reindex |
-| `FORCE_RAG_REINDEX` | Полная пересборка при старте |
-
----
-
-## Запуск
+Кратко: внутренний сервис поиска (не публичный Go `/api/v1`).
 
 ```bash
-# из корня репозитория
-# from repo root — HTTP only (dev)
-python -m flask --app api.app run -p 5000
-
-# production-shaped: Gunicorn + gRPC
+python -m flask --app api.http.app run -p 5000
+python -m api.grpc
 sh api/entrypoint.sh
 ```
 
-Docker: `CMD ["/app/api/entrypoint.sh"]` в `Dockerfile.python`. Актуальное описание: [../../en/knowledge-base/python-api.md](../../en/knowledge-base/python-api.md).
-
----
-
-## Дальше
-
-| Тема | Файл |
-|------|------|
-| Индексация | [rag-vector_store.md](./rag-vector_store.md) |
-| Поиск | [rag-retrieval.md](./rag-retrieval.md) |
-| Docker | [docker-overview.md](./docker-overview.md) |
+Docker: `ENTRYPOINT tini` + `CMD ["/app/api/entrypoint.sh"]` в `Dockerfile.python`.

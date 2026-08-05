@@ -28,7 +28,8 @@ else
 fi
 
 echo "==> Starting Python RAG on :${PYTHON_SERVICE_PORT}"
-python api/app.py &
+export PYTHONPATH="${ROOT}${PYTHONPATH:+:$PYTHONPATH}"
+python -m flask --app api.http.app run -h 127.0.0.1 -p "${PYTHON_SERVICE_PORT}" &
 APP_PID=$!
 cleanup() {
   kill "$APP_PID" 2>/dev/null || true

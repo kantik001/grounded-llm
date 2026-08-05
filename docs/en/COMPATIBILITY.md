@@ -39,7 +39,7 @@ Changing the embedding model requires **full reindex** and eval gate re-run. Doc
 | Image | Base | Dockerfile |
 |-------|------|------------|
 | Server | `alpine:3.21` | `Dockerfile.server` |
-| Python RAG | `python:3.11-slim` + Gunicorn/gRPC entrypoint | `Dockerfile.python` |
+| Python RAG | `python:3.11-slim` + tini + Gunicorn/gRPC | `Dockerfile.python` |
 | Webapp | nginx alpine | `Dockerfile.webapp` |
 
 Release tags `v*.*.*` publish to GHCR (see `.github/workflows/release.yml`).

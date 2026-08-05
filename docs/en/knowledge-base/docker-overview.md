@@ -107,7 +107,7 @@ Makefile: `make up`, `make logs`, `make smoke`, `make test`.
 
 ## Service `python` (RAG)
 
-- Ports **5000** (HTTP) and **50051** (gRPC); entrypoint: `api/entrypoint.sh` (Gunicorn + gRPC side-by-side)
+- Ports **5000** (HTTP) and **50051** (gRPC); `tini` + `api/entrypoint.sh` (Gunicorn + gRPC side-by-side)
 - Env: `DOMAINS_CONFIG_PATH`, `LOCALES_ROOT`, `DEFAULT_LOCALE`, `ADMIN_SECRET`, `FORCE_RAG_REINDEX`, `PYTHON_SERVICE_PORT`, `PYTHON_GRPC_PORT`, `REDIS_URL`, `RAG_SERVICE_TOKEN`
 - Healthcheck: `start_period: 180s` (first RAG / embeddings can be slow)
 - HTTP: `/health`, `/ready`, `/metrics`, `/rag/context`, `/domains`, `/admin/reindex`
@@ -162,7 +162,7 @@ From host: `localhost:8080` (Go), `localhost/api/` (via nginx), `127.0.0.1:5000`
 | File | Base | Notes |
 |------|------|-------|
 | `Dockerfile.server` | `golang:1.25-alpine` → `alpine:3.21` | multi-stage, `curl` for healthcheck |
-| `Dockerfile.python` | `python:3.11-slim` | Gunicorn + gRPC via `api/entrypoint.sh` |
+| `Dockerfile.python` | `python:3.11-slim` | `tini` + Gunicorn + gRPC via `api/entrypoint.sh` |
 | `Dockerfile.webapp` | `nginx:alpine` | static + `nginx.conf` |
 
 ---

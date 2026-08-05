@@ -3,12 +3,9 @@
 import grpc
 import warnings
 
-try:
-    from api import retriever_pb2 as retriever__pb2
-except ImportError:  # pragma: no cover
-    import retriever_pb2 as retriever__pb2
+from api.gen import retriever_pb2 as retriever__pb2
 
-GRPC_GENERATED_VERSION = '1.83.0'
+GRPC_GENERATED_VERSION = '1.69.0'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -21,15 +18,16 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + ' but the generated code in retriever_pb2_grpc.py depends on'
+        + f' but the generated code in retriever_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
     )
 
 
-class RetrieverStub:
-    """Retriever exposes hybrid/vector retrieval for agents over gRPC.
+class RetrieverStub(object):
+    """Retriever is the agent-facing RAG search API over gRPC.
+    It wraps the same retrieval core as HTTP POST /rag/context (no LLM).
     """
 
     def __init__(self, channel):
@@ -45,12 +43,20 @@ class RetrieverStub:
                 _registered_method=True)
 
 
-class RetrieverServicer:
-    """Retriever exposes hybrid/vector retrieval for agents over gRPC.
+class RetrieverServicer(object):
+    """Retriever is the agent-facing RAG search API over gRPC.
+    It wraps the same retrieval core as HTTP POST /rag/context (no LLM).
     """
 
     def Retrieve(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Retrieve returns ranked document chunks plus a concatenated context string.
+
+        Auth (when RAG_SERVICE_TOKEN is set): metadata key x-rag-service-token
+        or authorization: Bearer <token>. Optional x-request-id is logged for correlation.
+
+        Business failures (empty query, no hits, domain disabled) stay in the response
+        body with success=false. Unexpected errors use gRPC status INTERNAL.
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -71,8 +77,9 @@ def add_RetrieverServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class Retriever:
-    """Retriever exposes hybrid/vector retrieval for agents over gRPC.
+class Retriever(object):
+    """Retriever is the agent-facing RAG search API over gRPC.
+    It wraps the same retrieval core as HTTP POST /rag/context (no LLM).
     """
 
     @staticmethod

@@ -1,4 +1,4 @@
-# API deps needed by tests/test_api_ready.py (imports api.app)
+# API deps needed by tests that import api.http.app
 -r ../api/requirements.txt
 # Conformance deps for tests/test_conformance_cli.py (python -m conformance spec)
 -r ../conformance/requirements.txt

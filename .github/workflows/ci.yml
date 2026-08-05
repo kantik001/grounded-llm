@@ -65,6 +65,11 @@ jobs:
       - name: Ruff check
         run: pip install ruff==0.8.4 && ruff check rag api tests scripts sdk/python conformance connectors
 
+      - name: gRPC stubs in sync with proto
+        run: |
+          pip install 'grpcio==1.69.0' 'grpcio-tools==1.69.0' 'protobuf>=4.25.0,<6'
+          python scripts/gen_retriever_grpc.py --check
+
   conformance-spec:
     runs-on: ubuntu-latest
     steps:

@@ -8,9 +8,16 @@ select = ["E", "F", "I", "W"]
 ignore = ["E501"]
 
 [lint.per-file-ignores]
+# sys.path / load_dotenv before local imports (repo-root bootstrap)
 "api/app.py" = ["E402"]
-"api/retriever_pb2.py" = ["E", "F", "I", "W"]
-"api/retriever_pb2_grpc.py" = ["E", "F", "I", "W"]
+"api/grpc_retriever.py" = ["E402"]
+"api/http/app.py" = ["E402", "I001"]
+"tests/test_api_ready.py" = ["E402", "I001"]
+"tests/test_retrieve_metrics.py" = ["E402", "I001"]
+"tests/test_grpc_retriever.py" = ["E402", "I001"]
+# Generated protobuf / gRPC stubs
+"api/gen/retriever_pb2.py" = ["E", "F", "I", "W"]
+"api/gen/retriever_pb2_grpc.py" = ["E", "F", "I", "W"]
 
 [format]
 quote-style = "double"

@@ -54,4 +54,4 @@ cd ../grounded-guardrails/go && go run ./cmd/server
 | [ARCHITECTURE.md](./ARCHITECTURE.md) | Full chat flow including verify step |
 | [NETWORK_SECURITY.md](./NETWORK_SECURITY.md) | Port exposure for `:50052` |
 | [rag-verifier.md](./knowledge-base/rag-verifier.md) | Spec numeric algorithm |
-| Proto | [`api/proto/guardrails.proto`](../../api/proto/guardrails.proto) |
+| Proto | [`proto/guardrails.proto`](../../proto/guardrails.proto) |

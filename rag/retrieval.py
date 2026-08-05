@@ -2,7 +2,7 @@
 
 import json
 import os
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from rag.domains_config import get_domain, normalize_domain_id
 from rag.vector_store import search
@@ -66,6 +66,7 @@ def retrieve_rag_context(
     domain_id: str = "default",
     tenant_id: str = "default",
     locale: str = "ru",
+    top_k: Optional[int] = None,
 ) -> Dict[str, Any]:
     q = (user_question or "").strip()
     empty: Dict[str, Any] = {
@@ -97,20 +98,24 @@ def retrieve_rag_context(
         return empty
 
     k = _rag_k_for_domain(domain)
-    override = (os.environ.get("RAG_GRPC_TOP_K") or "").strip()
-    if override.isdigit():
-        k = max(1, min(int(override), 20))
+    if top_k is not None:
+        try:
+            k = max(1, min(int(top_k), 20))
+        except (TypeError, ValueError):
+            pass
     fragments = search(q, domain_id=domain_id, tenant_id=tenant_id, k=k)
     if not fragments:
         name = domain.get("name") or domain.get("name_ru") or domain_id
         empty["error"] = f"No information found in documents for domain «{name}»."
         return empty
 
+    from rag.rerank import keyword_overlap_score
+
     for f in fragments:
         print(f"[RAG:{domain_id}] source: {f.metadata.get('filename')}")
 
     context_parts: List[str] = []
-    fr_json: List[Dict[str, str]] = []
+    fr_json: List[Dict[str, Any]] = []
     for frag in fragments:
         source_name = frag.metadata.get("filename", "Unknown source")
         page = frag.metadata.get("page")
@@ -120,6 +125,7 @@ def retrieve_rag_context(
             "filename": source_name,
             "content": frag.page_content,
             "excerpt": _excerpt(frag.page_content),
+            "score": float(keyword_overlap_score(q, frag.page_content or "")),
         }
         if page is not None:
             try:
