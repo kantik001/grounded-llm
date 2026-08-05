@@ -74,5 +74,5 @@ python scripts/run_rag_eval.py --suite default_en
 
 - [PLATFORM_VISION.md](../../../PLATFORM_VISION.md)  
 - [LOCALE_GUIDE.md](../LOCALE_GUIDE.md)  
-- [domain-pack-template/](../../../domain-pack-template/)  
+- [packs/README.md](../../../packs/README.md) — установка / scaffold через `init_pack.py`
 - [CASE_STUDY_HR_PILOT.md](../../en/CASE_STUDY_HR_PILOT.md) — шаблон KPI для пилота  

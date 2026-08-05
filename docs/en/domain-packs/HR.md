@@ -80,4 +80,4 @@ python scripts/run_rag_eval.py --suite default_en
 
 - [PLATFORM_VISION.md](../../../PLATFORM_VISION.md) — platform positioning  
 - [LOCALE_GUIDE.md](../LOCALE_GUIDE.md) — add locales  
-- [domain-pack-template/](../../../domain-pack-template/) — generic scaffold  
+- [packs/README.md](../../../packs/README.md) — install / scaffold packs via `init_pack.py`

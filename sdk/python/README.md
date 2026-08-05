@@ -1,6 +1,20 @@
 # Grounded LLM Python SDK
 
-Official Python client and CLI for the [Grounded LLM](https://github.com/kantik001/grounded-llm) REST API.
+Official Python client and CLI for the [Grounded LLM](https://github.com/kantik001/grounded-llm) REST API (Go `server/`, not internal `api/` Retriever).
+
+Umbrella map: [`sdk/README.md`](../README.md).
+
+```
+sdk/python/
+├── grounded_llm/
+│   ├── client.py      # GroundedClient
+│   ├── cli.py         # grounded-llm entrypoint
+│   ├── exceptions.py
+│   └── __init__.py
+├── examples/          # runnable scripts
+├── tests/
+└── pyproject.toml     # package grounded-llm
+```
 
 ## Install
 
@@ -37,6 +51,18 @@ print(result.last_assistant_message["content"])
 print(result.last_assistant_message.get("citations"))
 ```
 
+### `GroundedClient` (main methods)
+
+| Method | Role |
+|--------|------|
+| `health` / `list_domains` / `branding` / `onboarding` | Discovery |
+| `create_session` / `history` | Sessions |
+| `send_message` / `chat` | Chat (non-stream) |
+| `stream_message_deltas` | SSE token stream |
+| `feedback` | Message rating |
+
+Raises `GroundedAPIError` / `GroundedAuthError` on failures.
+
 ## CLI
 
 ```bash
@@ -56,3 +82,4 @@ Environment variables: `GROUNDED_BASE_URL`, `GROUNDED_API_KEY`, `GROUNDED_TENANT
 
 - [API examples](../../docs/en/API_EXAMPLES.md)
 - [SDK quickstart](../../docs/en/QUICKSTART_SDK.md)
+- Runnable script: [examples/chat_basic.py](./examples/chat_basic.py)

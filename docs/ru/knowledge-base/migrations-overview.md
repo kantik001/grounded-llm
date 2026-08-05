@@ -1,7 +1,7 @@
 # Миграции PostgreSQL (`migrations/*.sql`)
 
-**Папка:** `migrations/`  
-**Файлы:** `001_init.sql`, `002_domain_id.sql`, `003_feedback_analytics.sql`, `005_message_citations.sql`, `006_tenant_id.sql`  
+**Папка:** `migrations/` — также [`migrations/README.md`](../../../migrations/README.md)  
+**Файлы:** `001_init.sql` … `003_*.sql`, `005_message_citations.sql` … `009_pgvector.sql` (нет `004`)  
 **Кто применяет:** Go-сервер при старте (`server/postgres_store.go` → `runAllMigrations`)  
 **СУБД:** PostgreSQL 16 (контейнер `postgres` в `docker-compose.yml`)
 

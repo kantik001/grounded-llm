@@ -1,7 +1,10 @@
 # Tests overview
 
-**Folders:** `tests/` (pytest), `server/*_test.go` (Go)  
+**Catalog:** [`tests/README.md`](../../../tests/README.md)  
+**Folders:** `tests/` (pytest), `server/internal/...` (Go), `sdk/python/tests/`  
 **CI:** [github-ci.yml.md](./github-ci.yml.md)
+
+> Retrieval **quality** baselines are under [`eval/`](../../../eval/README.md), not `tests/`.
 
 ---
 

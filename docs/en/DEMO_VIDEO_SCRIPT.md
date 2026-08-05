@@ -46,7 +46,7 @@ pip install -e sdk/python
 grounded-llm chat "How many vacation days?" --domain default
 ```
 
-Or show `examples/python/chat_basic.py`.
+Or show `sdk/python/examples/chat_basic.py`.
 
 ---
 

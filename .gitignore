@@ -11,8 +11,16 @@
 
 # RAG / logs
 chroma_db/
-sparse_index/
+sparse_index/**
+!sparse_index/.gitkeep
+!sparse_index/README.md
 models/*.pth
+models/*.onnx
+models/*.bin
+models/*.gguf
+models/*.safetensors
+!models/.gitkeep
+!models/README.md
 logs.json
 uploads/
 data/uploads/

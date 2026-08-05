@@ -75,7 +75,7 @@ Python `rag/domains_config.py` reloads `domains.json` when mtime changes.
 ## Local development (without Docker)
 
 1. Postgres + Redis + `.env` (`DATABASE_URL`, optional `REDIS_URL`).
-2. `cd server && go run .`
+2. `cd server && go run ./cmd/server`
 3. Python RAG: from repo root, prefer the same entrypoint as Docker:
    ```bash
    # HTTP only (dev): python -m flask --app api.http.app run -p 5000

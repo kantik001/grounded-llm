@@ -29,3 +29,7 @@ Shared pieces:
 
 Push CI runs on `main`/`master` and common prefix branches: `feature/**`, `refactor/**`, `chore/**`, `fix/**`, `docs/**`.
 Pull requests targeting `main`/`master` always run the full gate.
+
+Notable jobs:
+- `proto-lint` — `buf lint` (+ `buf breaking` vs `main` on PRs) for `proto/` and `api/proto/` (root `buf.yaml`)
+- `python-lint` — Ruff + Retriever stub sync (`scripts/gen_retriever_grpc.py --check`)

@@ -1,5 +1,6 @@
 ﻿# `webapp/` — Web UI
 
+**Folder README:** [`webapp/README.md`](../../../webapp/README.md)  
 **Files:** `index.html`, `admin.html`, `signup.html`, `embed.html`, `app.js`, `app.css`, `nginx.conf`  
 **Role:** reference UI for Telegram Web App, admin, optional SaaS signup, embed widget
 

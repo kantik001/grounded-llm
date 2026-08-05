@@ -1,0 +1,88 @@
+package auth
+
+import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"net/url"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
+
+	"grounded_llm_server/internal/store"
+)
+
+func ValidateTelegramInitData(initData, botToken string, maxAge time.Duration) (*store.TelegramUser, error) {
+	initData = strings.TrimSpace(initData)
+	if initData == "" {
+		return nil, fmt.Errorf("empty initData")
+	}
+	if botToken == "" {
+		return nil, fmt.Errorf("TELEGRAM_BOT_TOKEN is not set")
+	}
+
+	vals, err := url.ParseQuery(initData)
+	if err != nil {
+		return nil, fmt.Errorf("invalid initData: %w", err)
+	}
+
+	receivedHash := vals.Get("hash")
+	if receivedHash == "" {
+		return nil, fmt.Errorf("initData missing hash")
+	}
+	vals.Del("hash")
+
+	var pairs []string
+	for key := range vals {
+		pairs = append(pairs, key+"="+vals.Get(key))
+	}
+	sort.Strings(pairs)
+	dataCheckString := strings.Join(pairs, "\n")
+
+	secretMAC := hmac.New(sha256.New, []byte("WebAppData"))
+	secretMAC.Write([]byte(botToken))
+	secretKey := secretMAC.Sum(nil)
+
+	signMAC := hmac.New(sha256.New, secretKey)
+	signMAC.Write([]byte(dataCheckString))
+	calculatedHash := hex.EncodeToString(signMAC.Sum(nil))
+
+	if !hmac.Equal([]byte(calculatedHash), []byte(receivedHash)) {
+		return nil, fmt.Errorf("invalid initData signature")
+	}
+
+	authDateStr := vals.Get("auth_date")
+	if authDateStr == "" {
+		return nil, fmt.Errorf("initData missing auth_date")
+	}
+	authUnix, err := strconv.ParseInt(authDateStr, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("invalid auth_date: %w", err)
+	}
+	authTime := time.Unix(authUnix, 0)
+	if maxAge > 0 && time.Since(authTime) > maxAge {
+		return nil, fmt.Errorf("initData expired")
+	}
+
+	userJSON := vals.Get("user")
+	if userJSON == "" {
+		return nil, fmt.Errorf("initData missing user")
+	}
+	var user store.TelegramUser
+	if err := json.Unmarshal([]byte(userJSON), &user); err != nil {
+		return nil, fmt.Errorf("failed to parse user: %w", err)
+	}
+	if user.ID == 0 {
+		return nil, fmt.Errorf("invalid user.id")
+	}
+
+	return &user, nil
+}
+
+
+func validateTelegramInitData(initData, botToken string, maxAge time.Duration) (*store.TelegramUser, error) {
+	return ValidateTelegramInitData(initData, botToken, maxAge)
+}

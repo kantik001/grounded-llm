@@ -88,5 +88,5 @@ Full suite: `eval/rag_it_support_baseline.jsonl`.
 
 - [HR template](./HR.md)  
 - [PLATFORM_VISION.md](../../../PLATFORM_VISION.md)  
-- [domain-pack-template/](../../../domain-pack-template/)  
+- [packs/README.md](../../../packs/README.md) — install / scaffold packs via `init_pack.py`
 - [packs/README.md](../../../packs/README.md)  

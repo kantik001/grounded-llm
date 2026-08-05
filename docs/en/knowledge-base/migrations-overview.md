@@ -1,7 +1,7 @@
 # PostgreSQL migrations (`migrations/*.sql`)
 
-**Folder:** `migrations/`  
-**Files:** `001_init.sql`, `002_domain_id.sql`, `003_feedback_analytics.sql`, `005_message_citations.sql`, `006_tenant_id.sql`, `007_audit_log.sql`  
+**Folder:** `migrations/` — see also [`migrations/README.md`](../../../migrations/README.md)  
+**Files:** `001_init.sql` … `003_*.sql`, `005_message_citations.sql` … `009_pgvector.sql` (no `004`)  
 **Applied by:** Go server on startup (`server/postgres_store.go` → `runAllMigrations`)  
 **DB:** PostgreSQL 16 (Compose service `postgres`)
 

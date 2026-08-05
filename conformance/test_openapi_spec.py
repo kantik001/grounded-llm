@@ -6,7 +6,7 @@ from pathlib import Path
 from openapi_spec_validator import validate
 
 ROOT = Path(__file__).resolve().parents[1]
-OPENAPI_PATH = ROOT / "server" / "openapi.v1.json"
+OPENAPI_PATH = ROOT / "server" / "internal" / "httpapi" / "openapi.v1.json"
 
 
 def test_openapi_file_exists():

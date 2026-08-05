@@ -32,6 +32,24 @@ def test_registry_validate_no_errors():
     assert errors == [], errors
 
 
+def test_pack_schema_file_exists():
+    assert pack_registry.PACK_SCHEMA_PATH.is_file()
+
+
+def test_validate_pack_manifest_rejects_bad_domain():
+    errors = pack_registry.validate_pack_manifest(
+        {
+            "pack": "demo",
+            "version": "1.0.0",
+            "locale": "en",
+            "domain": {"id": "Bad-ID"},
+            "eval": {"suite": "demo"},
+        },
+        pack_id="demo",
+    )
+    assert errors, "expected schema errors for invalid domain.id"
+
+
 def test_registry_export_json():
     payload = pack_registry.export_registry_json()
     assert '"id": "hr"' in payload

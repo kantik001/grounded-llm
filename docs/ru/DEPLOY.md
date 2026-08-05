@@ -64,7 +64,7 @@ Python перечитывает `domains.json` при изменении вре�
 ## Локальная разработка (без Docker)
 
 1. Postgres + `.env` с `DATABASE_URL`.
-2. `cd server && go run .`
+2. `cd server && go run ./cmd/server`
 3. Python: `python api/app.py` (из корня репозитория).
 4. Web: nginx или `webapp/` + `TELEGRAM_AUTH_DISABLED=true`, API на `:8080`.
 

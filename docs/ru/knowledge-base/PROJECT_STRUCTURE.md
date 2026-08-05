@@ -8,32 +8,32 @@
 
 | Путь | Назначение |
 |------|------------|
-| `server/` | Go: auth, сессии, RAG+LLM, админка, verify |
-| `api/` | Python: Gunicorn HTTP + gRPC Retriever |
-
-| `rag/` | Chroma, поиск, домены, загрузчики документов |
+| `server/` | Go: auth, сессии, RAG+LLM, админка, verify — [`server/README.md`](../../../server/README.md) (`cmd/server` + `internal/`) |
+| `api/` | Python RAG **service** (HTTP+gRPC); см. `api/README.md` |
+| `proto/` | Guardrails gRPC IDL; Retriever в `api/proto/` — см. `proto/README.md` |
+| `rag/` | Retrieval **engine** (библиотека); HTTP/gRPC в `api/` — см. [`rag/README.md`](../../../rag/README.md) |
 | `config/` | Domain pack + `locales/{ru,en}/` |
 | `data/{tenant}/{domain}/` | База знаний: `.txt`, `.pdf`, `.docx` |
-| `webapp/` | Эталонный UI Telegram Web App |
-| `migrations/` | Схема PostgreSQL |
-| `eval/`, `scripts/` | Качество и эксплуатация |
+| `webapp/` | Эталонный UI — [`webapp/README.md`](../../../webapp/README.md) |
+| `site/` | GitHub Pages лендинг — [`site/README.md`](../../../site/README.md) |
+| `migrations/` | Схема PostgreSQL — см. [`migrations/README.md`](../../../migrations/README.md) |
+| `eval/`, `scripts/`, `tests/` | Качество и эксплуатация — README в каждой папке |
+| `sdk/python/` | Python-клиент + CLI для Go API — [`sdk/README.md`](../../../sdk/README.md) |
+| `models/`, `sparse_index/` | Runtime-бинарники/кэши (в gitignore) — см. README папок |
 | `docs/ru/`, `docs/en/` | Документация на двух языках |
 
 ---
 
 ## `server/` — Go backend
 
-Один бинарник `package main`, модуль **`grounded_llm_server`**.
+Модуль **`grounded_llm_server`**: `cmd/server` + `internal/` (см. [`server/README.md`](../../../server/README.md)).
 
-| Файл | Роль |
+| Путь | Роль |
 |------|------|
-| `main.go`, `routes.go` | Старт, маршруты |
-| `domains.go`, `locale.go` | Домены и локали |
-| `rag_pipeline.go`, `rag_verify.go` | RAG + LLM + verify (local Spec path) |
-| `guardrails_client.go` | опциональный remote verify → grounded-guardrails `:50052` |
-| `sse.go`, `api_keys.go`, `tenant.go` | Streaming, API keys, tenant |
-| `postgres_store.go` | Postgres |
-| `admin.go` | Upload KB, reindex |
+| `cmd/server` | точка входа |
+| `internal/app` | composition: `Run()`, `Deps`, bridges |
+| `internal/{config,store,auth,guardrails,metrics,llm,rag,httpapi,locale,domain,tenant,admin,oidc,saas,audit,analytics}` | доменные пакеты |
+| `gen/guardrails/v1` | guardrails gRPC stubs |
 
 → [server-overview.md](./server-overview.md)
 
@@ -41,13 +41,16 @@
 
 ## `rag/` — RAG-движок
 
+Библиотека для `api/` и скриптов — не сетевой сервис. Карта + env: [`rag/README.md`](../../../rag/README.md).
+
 | Модуль | Роль |
 |--------|------|
-| `domains_config.py` | `config/domains.json` |
-| `document_loaders.py` | `.txt`, `.pdf`, `.docx` |
-| `vector_store.py` | Индексация Chroma, фильтр tenant |
-| `retrieval.py` | Контекст для Go |
-| `verifier.py` | Проверка чисел (эталон для тестов) |
+| `vector_backend/` | Chroma / Qdrant / pgvector |
+| `vector_store.py` | поиск, hybrid RRF, readiness |
+| `indexing.py` / `document_loaders.py` | загрузка + чанки KB |
+| `retrieval.py` | контекст + few-shot |
+| `sparse_index.py` / `rerank.py` | BM25 hybrid + rerank |
+| `verifier.py` | локальная проверка чисел |
 
 ---
 

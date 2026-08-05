@@ -1,0 +1,177 @@
+package config
+
+import (
+	"log"
+	"os"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/joho/godotenv"
+)
+
+// Config — настройки приложения из переменных окружения.
+type Config struct {
+	PythonRAGURL string // POST JSON → retrieval (контекст) в Python
+	LLMAPIKey    string
+	LLMModel     string
+	LLMBaseURL   string
+	ServerPort   string
+
+	TelegramBotToken       string
+	TelegramAuthDisabled   bool
+	TelegramInitDataMaxAge time.Duration
+	CORSAllowedOrigins     []string
+	RateLimitPerMinute     int
+	DatabaseURL            string
+	UploadDir              string
+	DataDir                string
+	PythonBaseURL          string
+	AdminUser              string
+	AdminPassword          string
+	AdminSecret            string
+	DefaultTenantID        string
+	DefaultLocale          string
+	LLMMock                bool
+	RAGMock                bool
+	RAGServiceToken        string
+	LLMProvider            string
+	MessageRetentionDays   int
+	SessionRetentionDays   int
+	RetentionIntervalHours int
+
+	// Guardrails (optional remote verify via grounded-guardrails :50052)
+	GuardrailsMode     string // local | remote | hybrid
+	GuardrailsGRPCAddr string
+	GuardrailsPIIBlock bool
+}
+
+var current *Config
+
+// Current returns the process config after Load (migration helper).
+func Current() *Config { return current }
+
+// Загружает .env и собирает Config из переменных окружения.
+func Load() *Config {
+	_ = godotenv.Load()
+	_ = godotenv.Load("../.env")
+	_ = godotenv.Load("../../.env")
+	_ = godotenv.Load("../../../.env")
+
+	maxAgeSec, _ := strconv.Atoi(getEnv("TELEGRAM_INIT_DATA_MAX_AGE_SEC", "86400"))
+	if maxAgeSec < 0 {
+		maxAgeSec = 86400
+	}
+	rateLimit, _ := strconv.Atoi(getEnv("RATE_LIMIT_REQUESTS_PER_MINUTE", "30"))
+	if rateLimit < 0 {
+		rateLimit = 0
+	}
+	msgRetention, _ := strconv.Atoi(getEnv("MESSAGE_RETENTION_DAYS", "0"))
+	if msgRetention < 0 {
+		msgRetention = 0
+	}
+	sessRetention, _ := strconv.Atoi(getEnv("SESSION_RETENTION_DAYS", "0"))
+	if sessRetention < 0 {
+		sessRetention = 0
+	}
+	retentionHours, _ := strconv.Atoi(getEnv("RETENTION_INTERVAL_HOURS", "24"))
+	if retentionHours < 1 {
+		retentionHours = 24
+	}
+
+	cfg := &Config{
+		PythonRAGURL: getEnv("PYTHON_RAG_URL", "http://python:5000/rag/context"),
+		LLMAPIKey:    getEnv("LLM_API_KEY", ""),
+		LLMBaseURL:   os.Getenv("LLM_BASE_URL"), // empty → resolveLLMProvider fills by LLM_PROVIDER
+		LLMModel:     getEnv("LLM_MODEL", "openrouter/free"),
+		LLMProvider:  getEnv("LLM_PROVIDER", "openai"),
+		ServerPort:   getEnv("SERVER_PORT", "8080"),
+
+		TelegramBotToken:       getEnv("TELEGRAM_BOT_TOKEN", ""),
+		TelegramAuthDisabled:   strings.EqualFold(getEnv("TELEGRAM_AUTH_DISABLED", "false"), "true"),
+		TelegramInitDataMaxAge: time.Duration(maxAgeSec) * time.Second,
+		CORSAllowedOrigins:     parseAllowedOrigins(getEnv("CORS_ALLOWED_ORIGINS", "http://localhost,http://127.0.0.1")),
+		RateLimitPerMinute:     rateLimit,
+		DatabaseURL:            getEnv("DATABASE_URL", "postgres://grounded:grounded@postgres:5432/grounded?sslmode=disable"),
+		UploadDir:              getEnv("UPLOAD_DIR", "/data/uploads"),
+		DataDir:                getEnv("DATA_DIR", "/app/data"),
+		PythonBaseURL:          getEnv("PYTHON_BASE_URL", "http://python:5000"),
+		AdminUser:              getEnv("ADMIN_USER", "admin"),
+		AdminPassword:          getEnv("ADMIN_PASSWORD", ""),
+		AdminSecret:            getEnv("ADMIN_SECRET", ""),
+		DefaultTenantID:        getEnv("DEFAULT_TENANT_ID", "default"),
+		DefaultLocale:          getEnv("DEFAULT_LOCALE", "en"),
+		LLMMock:                isTruthyEnv("LLM_MOCK"),
+		RAGMock:                isTruthyEnv("RAG_MOCK"),
+		RAGServiceToken:        getEnv("RAG_SERVICE_TOKEN", ""),
+		MessageRetentionDays:   msgRetention,
+		SessionRetentionDays:   sessRetention,
+		RetentionIntervalHours: retentionHours,
+
+		GuardrailsMode:     getEnv("GUARDRAILS_MODE", "local"),
+		GuardrailsGRPCAddr: getEnv("GUARDRAILS_GRPC_ADDR", ""),
+		GuardrailsPIIBlock: isTruthyEnv("GUARDRAILS_PII_BLOCK"),
+	}
+	resolveLLMProvider(cfg)
+	current = cfg
+	return cfg
+}
+
+// Возвращает значение переменной окружения или defaultValue.
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
+// LogBasic writes core settings at startup (registry-aware lines stay in app).
+func LogBasic(cfg *Config) {
+	log.Printf("Starting Grounded LLM Server...")
+	if isProductionEnv() {
+		log.Printf("Environment: production (safety checks enforced)")
+	} else {
+		log.Printf("Environment: development")
+	}
+	log.Printf("Python RAG context URL: %s", cfg.PythonRAGURL)
+	log.Printf("LLM provider: %s  base=%s  model=%s", cfg.LLMProvider, cfg.LLMBaseURL, cfg.LLMModel)
+	if cfg.LLMMock {
+		log.Printf("LLM: MOCK mode (deterministic responses for CI/smoke)")
+	} else if cfg.LLMAPIKey != "" {
+		log.Printf("LLM API Key: configured")
+	} else {
+		log.Printf("LLM API Key: not configured")
+	}
+	if cfg.RAGMock {
+		log.Printf("RAG: MOCK mode (skips Python retrieval service)")
+	}
+	if cfg.RAGServiceToken != "" {
+		log.Printf("RAG service token: configured (Python internal auth enabled)")
+	}
+	if cfg.MessageRetentionDays > 0 || cfg.SessionRetentionDays > 0 {
+		log.Printf("Retention: messages=%d days, sessions=%d days, interval=%dh",
+			cfg.MessageRetentionDays, cfg.SessionRetentionDays, cfg.RetentionIntervalHours)
+	}
+	mode := normalizeGuardrailsMode(cfg.GuardrailsMode)
+	log.Printf("Guardrails mode: %s", mode)
+	if mode != "local" {
+		addr := cfg.GuardrailsGRPCAddr
+		if addr == "" {
+			addr = "localhost:50052"
+		}
+		log.Printf("Guardrails gRPC: %s (pii_block=%v)", addr, cfg.GuardrailsPIIBlock)
+	}
+	if cfg.TelegramAuthDisabled {
+		log.Printf("Telegram auth: DISABLED (dev mode only)")
+	} else if cfg.TelegramBotToken != "" {
+		log.Printf("Telegram auth: enabled")
+	} else {
+		log.Printf("Telegram auth: WARNING — TELEGRAM_BOT_TOKEN not set, protected routes will reject clients")
+	}
+	log.Printf("Default tenant: %s", cfg.DefaultTenantID)
+	log.Printf("Default locale: %s", cfg.DefaultLocale)
+	log.Printf("CORS origins: %v", cfg.CORSAllowedOrigins)
+	log.Printf("Rate limit: %d req/min per user", cfg.RateLimitPerMinute)
+	log.Printf("Database URL: configured")
+	log.Printf("Upload dir: %s", cfg.UploadDir)
+}

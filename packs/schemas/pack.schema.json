@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kantik001/grounded-llm/packs/schemas/pack.schema.json",
+  "title": "Grounded LLM pack.yaml v1",
+  "type": "object",
+  "required": ["pack", "version", "domain", "locale", "eval"],
+  "additionalProperties": true,
+  "properties": {
+    "pack": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "version": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "locale": {
+      "type": "string",
+      "enum": ["en", "ru"]
+    },
+    "domain": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "name": { "type": "string" },
+        "names": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "emoji": { "type": "string" },
+        "rag_enabled": { "type": "boolean" },
+        "rag_k": { "type": "integer", "minimum": 1, "maximum": 64 }
+      }
+    },
+    "prompts": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "rag_system": { "type": "string" },
+        "rag_task_intro": { "type": "string" }
+      }
+    },
+    "onboarding": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "few_shot": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "general": { "type": "string" }
+      }
+    },
+    "eval": {
+      "type": "object",
+      "required": ["suite"],
+      "additionalProperties": true,
+      "properties": {
+        "suite": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-z0-9][a-z0-9_]*$"
+        }
+      }
+    }
+  }
+}

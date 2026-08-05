@@ -1,7 +1,10 @@
 # Тесты
 
-**Папки:** `tests/` (pytest), `server/*_test.go` (Go)  
+**Каталог:** [`tests/README.md`](../../../tests/README.md)  
+**Папки:** `tests/` (pytest), `server/internal/...` (Go), `sdk/python/tests/`  
 **CI:** [github-ci.yml.md](./github-ci.yml.md)
+
+> Базовые наборы **качества retrieval** — в [`eval/`](../../../eval/README.md), не в `tests/`.
 
 ---
 

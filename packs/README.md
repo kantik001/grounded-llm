@@ -68,8 +68,17 @@ python scripts/run_rag_eval.py --suite it_support
 | `it_support` | `it_support` | `it_support` |
 | `legal_faq` | `legal_faq` | `legal_faq` |
 
-Official registry: [registry.yaml](./registry.yaml) — validated in CI.
+Official registry: [registry.yaml](./registry.yaml) — validated in CI (`python scripts/init_pack.py registry --validate`).
+
+Manifest contract: [`schemas/pack.schema.json`](./schemas/pack.schema.json) (checked for every registered pack).
+
+### HR pack vs runtime `data/`
+
+- **`packs/hr/data/`** is the **English** source of truth (install copies into `data/default/default/`).
+- Runtime demo may also keep **RU** docs (`*_policy_ru.txt`) under `data/default/default/` for the RU eval suite (`eval/rag_default_baseline.jsonl`). Those RU files are **not** part of the HR pack install — edit/add them in `data/` (or a future locale-specific pack), not by expecting `init_pack.py install hr` to ship them.
 
 See [docs/en/domain-packs/](../docs/en/domain-packs/) for deploy guides.
 
-**Contribute a pack:** [domain-pack-template/](../domain-pack-template/) · starter tasks in [GOOD_FIRST_ISSUES.md](../GOOD_FIRST_ISSUES.md).
+**Create / contribute a pack:** use the CLI above (`init_pack.py new …`), then open a PR. Starter tasks: [GOOD_FIRST_ISSUES.md](../GOOD_FIRST_ISSUES.md).
+
+Legacy helper (data directory only): `./scripts/init_domain.sh my_domain default`.

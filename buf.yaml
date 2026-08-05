@@ -1,0 +1,27 @@
+# Buf workspace: lint + breaking-change checks for gRPC contracts.
+# Docs: https://buf.build/docs/configuration/v2/buf-yaml/
+# Local: buf lint   (or: go install github.com/bufbuild/buf/cmd/buf@v1.50.1)
+version: v2
+modules:
+  # One module so `buf breaking` compares cleanly against main (flat IDL layout).
+  # Guardrails (:50052) → server/gen/guardrails/ ; Retriever (:50051) → api/gen/
+  - path: .
+    includes:
+      - proto
+      - api/proto
+lint:
+  use:
+    - STANDARD
+  except:
+    # Flat layout (proto/*.proto, api/proto/*.proto) — not package-path directories.
+    - PACKAGE_DIRECTORY_MATCH
+    # Existing public enums/RPCs; renaming would break generated clients.
+    - ENUM_VALUE_PREFIX
+    - ENUM_ZERO_VALUE_SUFFIX
+    - SERVICE_SUFFIX
+    - RPC_REQUEST_STANDARD_NAME
+    - RPC_RESPONSE_STANDARD_NAME
+    - RPC_REQUEST_RESPONSE_UNIQUE
+breaking:
+  use:
+    - FILE
