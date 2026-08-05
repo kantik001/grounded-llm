@@ -1,5 +1,7 @@
 # `.github/` — automation for this repository
 
+> Not the repository homepage README. GitHub prefers `.github/README.md` over the root `README.md`, so this map lives here instead.
+
 | Path | Role |
 |------|------|
 | `workflows/ci.yml` | PR/push quality gate (lint, tests, retrieval eval, images, smoke) |
