@@ -27,11 +27,12 @@ def discover_kb_directories() -> Iterator[Tuple[str, str, str]]:
     """Yield (tenant_id, domain_id, directory_path).
 
     Layouts:
-    - Legacy: data/{domain_id}/*.{txt,pdf,docx}
-    - Multi-tenant: data/{tenant_id}/{domain_id}/*.{txt,pdf,docx}
+    - Multi-tenant (preferred): data/{tenant_id}/{domain_id}/*.{txt,pdf,docx}
+    - Legacy: data/{domain_id}/*.{txt,pdf,docx} (default tenant only)
 
     When a folder name is both a legacy domain (e.g. ``default``) and a tenant
-    with nested domains (e.g. ``default/it_support/``), both are indexed.
+    with nested domains (e.g. ``default/it_support/``), both are indexed if they
+    contain KB files.
     """
     if not os.path.isdir(DATA_DIR):
         return

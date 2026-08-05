@@ -50,7 +50,7 @@ python scripts/init_pack.py new my_pack --install
 
 - `config/domains.json`
 - `config/locales/{locale}/` (prompts, onboarding, few_shot)
-- `data/{tenant}/{domain}/` (HR `default` uses legacy flat `data/default/`)
+- `data/{tenant}/{domain}/` (all domains, including HR `default/default`)
 - `eval/rag_{suite}_baseline.jsonl`
 
 Then:

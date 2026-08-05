@@ -2,7 +2,7 @@
 
 **Use case:** Internal HR Q&A over vacation, sick leave, remote work, and conduct policies.  
 **Deployment:** Docker Compose on customer VPC (on-prem).  
-**Domain pack:** HR template (`packs/hr`, `data/default/*_en.txt`).
+**Domain pack:** HR template (`packs/hr`, `data/default/default/`).
 
 > **Note:** Metrics below reflect a **structured pilot demo** with scripted questions and eval baselines — a template for real customer pilots, not a published third-party production deployment.
 

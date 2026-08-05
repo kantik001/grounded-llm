@@ -15,7 +15,7 @@ def _domains_config(monkeypatch):
     monkeypatch.setenv("DOMAINS_CONFIG_PATH", str(_ROOT / "config" / "domains.json"))
 
 
-def test_discover_legacy_default_and_nested_it_support():
+def test_discover_nested_default_and_it_support():
     from rag.domains_config import reload_domains_config
     from rag.kb_discovery import discover_kb_directories
 
@@ -24,6 +24,9 @@ def test_discover_legacy_default_and_nested_it_support():
 
     assert ("default", "default") in pairs
     assert ("default", "it_support") in pairs
+    hr_paths = [p for t, d, p in discover_kb_directories() if t == "default" and d == "default"]
+    assert len(hr_paths) == 1
+    assert hr_paths[0].endswith(os.path.join("data", "default", "default"))
 
 
 def test_discover_nested_paths_include_it_support_files():

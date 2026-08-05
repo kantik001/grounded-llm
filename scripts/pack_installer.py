@@ -55,10 +55,9 @@ def _locale(manifest: dict[str, Any]) -> str:
 
 
 def data_target_dir(tenant_id: str, domain_id: str) -> Path:
-    """Resolve KB directory (legacy flat layout for tenant+domain both default)."""
-    tenant_id = tenant_id.strip() or "default"
-    if tenant_id == "default" and domain_id == "default":
-        return ROOT / "data" / "default"
+    """Resolve KB directory: data/{tenant}/{domain}/."""
+    tenant_id = (tenant_id or "").strip() or "default"
+    domain_id = (domain_id or "").strip() or "default"
     return ROOT / "data" / tenant_id / domain_id
 
 

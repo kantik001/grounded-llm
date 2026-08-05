@@ -127,7 +127,7 @@ curl -sS -u admin:your-password http://localhost:8080/api/admin/status
 ```bash
 curl -sS -u admin:your-password \
   -F "domain_id=default" \
-  -F "file=@./data/default/vacation_policy_en.txt" \
+  -F "file=@./data/default/default/vacation_policy_en.txt" \
   http://localhost:8080/api/admin/upload
 ```
 

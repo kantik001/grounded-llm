@@ -74,7 +74,7 @@ curl -sS -N -X POST "http://localhost:8080/api/message?stream=1" \
 ```bash
 curl -sS -u admin:password \
   -F "domain_id=default" \
-  -F "file=@./data/default/vacation_policy_en.txt" \
+  -F "file=@./data/default/default/vacation_policy_en.txt" \
   http://localhost:8080/api/admin/upload
 ```
 

@@ -76,7 +76,7 @@
 | **English-first UI** | ✅ | `webapp/`, `DEFAULT_LOCALE=en` |
 | **Security brief** | ✅ | [SECURITY_BRIEF.md](./SECURITY_BRIEF.md) |
 | **Case study template** | ✅ | [CASE_STUDY_HR_PILOT.md](../en/CASE_STUDY_HR_PILOT.md) |
-| **HR domain pack (EN)** | ✅ | [domain-packs/HR.md](./domain-packs/HR.md), `data/default/*_en.txt` |
+| **HR domain pack (EN)** | ✅ | [domain-packs/HR.md](./domain-packs/HR.md), `data/default/default/` |
 | **Расширяемость locale** | ✅ | [LOCALE_GUIDE.md](./LOCALE_GUIDE.md) |
 
 ### Инженерия

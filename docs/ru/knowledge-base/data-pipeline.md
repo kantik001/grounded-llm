@@ -41,12 +41,12 @@ flowchart LR
 ## Шаг 1 — подготовить документы
 
 ```
-data/default/default/policy_vacation.txt
+data/default/default/vacation_policy_en.txt
 data/default/default/handbook.pdf
 data/acme/legal/contract.docx
 ```
 
-Демо HR: `data/default/default/` (legacy `data/default/` тоже работает).
+Демо HR: `data/default/default/` (плоский legacy `data/default/*.txt` всё ещё подхватывается, если есть).
 
 ---
 

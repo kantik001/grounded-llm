@@ -74,7 +74,7 @@ See also: [PLATFORM_VISION.md](../../PLATFORM_VISION.md) · [ARCHITECTURE.md](./
 |------|--------|----------|
 | **English-first UI** | ✅ | `webapp/`, `DEFAULT_LOCALE=en` |
 | **Security brief** | ✅ | [SECURITY_BRIEF.md](./SECURITY_BRIEF.md) |
-| **HR reference template** | ✅ | [domain-packs/HR.md](./domain-packs/HR.md), `data/default/*_en.txt` |
+| **HR reference template** | ✅ | [domain-packs/HR.md](./domain-packs/HR.md), `data/default/default/` |
 | **IT support template** | ✅ | [domain-packs/IT_SUPPORT.md](./domain-packs/IT_SUPPORT.md), `data/default/it_support/` |
 | **Platform positioning** | ✅ | [PLATFORM_VISION.md](../../PLATFORM_VISION.md), [ARCHITECTURE.md](./ARCHITECTURE.md) |
 | **Locale extensibility** | ✅ | [LOCALE_GUIDE.md](./LOCALE_GUIDE.md) |
