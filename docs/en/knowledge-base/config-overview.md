@@ -17,7 +17,6 @@
 | `locales/{ru,en}/onboarding.json` | Go | Starter question chips in the Web App |
 | `locales/{ru,en}/branding.json` | Go | UI titles and disclaimer |
 | `examples/*.json.example` | operators | Templates for tenants, quotas, RBAC, OIDC, API keys |
-| `legacy/` | — | Pre-locale flat JSON (not loaded) |
 
 See [config/locales/README.md](../../../config/locales/README.md).
 

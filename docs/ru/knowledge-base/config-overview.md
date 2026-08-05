@@ -18,7 +18,6 @@
 | `locales/*/onboarding.json` | Go | Стартовые вопросы в Web App |
 | `locales/*/branding.json` | Go | Заголовки и дисклеймер UI |
 | `examples/*.json.example` | оператор | Шаблоны tenants / quotas / RBAC / OIDC / API keys |
-| `legacy/` | — | Старые плоские JSON (runtime не читает) |
 
 Подробнее: [config/locales/README.md](../../../config/locales/README.md).
 

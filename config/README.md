@@ -13,7 +13,6 @@ Deep dive: [docs/en/knowledge-base/config-overview.md](../docs/en/knowledge-base
 | `plans.yaml` | SaaS plan tiers (`PLANS_FILE`) |
 | `examples/` | Safe templates for optional operator files (copy → repo root of `config/`) |
 | `schemas/` | JSON Schema for CI / local validation |
-| `legacy/` | Pre-locale flat JSON (not loaded at runtime) |
 | `*.md` | Operator notes: SSO, RBAC, quotas, reindex, analytics |
 
 ## Environment
