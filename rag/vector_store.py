@@ -81,9 +81,9 @@ def readiness_index_check() -> tuple[str, bool]:
 
     if name == "pgvector":
         try:
-            from rag.vector_backend.pgvector_backend import pg_connection_url, psycopg_dsn
-
             import psycopg
+
+            from rag.vector_backend.pgvector_backend import pg_connection_url, psycopg_dsn
 
             dsn = psycopg_dsn(pg_connection_url())
             with psycopg.connect(dsn, connect_timeout=2) as conn:

@@ -19,13 +19,13 @@ import threading
 import time
 from concurrent import futures
 
-import grpc
 from grpc_health.v1 import health, health_pb2, health_pb2_grpc
+from rag.retrieval import retrieve_rag_context
 
+import grpc
 from api.auth import rag_service_token_ok, rag_token_from_metadata
 from api.gen import retriever_pb2, retriever_pb2_grpc
 from api.retrieve_metrics import record_retrieve
-from rag.retrieval import retrieve_rag_context
 
 logger = logging.getLogger(__name__)
 
