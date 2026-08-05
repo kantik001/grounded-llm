@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kantik001/grounded-llm/config/schemas/domains.schema.json",
+  "title": "Grounded LLM domains catalog",
+  "type": "object",
+  "required": ["default_domain", "domains"],
+  "additionalProperties": true,
+  "properties": {
+    "_comment": { "type": "string" },
+    "default_domain": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9_-]*$"
+    },
+    "domains": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/domain" }
+    }
+  },
+  "$defs": {
+    "domain": {
+      "type": "object",
+      "required": ["rag_enabled"],
+      "additionalProperties": true,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "name_ru": { "type": "string" },
+        "names": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "emoji": { "type": "string" },
+        "rag_enabled": { "type": "boolean" },
+        "rag_k": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "ui_hidden": { "type": "boolean" }
+      },
+      "anyOf": [
+        { "required": ["name"] },
+        { "required": ["name_ru"] },
+        { "required": ["names"] }
+      ]
+    }
+  }
+}

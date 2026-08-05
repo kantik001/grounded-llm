@@ -25,7 +25,7 @@
 | 1 | Signup API | `POST /api/v1/signup` |
 | 2 | Plans API | `GET /api/v1/plans` |
 | 3 | Stripe webhook | `POST /api/v1/billing/stripe/webhook` |
-| 4 | Tenant registry | `config/tenants.json.example`, `server/tenant_registry.go` |
+| 4 | Tenant registry | `config/examples/tenants.json.example`, `server/tenant_registry.go` |
 | 5 | Signup UI | `webapp/signup.html` |
 | 6 | Docs | [BILLING.md](./BILLING.md), [SAAS.md](./SAAS.md) |
 
@@ -38,7 +38,7 @@
 export SAAS_SIGNUP_ENABLED=true
 export TENANTS_REGISTRY_FILE=config/tenants.json
 export TENANT_QUOTAS_FILE=config/tenant_quotas.json
-cp config/tenants.json.example config/tenants.json
+cp config/examples/tenants.json.example config/tenants.json
 ```
 
 ### Signup

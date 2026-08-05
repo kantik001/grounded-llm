@@ -53,7 +53,7 @@
 
 ## `config/` — domain pack
 
-`domains.json`, `locales/ru/`, `locales/en/` (prompts, few_shot, onboarding, branding)
+`domains.json`, `locales/ru/`, `locales/en/`, `examples/`, `schemas/` — см. [config/README.md](../../../config/README.md)
 
 → [config-overview.md](./config-overview.md)
 

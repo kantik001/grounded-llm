@@ -29,7 +29,7 @@ Register the redirect URL in your IdP app registration.
 
 ## Role mapping
 
-Example: [oidc_role_mapping.json.example](./oidc_role_mapping.json.example)
+Example: [examples/oidc_role_mapping.json.example](./examples/oidc_role_mapping.json.example)
 
 - `default_roles` — if no group/email match (default: `kb_editor`)
 - `groups` — IdP group name → RBAC roles (`admin`, `kb_editor`, `api_manager`, `chat_only`)

@@ -8,7 +8,7 @@ Optional caps per tenant for **messages/day**, **KB storage**, and **number of d
 TENANT_QUOTAS_FILE=config/tenant_quotas.json
 ```
 
-Example: [tenant_quotas.json.example](./tenant_quotas.json.example)
+Example: [examples/tenant_quotas.json.example](./examples/tenant_quotas.json.example)
 
 ```json
 [

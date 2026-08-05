@@ -1,7 +1,8 @@
 ﻿# Config directory (`config/`)
 
 **Folder:** `config/` — JSON configs mounted without rebuild (Docker volume `/config`).  
-**Readers:** Go (`server/`), Python (`rag/`)
+**Readers:** Go (`server/`), Python (`rag/`)  
+**Map:** [config/README.md](../../../config/README.md)
 
 ---
 
@@ -10,10 +11,12 @@
 | Path | Reader | Purpose |
 |------|--------|---------|
 | `domains.json` | Go + Python | Domain catalog, `rag_enabled`, localized `names` |
+| `schemas/domains.schema.json` | CI / pytest | Structural validation of `domains.json` |
 | `locales/{ru,en}/prompts.json` | Go | Per-domain RAG system prompts + `_platform` rules |
 | `locales/{ru,en}/few_shot.json` | Python | Few-shot examples (`locale` in `POST /rag/context`) |
 | `locales/{ru,en}/onboarding.json` | Go | Starter question chips in the Web App |
 | `locales/{ru,en}/branding.json` | Go | UI titles and disclaimer |
+| `examples/*.json.example` | operators | Templates for tenants, quotas, RBAC, OIDC, API keys |
 
 See [config/locales/README.md](../../../config/locales/README.md).
 
@@ -24,7 +27,7 @@ See [config/locales/README.md](../../../config/locales/README.md).
 - **Go:** `GET /domains` returns display names for the request locale
 - **Python:** `normalize_domain_id`, Chroma filter by `domain_id` and `tenant_id`
 
-Env: `DOMAINS_CONFIG_PATH`.
+Env: `DOMAINS_CONFIG_PATH`. Schema: `config/schemas/domains.schema.json` (`tests/test_domains_schema.py`).
 
 More: [rag-domains_config.md](./rag-domains_config.md).
 

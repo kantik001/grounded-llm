@@ -1,7 +1,8 @@
 ﻿# Папка `config/`
 
 **Папка:** `config/` — JSON-конфиги без пересборки образов (в Docker монтируется как `/config`).  
-**Читают:** Go (`server/`), Python (`rag/`)
+**Читают:** Go (`server/`), Python (`rag/`)  
+**Карта:** [config/README.md](../../../config/README.md)
 
 ---
 
@@ -10,11 +11,13 @@
 | Путь | Кто | Назначение |
 |------|-----|------------|
 | `domains.json` | Go + Python | Каталог доменов, `rag_enabled`, `names.ru` / `names.en` |
+| `schemas/domains.schema.json` | CI / pytest | Проверка структуры `domains.json` |
 | `locales/ru/prompts.json` | Go | Промпты RAG и правила ответа (русский) |
 | `locales/en/prompts.json` | Go | То же для английского |
 | `locales/*/few_shot.json` | Python | Few-shot примеры (`locale` в `POST /rag/context`) |
 | `locales/*/onboarding.json` | Go | Стартовые вопросы в Web App |
 | `locales/*/branding.json` | Go | Заголовки и дисклеймер UI |
+| `examples/*.json.example` | оператор | Шаблоны tenants / quotas / RBAC / OIDC / API keys |
 
 Подробнее: [config/locales/README.md](../../../config/locales/README.md).
 
@@ -54,7 +57,7 @@
 
 Сервер: `initLocaleConfig()`, middleware по заголовкам `X-Locale`, `Accept-Language` или query `?locale=`.
 
-Переменные: `DEFAULT_LOCALE` (по умолчанию `ru`), `LOCALES_ROOT`.
+Переменные: `DEFAULT_LOCALE` (по умолчанию `en`), `LOCALES_ROOT`.
 
 **Важно:** для русскоязычных пользователей правьте в первую очередь `locales/ru/prompts.json` — оттуда берётся язык ответа LLM.
 

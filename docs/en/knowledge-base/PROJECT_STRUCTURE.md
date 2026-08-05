@@ -58,7 +58,7 @@ Key files:
 
 ## `config/` — domain pack
 
-`domains.json`, `locales/{ru,en}/` (prompts, few_shot, onboarding, branding)
+`domains.json`, `locales/{ru,en}/`, `examples/`, `schemas/` — see [config/README.md](../../../config/README.md)
 
 → [config-overview.md](./config-overview.md)
 

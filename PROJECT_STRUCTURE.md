@@ -7,7 +7,7 @@ High-level map of this repository. Deeper map (per-folder files): [docs/en/knowl
 | `server/` | Go: auth, sessions, RAG+LLM orchestration, admin, verify, optional guardrails client |
 | `api/` | Python RAG **service** (internal): HTTP `:5000` + gRPC `:50051` — see `api/README.md` |
 | `rag/` | Retrieval engine: vector backends, hybrid/BM25, rerank, loaders, domains config |
-| `config/` | Runtime config: `domains.json`, locales, RBAC/SSO, plans, quotas |
+| `config/` | Runtime config: `domains.json`, locales, examples, schemas — see `config/README.md` |
 | `data/{tenant}/{domain}/` | Knowledge base documents (`.txt`, `.pdf`, `.docx`) |
 | `packs/` | Official template packs (HR, IT Support, Legal FAQ) + registry |
 | `webapp/` | Reference UI: chat, admin, embed widget (nginx) |

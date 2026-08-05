@@ -11,6 +11,7 @@
 |------|-----------|
 | `test_verifier.py` | `rag/verifier.py` — числа, дисклеймер |
 | `test_domains_config.py` | `rag/domains_config.py`, `domains.json` |
+| `test_domains_schema.py` | `config/schemas/domains.schema.json` vs `domains.json` |
 | `test_document_loaders.py` | Форматы KB, загрузка `.txt` |
 
 ```bash

@@ -38,11 +38,11 @@ Telegram Web App users keep implicit `chat_only` (unchanged).
 
 Use `password_bcrypt` in production (`bcrypt` cost 10). Plain `password` is for local dev only.
 
-Example file: [admin_users.json.example](./admin_users.json.example) (admin password: `password`).
+Example file: [examples/admin_users.json.example](./examples/admin_users.json.example) (admin password: `password`).
 
 ## API keys
 
-Extend [api_keys.json.example](./api_keys.json.example):
+Extend [examples/api_keys.json.example](./examples/api_keys.json.example):
 
 ```json
 [
