@@ -16,7 +16,7 @@ High-level map of this repository. Deeper map (per-folder files): [docs/en/knowl
 | `scripts/` | Reindex, eval runner, smoke/load/backup, pack CLI |
 | `sdk/python/` | Python SDK + CLI (`grounded-llm`) |
 | `connectors/` | Optional ingest (SharePoint, Drive, Confluence) — see `connectors/README.md` |
-| `conformance/` | Spec / OpenAPI conformance CLI |
+| `conformance/` | Spec / OpenAPI conformance CLI — see `conformance/README.md` |
 | `deploy/` | Helm chart + Terraform references |
 | `.github/` | CI, Dependabot, CODEOWNERS, issue/PR templates — see `.github/AUTOMATION.md` |
 | `docs/en/` | Primary documentation (architecture, deploy, knowledge base) |

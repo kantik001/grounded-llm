@@ -103,16 +103,14 @@ jobs:
           DOMAINS_CONFIG_PATH: config/domains.json
         run: pytest tests/ -v --tb=short --cov=rag --cov-report=term-missing
 
+  # Alias job: branch protection may still require this check name.
+  # Real validation lives in conformance-spec (same openapi-spec-validator pin).
   openapi-validate:
+    needs: conformance-spec
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/actions/setup-python-ci
-      - name: Validate OpenAPI spec
-        run: |
-          pip install openapi-spec-validator==0.7.1
-          python -c "import json; from openapi_spec_validator import validate; validate(json.load(open('server/openapi.v1.json')))"
-          echo "OpenAPI spec is valid"
+      - name: Covered by conformance-spec
+        run: echo "OpenAPI validation is CI / conformance-spec (conformance/requirements.txt)"
 
   sdk-test:
     runs-on: ubuntu-latest
@@ -188,11 +186,9 @@ jobs:
       - name: Adversarial E2E (mock LLM + RAG)
         run: pip install requests && python scripts/run_adversarial_e2e.py --base-url http://127.0.0.1:8080
       - name: OpenAPI HTTP conformance
-        env:
-          CONFORMANCE_BASE_URL: http://127.0.0.1:8080
         run: |
           pip install -r conformance/requirements.txt
-          pytest conformance/test_openapi_http.py -v --tb=short
+          python -m conformance http --url http://127.0.0.1:8080
       - name: Stop server
         if: always()
         run: |
