@@ -1,0 +1,12 @@
+name: Cache HF embeddings model
+description: Cache Hugging Face home for multilingual-e5-small
+runs:
+  using: composite
+  steps:
+    - uses: actions/cache@v6
+      with:
+        path: |
+          .cache/huggingface
+        key: hf-${{ runner.os }}-multilingual-e5-small-v1
+        restore-keys: |
+          hf-${{ runner.os }}-

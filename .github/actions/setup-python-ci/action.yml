@@ -1,0 +1,27 @@
+name: Setup Python (CI)
+description: Python 3.11 for CI jobs (optional pip cache)
+inputs:
+  cache:
+    description: Set to "true" to enable pip cache
+    required: false
+    default: "false"
+  cache-dependency-path:
+    description: Pip cache dependency path(s)
+    required: false
+    default: ""
+runs:
+  using: composite
+  steps:
+    - name: Set up Python 3.11 (cached)
+      if: inputs.cache == 'true'
+      uses: actions/setup-python@v7
+      with:
+        python-version: "3.11"
+        cache: pip
+        cache-dependency-path: ${{ inputs.cache-dependency-path }}
+
+    - name: Set up Python 3.11
+      if: inputs.cache != 'true'
+      uses: actions/setup-python@v7
+      with:
+        python-version: "3.11"

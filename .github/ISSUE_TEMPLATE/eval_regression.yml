@@ -8,20 +8,26 @@ body:
       value: |
         Use this template when `make eval-retrieval-ci` or CI job `eval-retrieval-gate` fails,
         or when retrieval quality regresses for a domain pack.
+        Suites are discovered from `eval/rag_*_baseline.jsonl` (see `eval/README.md`).
+        CLI: `python scripts/run_rag_eval.py --suite <name>` where `<name>` is the middle part
+        of the filename (`default_en`, `it_support`, …). Use `--suite all` for the CI gate
+        (hybrid suite is skipped unless `RAG_RETRIEVAL_MODE=hybrid`).
         See [BENCHMARK.md](https://github.com/kantik001/grounded-llm/blob/main/docs/en/BENCHMARK.md).
 
   - type: dropdown
     id: suite
     attributes:
       label: Eval suite
+      description: Maps to eval/rag_{suite}_baseline.jsonl (or E2E file)
       options:
-        - eval/rag_default_en_baseline.jsonl
-        - eval/rag_default_baseline.jsonl (RU)
-        - eval/rag_it_support_baseline.jsonl
-        - eval/rag_legal_faq_baseline.jsonl
-        - eval/rag_adversarial_baseline.jsonl
-        - eval/rag_hybrid_baseline.jsonl
-        - eval/rag_adversarial_e2e.jsonl
+        - all (CI gate — all baselines except hybrid-only)
+        - default_en → eval/rag_default_en_baseline.jsonl
+        - default → eval/rag_default_baseline.jsonl (RU)
+        - it_support → eval/rag_it_support_baseline.jsonl
+        - legal_faq → eval/rag_legal_faq_baseline.jsonl
+        - adversarial → eval/rag_adversarial_baseline.jsonl
+        - hybrid → eval/rag_hybrid_baseline.jsonl (needs RAG_RETRIEVAL_MODE=hybrid)
+        - e2e → eval/rag_adversarial_e2e.jsonl (message path, not retrieval JSONL gate)
         - Custom / new suite
     validations:
       required: true
@@ -52,7 +58,7 @@ body:
       render: shell
       placeholder: |
         make eval-retrieval-ci
-        # or
+        # or a single suite:
         python scripts/run_rag_eval.py --suite default_en
     validations:
       required: true
