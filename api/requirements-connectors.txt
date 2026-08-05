@@ -1,4 +1,3 @@
-# Optional connector dependencies (Google Drive API)
+# Backward-compatible alias — prefer: pip install -r connectors/requirements.txt
 -r requirements.txt
-google-api-python-client>=2.198.0
-google-auth>=2.0.0
+-r ../connectors/requirements.txt

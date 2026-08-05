@@ -1,6 +1,28 @@
 """Tests for ingest connectors."""
 
+import pytest
 from connectors.local_folder import LocalFolderConnector
+from connectors.registry import CONNECTOR_NAMES, build_connector, requires_source
+
+
+def test_registry_lists_expected_connectors():
+    assert "local_folder" in CONNECTOR_NAMES
+    assert "google_drive" in CONNECTOR_NAMES
+    assert "confluence" in CONNECTOR_NAMES
+    assert requires_source("local_folder") is True
+    assert requires_source("confluence") is False
+
+
+def test_build_connector_local_folder(tmp_path):
+    src = tmp_path / "src"
+    src.mkdir()
+    conn = build_connector("local_folder", str(src))
+    assert conn.name == "local_folder"
+
+
+def test_build_connector_unknown():
+    with pytest.raises(ValueError, match="Unknown connector"):
+        build_connector("not_a_real_connector")
 
 
 def test_local_folder_dry_run(tmp_path):

@@ -1,0 +1,9 @@
+# Optional deps for live Google Drive API connector.
+# SharePoint / Confluence live use `requests` (already in api/requirements.txt).
+#
+#   pip install -r connectors/requirements.txt
+#
+# Alias kept for older docs/scripts: api/requirements-connectors.txt
+
+google-api-python-client>=2.198.0
+google-auth>=2.0.0

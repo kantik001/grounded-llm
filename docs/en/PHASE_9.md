@@ -25,7 +25,7 @@
 |---|------|----------|
 | 1 | Google Drive API | `connectors/google_drive.py` |
 | 2 | Confluence REST | `connectors/confluence.py` |
-| 3 | Connector deps | `api/requirements-connectors.txt` |
+| 3 | Connector deps | `connectors/requirements.txt` (+ alias `api/requirements-connectors.txt`) |
 | 4 | Billing scaffold | `config/plans.yaml`, BILLING.md |
 | 5 | Launch playbook | LAUNCH.md |
 | 6 | Site packs UI | `site/index.html` + `packs.json` |
@@ -41,7 +41,7 @@ python scripts/sync_connector.py confluence --domain it_support --dry-run
 
 ### Google Drive
 ```bash
-pip install -r api/requirements-connectors.txt
+pip install -r connectors/requirements.txt
 python scripts/sync_connector.py google_drive --domain default --dry-run
 ```
 
