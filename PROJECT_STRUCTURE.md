@@ -17,7 +17,7 @@ High-level map of this repository. Deeper map (per-folder files): [docs/en/knowl
 | `sdk/python/` | Python SDK + CLI (`grounded-llm`) |
 | `connectors/` | Optional ingest: SharePoint, Google Drive, Confluence |
 | `conformance/` | Spec / OpenAPI conformance CLI — see `conformance/README.md` |
-| `deploy/` | Helm chart + Terraform references |
+| `deploy/` | Helm chart + Terraform references — see `deploy/README.md` |
 | `.github/` | CI, Dependabot, CODEOWNERS, issue/PR templates — see `.github/AUTOMATION.md` |
 | `docs/en/` | Primary documentation (architecture, deploy, knowledge base) |
 | `docs/ru/` | Russian docs (legacy locale mirror) |
