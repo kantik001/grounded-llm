@@ -5,7 +5,7 @@ High-level map of this repository. Deeper map (per-folder files): [docs/en/knowl
 | Path | Purpose |
 |------|---------|
 | `server/` | Go: auth, sessions, RAG+LLM orchestration, admin, verify, optional guardrails client |
-| `api/` | Python RAG: Flask + Gunicorn HTTP `:5000` + gRPC Retriever `:50051` |
+| `api/` | Python RAG **service** (internal): HTTP `:5000` + gRPC `:50051` — see `api/README.md` |
 | `rag/` | Retrieval engine: vector backends, hybrid/BM25, rerank, loaders, domains config |
 | `config/` | Runtime config: `domains.json`, locales, RBAC/SSO, plans, quotas |
 | `data/{tenant}/{domain}/` | Knowledge base documents (`.txt`, `.pdf`, `.docx`) |

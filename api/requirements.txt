@@ -4,9 +4,11 @@ flask>=3.0.0
 flask-cors>=4.0.0
 gunicorn>=22.0.0
 redis>=5.0.0
-grpcio>=1.62.0
-grpcio-health-checking>=1.62.0
+grpcio==1.69.0
+grpcio-health-checking==1.69.0
 protobuf>=4.25.0,<6
+# Stub codegen (same version as grpcio): pip install grpcio-tools==1.69.0
+# Regenerate: python scripts/gen_retriever_grpc.py
 
 langchain-core>=0.3.86
 langchain-community>=0.4.2

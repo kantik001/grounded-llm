@@ -4,14 +4,21 @@ WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app \
     PYTHON_SERVICE_PORT=5000 \
     PYTHON_GRPC_PORT=50051 \
+    GRPC_MAX_WORKERS=4 \
     GUNICORN_WORKERS=2 \
     GUNICORN_TIMEOUT=120
 
+# tini as PID 1: reap zombies (gunicorn workers) and forward signals to CMD.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends tini \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY api/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt \
-    && pip install --no-cache-dir 'grpcio-tools>=1.62.0,<1.70'
+    && pip install --no-cache-dir 'grpcio-tools==1.69.0'
 
 COPY api/ ./api/
 COPY rag/ ./rag/
@@ -19,11 +26,11 @@ COPY scripts/ ./scripts/
 COPY config/ ./config/
 COPY data/ ./data/
 
-# Regenerate stubs in-image so import paths match the container layout.
-RUN python -m grpc_tools.protoc -I api/proto --python_out=api --grpc_python_out=api api/proto/retriever.proto \
-    && sed -i 's/^import retriever_pb2/from api import retriever_pb2/' api/retriever_pb2_grpc.py \
+# Same generator as local/CI so import paths stay consistent.
+RUN python scripts/gen_retriever_grpc.py \
     && chmod +x /app/api/entrypoint.sh
 
 EXPOSE 5000 50051
 
+ENTRYPOINT ["tini", "--"]
 CMD ["/app/api/entrypoint.sh"]

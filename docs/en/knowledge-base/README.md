@@ -24,7 +24,7 @@ Russian docs: [../../ru/knowledge-base/README.md](../../ru/knowledge-base/README
 
 | Document | Description |
 |----------|-------------|
-| [python-api.md](./python-api.md) | `api/app.py` |
+| [python-api.md](./python-api.md) | Python RAG service (`api/`) |
 | [rag-domains_config.md](./rag-domains_config.md) | `domains.json`, tenants |
 | [rag-vector_store.md](./rag-vector_store.md) | Chroma, reindex |
 | [rag-retrieval.md](./rag-retrieval.md) | `POST /rag/context` |

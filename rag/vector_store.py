@@ -1,6 +1,7 @@
 # Vector store facade — delegates to pluggable backend (Chroma default, Qdrant optional).
 
 import os
+from urllib.parse import urlparse
 
 from rag.domains_config import normalize_domain_id
 from rag.kb_discovery import DEFAULT_TENANT
@@ -36,6 +37,64 @@ def load_vector_store(force_reindex: bool = False):
     backend.load(force_reindex=force_reindex)
     ensure_sparse_index(force_reindex=force_reindex)
     return backend
+
+
+def readiness_index_check() -> tuple[str, bool]:
+    """Cheap index/backend smoke for GET /ready (no embedding model load).
+
+    Returns (status_label, ok). ok=False → probe should return 503.
+
+    Chroma with missing/empty persist is still ok=True (label pending/empty): the
+    index is built lazily on first retrieve / admin reindex. Remote backends
+    (qdrant/pgvector) must answer a lightweight ping.
+    """
+    name = (os.environ.get("VECTOR_STORE") or "chroma").strip().lower()
+    if name in ("chroma", ""):
+        persist = os.environ.get("CHROMA_PERSIST_DIR", PERSIST_DIR).strip() or PERSIST_DIR
+        if not os.path.isdir(persist):
+            return "pending", True
+        if not os.listdir(persist):
+            return "empty", True
+        return "ok", True
+
+    if name == "qdrant":
+        url = (os.environ.get("QDRANT_URL") or "http://127.0.0.1:6333").strip()
+        try:
+            import urllib.request
+
+            parsed = urlparse(url)
+            base = f"{parsed.scheme}://{parsed.netloc}"
+            with urllib.request.urlopen(f"{base}/readyz", timeout=2) as resp:
+                if 200 <= getattr(resp, "status", 200) < 300:
+                    return "ok", True
+            return "unreachable", False
+        except Exception:
+            try:
+                import urllib.request
+
+                parsed = urlparse(url)
+                base = f"{parsed.scheme}://{parsed.netloc}"
+                with urllib.request.urlopen(f"{base}/", timeout=2) as resp:
+                    return "ok", True
+            except Exception as exc:
+                return f"error:{type(exc).__name__}", False
+
+    if name == "pgvector":
+        try:
+            from rag.vector_backend.pgvector_backend import pg_connection_url, psycopg_dsn
+
+            import psycopg
+
+            dsn = psycopg_dsn(pg_connection_url())
+            with psycopg.connect(dsn, connect_timeout=2) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT 1")
+                    cur.fetchone()
+            return "ok", True
+        except Exception as exc:
+            return f"error:{type(exc).__name__}", False
+
+    return f"unknown_backend:{name}", False
 
 
 def retrieval_mode() -> str:

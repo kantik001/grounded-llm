@@ -78,7 +78,7 @@ Makefile: `make up`, `make logs`, `make smoke`, `make test`.
 
 ## Сервис `python` (RAG)
 
-- Порты **5000** (HTTP) и **50051** (gRPC); entrypoint: `api/entrypoint.sh` (Gunicorn + gRPC)
+- Порты **5000** (HTTP) и **50051** (gRPC); `tini` + `api/entrypoint.sh` (Gunicorn + gRPC)
 - Env: `DOMAINS_CONFIG_PATH`, `LOCALES_ROOT`, `DEFAULT_LOCALE`, `ADMIN_SECRET`, `FORCE_RAG_REINDEX`, `PYTHON_SERVICE_PORT`
 - Healthcheck: `start_period: 180s` (первый RAG / embeddings может быть долгим)
 - Endpoints: `/health`, `/rag/context`, `/domains`, `/admin/reindex`
@@ -129,7 +129,7 @@ TELEGRAM_AUTH_DISABLED=true
 | Файл | База | Заметки |
 |------|------|---------|
 | `Dockerfile.server` | `golang:1.25-alpine` → `alpine:3.21` | multi-stage, `curl` для healthcheck |
-| `Dockerfile.python` | `python:3.11-slim` | Gunicorn + gRPC (`api/entrypoint.sh`) |
+| `Dockerfile.python` | `python:3.11-slim` | `tini` + Gunicorn + gRPC (`api/entrypoint.sh`) |
 | `Dockerfile.python` | `python:3.11-slim` | RAG deps из `api/requirements.txt` |
 | `Dockerfile.webapp` | `nginx:alpine` | статика + `nginx.conf` |
 

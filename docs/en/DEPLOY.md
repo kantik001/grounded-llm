@@ -78,7 +78,7 @@ Python `rag/domains_config.py` reloads `domains.json` when mtime changes.
 2. `cd server && go run .`
 3. Python RAG: from repo root, prefer the same entrypoint as Docker:
    ```bash
-   # HTTP only (dev): python -m flask --app api.app run -p 5000
+   # HTTP only (dev): python -m flask --app api.http.app run -p 5000
    # Or full stack (Gunicorn + gRPC): sh api/entrypoint.sh
    ```
 4. Web: nginx or `webapp/` + `TELEGRAM_AUTH_DISABLED=true`, API on `:8080`.

@@ -34,7 +34,7 @@ English: [../../en/knowledge-base/README.md](../../en/knowledge-base/README.md).
 
 | Документ | Описание |
 |----------|----------|
-| [python-api.md](./python-api.md) | HTTP-сервис `api/app.py` |
+| [python-api.md](./python-api.md) | HTTP/gRPC-сервис Python RAG (`api/`) |
 | [rag-domains_config.md](./rag-domains_config.md) | `domains.json`, tenant |
 | [rag-vector_store.md](./rag-vector_store.md) | Chroma, индексация |
 | [rag-retrieval.md](./rag-retrieval.md) | `POST /rag/context` |

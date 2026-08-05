@@ -2,29 +2,50 @@ syntax = "proto3";
 
 package grounded.rag.v1;
 
-// Retriever exposes hybrid/vector retrieval for agents over gRPC.
+// Retriever is the agent-facing RAG search API over gRPC.
+// It wraps the same retrieval core as HTTP POST /rag/context (no LLM).
 service Retriever {
+  // Retrieve returns ranked document chunks plus a concatenated context string.
+  //
+  // Auth (when RAG_SERVICE_TOKEN is set): metadata key x-rag-service-token
+  // or authorization: Bearer <token>. Optional x-request-id is logged for correlation.
+  //
+  // Business failures (empty query, no hits, domain disabled) stay in the response
+  // body with success=false. Unexpected errors use gRPC status INTERNAL.
   rpc Retrieve(RetrieveRequest) returns (RetrieveResponse);
 }
 
 message RetrieveRequest {
+  // User question / search query (required).
   string query = 1;
+  // Knowledge domain id (default: "default").
   string domain_id = 2;
+  // Tenant id for multi-tenant indexes (default: "default").
   string tenant_id = 3;
+  // Locale for few-shot / domain naming (e.g. "en", "ru").
   string locale = 4;
+  // Optional chunk limit override (1..20). Zero means use domain rag_k.
   int32 top_k = 5;
 }
 
 message Chunk {
+  // Stable-ish id (typically source filename).
   string id = 1;
+  // Chunk text returned to the caller.
   string text = 2;
+  // Relevance hint (keyword-overlap score in the current Python server).
   double score = 3;
+  // Human-readable source label (typically filename).
   string source = 4;
 }
 
 message RetrieveResponse {
+  // Ranked chunks for the query.
   repeated Chunk chunks = 1;
+  // Concatenated context string suitable for an LLM prompt.
   string context = 2;
+  // False on handled business failures; see error.
   bool success = 3;
+  // Empty when success is true; otherwise a short reason.
   string error = 4;
 }
