@@ -1,0 +1,19 @@
+# CODEOWNERS — review routing for Grounded LLM
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+*       @kantik001
+
+# Core product surfaces
+/server/                @kantik001
+/api/                   @kantik001
+/rag/                   @kantik001
+/config/                @kantik001
+
+# CI / automation
+/.github/               @kantik001
+/scripts/               @kantik001
+/deploy/                @kantik001
+
+# Quality gates
+/eval/                  @kantik001
+/conformance/           @kantik001

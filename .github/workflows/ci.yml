@@ -1,10 +1,30 @@
 name: CI
 
+# Single workflow name "CI" keeps branch-protection required check names stable.
+# Shared setup: .github/actions/* and top-level env below. Map: .github/README.md
+
 on:
   push:
-    branches: [master, main, "feature/**"]
+    branches:
+      - master
+      - main
+      - "feature/**"
+      - "refactor/**"
+      - "chore/**"
+      - "fix/**"
+      - "docs/**"
   pull_request:
     branches: [master, main]
+  workflow_dispatch:
+
+env:
+  GO_VERSION: "1.25"
+  PYTHON_VERSION: "3.11"
+  DEFAULT_LOCALE: en
+  DOMAINS_CONFIG_PATH: ${{ github.workspace }}/config/domains.json
+  LOCALES_ROOT: ${{ github.workspace }}/config/locales
+  HF_HOME: ${{ github.workspace }}/.cache/huggingface
+  TRANSFORMERS_CACHE: ${{ github.workspace }}/.cache/huggingface
 
 jobs:
   go-lint:
@@ -14,12 +34,9 @@ jobs:
         working-directory: server
     steps:
       - uses: actions/checkout@v7
-
-      - uses: actions/setup-go@v7
+      - uses: ./.github/actions/setup-go-ci
         with:
-          go-version: "1.25"
-          cache-dependency-path: server/go.sum
-
+          go-version: ${{ env.GO_VERSION }}
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
@@ -33,23 +50,16 @@ jobs:
         working-directory: server
     steps:
       - uses: actions/checkout@v7
-
-      - uses: actions/setup-go@v7
+      - uses: ./.github/actions/setup-go-ci
         with:
-          go-version: "1.25"
-          cache-dependency-path: server/go.sum
-
+          go-version: ${{ env.GO_VERSION }}
       - name: Go mod tidy
         run: go mod tidy
-
       - name: Go test with coverage
         env:
-          DOMAINS_CONFIG_PATH: ${{ github.workspace }}/config/domains.json
-          LOCALES_ROOT: ${{ github.workspace }}/config/locales
           LLM_MOCK: "true"
           RAG_MOCK: "true"
         run: go test -v -count=1 -coverprofile=coverage.out ./...
-
       - name: Go coverage summary
         run: go tool cover -func=coverage.out | tail -1
 
@@ -57,14 +67,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.11"
-
+      - uses: ./.github/actions/setup-python-ci
       - name: Ruff check
         run: pip install ruff==0.8.4 && ruff check rag api tests scripts sdk/python conformance connectors
-
       - name: gRPC stubs in sync with proto
         run: |
           pip install 'grpcio==1.69.0' 'grpcio-tools==1.69.0' 'protobuf>=4.25.0,<6'
@@ -74,11 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.11"
-
+      - uses: ./.github/actions/setup-python-ci
       - name: OpenAPI conformance (offline)
         run: |
           pip install -r conformance/requirements.txt
@@ -88,19 +89,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-
-      - uses: actions/setup-python@v7
+      - uses: ./.github/actions/setup-python-ci
         with:
-          python-version: "3.11"
-          cache: pip
+          cache: "true"
           cache-dependency-path: |
             tests/requirements-test.txt
             api/requirements.txt
             conformance/requirements.txt
-
       - name: Install test dependencies
         run: pip install -r tests/requirements-test.txt
-
       - name: Pytest with coverage
         env:
           DOMAINS_CONFIG_PATH: config/domains.json
@@ -110,11 +107,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.11"
-
+      - uses: ./.github/actions/setup-python-ci
       - name: Validate OpenAPI spec
         run: |
           pip install openapi-spec-validator==0.7.1
@@ -125,17 +118,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.11"
-
+      - uses: ./.github/actions/setup-python-ci
       - name: Install SDK with dev deps
         run: pip install -e "sdk/python[dev]"
-
       - name: SDK unit tests
         run: pytest sdk/python/tests -v --tb=short
-
       - name: Ruff SDK
         run: pip install ruff==0.8.4 && ruff check sdk/python
 
@@ -143,11 +130,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.11"
-
+      - uses: ./.github/actions/setup-python-ci
       - name: Validate eval JSONL baselines
         run: pip install pytest && pytest tests/test_eval_baseline.py -v
 
@@ -156,49 +139,22 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
-
-      - uses: actions/setup-python@v7
+      - uses: ./.github/actions/setup-python-ci
         with:
-          python-version: "3.11"
-          cache: pip
+          cache: "true"
           cache-dependency-path: api/requirements.txt
-
-      - name: Cache Hugging Face models
-        uses: actions/cache@v6
-        with:
-          path: |
-            .cache/huggingface
-          key: hf-${{ runner.os }}-multilingual-e5-small-v1
-          restore-keys: |
-            hf-${{ runner.os }}-
-
+      - uses: ./.github/actions/cache-hf-e5
       - name: Install RAG dependencies
         run: pip install -r api/requirements.txt requests
-
       - name: Prefetch embedding model
-        env:
-          HF_HOME: ${{ github.workspace }}/.cache/huggingface
-          TRANSFORMERS_CACHE: ${{ github.workspace }}/.cache/huggingface
         run: |
           python -c "from langchain_huggingface import HuggingFaceEmbeddings; HuggingFaceEmbeddings(model_name='intfloat/multilingual-e5-small')"
-
       - name: Reindex Chroma
         env:
-          DOMAINS_CONFIG_PATH: ${{ github.workspace }}/config/domains.json
-          LOCALES_ROOT: ${{ github.workspace }}/config/locales
-          DEFAULT_LOCALE: en
           FORCE_RAG_REINDEX: "true"
-          HF_HOME: ${{ github.workspace }}/.cache/huggingface
-          TRANSFORMERS_CACHE: ${{ github.workspace }}/.cache/huggingface
         run: python scripts/reindex_rag.py
-
       - name: Retrieval eval gate (RAG HTTP + all suites)
         env:
-          DOMAINS_CONFIG_PATH: ${{ github.workspace }}/config/domains.json
-          LOCALES_ROOT: ${{ github.workspace }}/config/locales
-          DEFAULT_LOCALE: en
-          HF_HOME: ${{ github.workspace }}/.cache/huggingface
-          TRANSFORMERS_CACHE: ${{ github.workspace }}/.cache/huggingface
           PYTHON_SERVICE_PORT: "5000"
         run: bash scripts/ci_eval_retrieval.sh --skip-reindex
 
@@ -220,57 +176,23 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v7
-
-      - uses: actions/setup-go@v7
+      - uses: ./.github/actions/setup-go-ci
         with:
-          go-version: "1.25"
-          cache-dependency-path: server/go.sum
-
+          go-version: ${{ env.GO_VERSION }}
       - name: Build and start server
         env:
           DATABASE_URL: postgres://grounded:grounded@localhost:5432/grounded?sslmode=disable
-          TELEGRAM_AUTH_DISABLED: "true"
-          LLM_MOCK: "true"
-          RAG_MOCK: "true"
-          PYTHON_RAG_URL: http://127.0.0.1:59999/rag/context
-          PYTHON_BASE_URL: http://127.0.0.1:59999
-          DOMAINS_CONFIG_PATH: ${{ github.workspace }}/config/domains.json
-          LOCALES_ROOT: ${{ github.workspace }}/config/locales
-          MIGRATIONS_DIR: ${{ github.workspace }}/migrations
-          DATA_DIR: ${{ github.workspace }}/data
-          UPLOAD_DIR: /tmp/grounded-uploads
-          SERVER_PORT: "8080"
-        run: |
-          mkdir -p /tmp/grounded-uploads
-          cd server
-          go mod tidy
-          go build -o ../server-bin .
-          cd ..
-          ./server-bin &
-          echo $! > server.pid
-          for i in $(seq 1 60); do
-            if curl -sf http://127.0.0.1:8080/health; then
-              echo "Server ready"
-              exit 0
-            fi
-            sleep 1
-          done
-          echo "Server failed to start"
-          exit 1
-
+        run: bash scripts/ci_start_mock_server.sh
       - name: Smoke test (health + full /message path)
         run: bash scripts/smoke.sh http://127.0.0.1:8080
-
       - name: Adversarial E2E (mock LLM + RAG)
         run: pip install requests && python scripts/run_adversarial_e2e.py --base-url http://127.0.0.1:8080
-
       - name: OpenAPI HTTP conformance
         env:
           CONFORMANCE_BASE_URL: http://127.0.0.1:8080
         run: |
           pip install -r conformance/requirements.txt
           pytest conformance/test_openapi_http.py -v --tb=short
-
       - name: Stop server
         if: always()
         run: |
@@ -280,16 +202,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-
       - name: Build server image
         run: docker build -f Dockerfile.server -t grounded-llm-server:ci .
-
       - name: Build webapp image
         run: docker build -f Dockerfile.webapp -t grounded-llm-webapp:ci .
-
       - name: Build python image
         run: docker build -f Dockerfile.python -t grounded-llm-python:ci .
-
       # Pin by commit SHA (v0.36.0); avoid mutable/missing numeric tags after trivy-action remediations.
       - name: Trivy scan server image
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
@@ -298,7 +216,6 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: "1"
           ignore-unfixed: true
-
       - name: Trivy scan webapp image
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
         with:
@@ -306,7 +223,6 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: "1"
           ignore-unfixed: true
-
       # Python image pulls torch/CUDA wheels — many unfixed HIGH; gate on CRITICAL only.
       - name: Trivy scan python image
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
@@ -320,15 +236,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-
       - name: Set up Helm
         uses: azure/setup-helm@v5
         with:
           version: v3.16.4
-
       - name: Helm lint
         run: helm lint deploy/helm/grounded-llm
-
       - name: Helm template (smoke render)
         run: |
           helm template grounded deploy/helm/grounded-llm \
@@ -356,10 +269,8 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v7
-
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
-
       - name: Postgres backup/restore smoke
         env:
           PGHOST: 127.0.0.1
@@ -388,49 +299,17 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v7
-
-      - uses: actions/setup-go@v7
+      - uses: ./.github/actions/setup-go-ci
         with:
-          go-version: "1.25"
-          cache-dependency-path: server/go.sum
-
+          go-version: ${{ env.GO_VERSION }}
       - name: Build and start server (mock LLM/RAG)
         env:
           DATABASE_URL: postgres://grounded:grounded@localhost:5432/grounded?sslmode=disable
-          TELEGRAM_AUTH_DISABLED: "true"
-          LLM_MOCK: "true"
-          RAG_MOCK: "true"
           # Default is 30 req/min; concurrent load smoke exceeds that and returns 429.
           RATE_LIMIT_REQUESTS_PER_MINUTE: "2000"
-          PYTHON_RAG_URL: http://127.0.0.1:59999/rag/context
-          PYTHON_BASE_URL: http://127.0.0.1:59999
-          DOMAINS_CONFIG_PATH: ${{ github.workspace }}/config/domains.json
-          LOCALES_ROOT: ${{ github.workspace }}/config/locales
-          MIGRATIONS_DIR: ${{ github.workspace }}/migrations
-          DATA_DIR: ${{ github.workspace }}/data
-          UPLOAD_DIR: /tmp/grounded-uploads
-          SERVER_PORT: "8080"
-        run: |
-          mkdir -p /tmp/grounded-uploads
-          cd server
-          go mod tidy
-          go build -o ../server-bin .
-          cd ..
-          ./server-bin &
-          echo $! > server.pid
-          for i in $(seq 1 60); do
-            if curl -sf http://127.0.0.1:8080/health; then
-              echo "Server ready"
-              exit 0
-            fi
-            sleep 1
-          done
-          echo "Server failed to start"
-          exit 1
-
+        run: bash scripts/ci_start_mock_server.sh
       - name: Concurrent load smoke
         run: bash scripts/load_smoke.sh http://127.0.0.1:8080 20 2
-
       - name: Stop server
         if: always()
         run: |
