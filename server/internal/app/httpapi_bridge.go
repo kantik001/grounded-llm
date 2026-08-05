@@ -54,8 +54,6 @@ func (chatHTTPServices) RecordRAGAnalytics(ctx context.Context, telegramID int64
 	recordRAGAnalytics(ctx, telegramID, tenantID, domainID, question, result)
 }
 
-const ctxKeyRequestID = httpapi.CtxKeyRequestID
-
 func requestIDMiddleware() gin.HandlerFunc { return httpapi.RequestID() }
 func corsMiddleware(allowedOrigins []string) gin.HandlerFunc {
 	return httpapi.CORS(allowedOrigins)
@@ -80,34 +78,12 @@ func logRequest(c *gin.Context, event string, fields map[string]any) {
 }
 
 func publicAPIError(err error) string { return httpapi.PublicAPIError(err) }
-func jsonError(c *gin.Context, code int, err error) {
-	httpapi.JSONError(c, code, err)
-}
 
 func handleHealthCheck(c *gin.Context) { httpapi.Health(c) }
 func handleReadiness(c *gin.Context)   { httpapi.Ready(c) }
-func handleMetrics(c *gin.Context)     { httpapi.Metrics(c) }
-func handleListDomains(c *gin.Context) { httpapi.Domains(c) }
-func handleOnboarding(c *gin.Context)  { httpapi.Onboarding(c) }
-func handleBranding(c *gin.Context)    { httpapi.Branding(c) }
-func handleNewSession(c *gin.Context)  { httpapi.NewSession(c) }
-func handleHistory(c *gin.Context)     { httpapi.History(c) }
-func handleMessage(c *gin.Context)     { httpapi.Message(c) }
-func handleFeedback(c *gin.Context)    { httpapi.Feedback(c) }
-func handleMedia(c *gin.Context)       { httpapi.Media(c) }
-func handleOpenAPI(c *gin.Context)     { httpapi.OpenAPI(c) }
 
-func beginPathTrace(reqID, tenant string) *httpapi.PathTrace {
-	return httpapi.BeginPathTrace(reqID, tenant)
-}
-func contextWithPathTrace(ctx context.Context, tr *httpapi.PathTrace) context.Context {
-	return httpapi.ContextWithPathTrace(ctx, tr)
-}
 func pathTraceFrom(ctx context.Context) *httpapi.PathTrace {
 	return httpapi.PathTraceFrom(ctx)
-}
-func attachRequestID(c *gin.Context, body gin.H) gin.H {
-	return httpapi.AttachRequestID(c, body)
 }
 
 type rateLimiter = httpapi.RateLimiter

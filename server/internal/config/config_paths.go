@@ -22,10 +22,6 @@ func ResolvePath(envKey string, candidates ...string) string {
 	return ""
 }
 
-func resolveConfigPath(envKey string, candidates ...string) string {
-	return ResolvePath(envKey, candidates...)
-}
-
 // DefaultCandidates lists typical config file locations for different CWDs.
 func DefaultCandidates(name string) []string {
 	// CWD may be repo root, server/, or server/internal/app/ (go test).
@@ -36,8 +32,4 @@ func DefaultCandidates(name string) []string {
 		filepath.Join("..", "..", "config", name),
 		filepath.Join("..", "..", "..", "config", name),
 	}
-}
-
-func defaultConfigCandidates(name string) []string {
-	return DefaultCandidates(name)
 }

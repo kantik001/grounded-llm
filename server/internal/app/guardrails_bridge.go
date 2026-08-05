@@ -19,11 +19,3 @@ func initGuardrailsClient(cfg *Config) {
 func closeGuardrailsClient() {
 	guardrails.Close()
 }
-
-func normalizeGuardrailsMode(s string) GuardrailsMode {
-	return guardrails.NormalizeMode(s)
-}
-
-func verifyViaGuardrails(answer, contextText, tenantID string, piiBlock bool) (bool, string, error) {
-	return guardrails.VerifyText(answer, contextText, tenantID, piiBlock)
-}

@@ -6,22 +6,14 @@ import (
 	cfgpkg "grounded_llm_server/internal/config"
 )
 
-var lookupConfig = cfgpkg.Current
-
 var (
 	lookupDefaultDomainID         func() string
 	lookupTelegramLanguageFromCtx func(c *gin.Context) string
 )
 
-// BindConfig overrides where this package reads process config (app sets app.config).
+// BindConfig is kept for app wiring compatibility; locale reads config via Init().
 func BindConfig(fn func() *cfgpkg.Config) {
-	if fn != nil {
-		lookupConfig = fn
-	}
-}
-
-func cfg() *cfgpkg.Config {
-	return lookupConfig()
+	_ = fn
 }
 
 // BindDefaultDomainID wires the default knowledge domain ID (from internal/domain).

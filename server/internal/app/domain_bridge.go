@@ -15,17 +15,10 @@ func init() {
 	locale.BindDefaultDomainID(domain.DefaultID)
 }
 
-type (
-	DomainInfo  = domain.Info
-	domainsFile = domain.File
-)
+type DomainInfo = domain.Info
 
 func loadDomainCatalog() error {
 	return domain.LoadCatalog()
-}
-
-func domainsConfigPath() string {
-	return domain.ConfigPath()
 }
 
 func normalizeDomainID(raw string) (string, error) {
@@ -34,18 +27,6 @@ func normalizeDomainID(raw string) (string, error) {
 
 func defaultDomainID() string {
 	return domain.DefaultID()
-}
-
-func domainInfo(domainID string) (DomainInfo, bool) {
-	return domain.Lookup(domainID)
-}
-
-func domainDisplayName(d DomainInfo, localeCode string) string {
-	return domain.DisplayName(d, localeCode)
-}
-
-func domainIDFromQuery(c *gin.Context) string {
-	return domain.IDFromQuery(c)
 }
 
 func domainIDFromForm(c *gin.Context) string {

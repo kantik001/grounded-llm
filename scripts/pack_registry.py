@@ -42,7 +42,6 @@ def validate_pack_manifest(manifest: dict[str, Any], *, pack_id: str = "") -> li
     errors: list[str] = []
     label = pack_id or (manifest.get("pack") or "pack")
     try:
-        import jsonschema
         from jsonschema import Draft202012Validator
     except ImportError:
         # Registry CLI still works without jsonschema; CI tests install it via tests/.

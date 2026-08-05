@@ -1,4 +1,4 @@
-﻿package app
+package app
 
 import cfgpkg "grounded_llm_server/internal/config"
 

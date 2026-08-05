@@ -80,16 +80,8 @@ func loadTenantQuotas() {
 	tenant.LoadQuotas()
 }
 
-func quotaLimitsForTenant(tenantID string) (TenantQuotaLimits, bool) {
-	return tenant.QuotaLimitsFor(tenantID)
-}
-
 func upsertTenantQuota(tenantID string, limits TenantQuotaLimits) error {
 	return tenant.UpsertQuota(tenantID, limits)
-}
-
-func applyPlanQuotas(tenantID, planID string) error {
-	return tenant.ApplyPlanQuotas(tenantID, planID)
 }
 
 func applyPlanQuotasFromPlans(tenantID, planID string) error {
@@ -104,20 +96,8 @@ func applyPlanQuotasFromPlans(tenantID, planID string) error {
 	})
 }
 
-func buildTenantQuotaStatus(ctx context.Context, tenantID string) (TenantQuotaStatus, error) {
-	return tenant.BuildQuotaStatus(ctx, tenantID)
-}
-
 func checkMessageQuota(ctx context.Context, tenantID string) error {
 	return tenant.CheckMessageQuota(ctx, tenantID)
-}
-
-func checkStorageQuota(tenantID string, additionalBytes int64) error {
-	return tenant.CheckStorageQuota(tenantID, additionalBytes)
-}
-
-func checkDomainQuota(tenantID, domainID string) error {
-	return tenant.CheckDomainQuota(tenantID, domainID)
 }
 
 func quotaErrorResponse(c *gin.Context, err error) {
@@ -130,12 +110,4 @@ func quotaErrorResponse(c *gin.Context, err error) {
 
 func tenantSignupEmail(tenantID string) string {
 	return tenant.SignupEmail(tenantID)
-}
-
-func tenantIsAllowed(tenantID string) bool {
-	return tenant.IsAllowed(tenantID)
-}
-
-func allowTenant(tenantID string) {
-	tenant.AllowTenant(tenantID)
 }

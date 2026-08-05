@@ -1,4 +1,4 @@
-﻿package main
+package main
 
 import "grounded_llm_server/internal/app"
 

@@ -18,14 +18,12 @@ type (
 	TenantPurgeStats    = store.TenantPurgeStats
 	FeedbackSummaryRow  = store.FeedbackSummaryRow
 	AnalyticsDashboard  = store.AnalyticsDashboard
-	QuestionsPerDayRow  = store.QuestionsPerDayRow
+	QuestionsPerDayRow    = store.QuestionsPerDayRow
 	DomainQuestionCount = store.DomainQuestionCount
 	KBGapRow            = store.KBGapRow
 	RAGStats            = store.RAGStats
 	ReindexJob          = store.ReindexJob
 )
-
-var errSessionNotFound = store.ErrSessionNotFound
 
 func parseAnalyticsDays(s string) int {
 	return store.ParseAnalyticsDays(s)
@@ -49,8 +47,4 @@ func runAllMigrations(ctx context.Context, pool *pgxpool.Pool, dir string) error
 
 func findMigrationsDir() (string, error) {
 	return store.FindMigrationsDir()
-}
-
-func trimHistoryMessages(msgs []Message, max int) []Message {
-	return store.TrimHistoryMessages(msgs, max)
 }

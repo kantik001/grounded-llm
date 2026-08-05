@@ -20,15 +20,6 @@ const (
 )
 
 const (
-	auditActionLoginFailed = AuditActionLoginFailed
-	auditActionLogin       = AuditActionLogin
-	auditActionKBUpload    = AuditActionKBUpload
-	auditActionKBDelete    = AuditActionKBDelete
-	auditActionKBReindex   = AuditActionKBReindex
-	auditActionLogout      = AuditActionLogout
-)
-
-const (
 	AuditLogDefaultLimit = 50
 	AuditLogMaxLimit     = 200
 )

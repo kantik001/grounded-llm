@@ -260,4 +260,3 @@ func ParseAnalyticsDays(s string) int {
 	return d
 }
 
-func parseAnalyticsDays(s string) int { return ParseAnalyticsDays(s) }

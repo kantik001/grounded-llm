@@ -10,7 +10,7 @@ import pytest
 import requests
 
 ROOT = Path(__file__).resolve().parents[1]
-OPENAPI_PATH = ROOT / "server" / "openapi.v1.json"
+OPENAPI_PATH = ROOT / "server" / "internal" / "httpapi" / "openapi.v1.json"
 
 BASE_URL = os.environ.get("CONFORMANCE_BASE_URL", "").rstrip("/")
 SKIP = os.environ.get("CONFORMANCE_SKIP_HTTP", "") == "1" or not BASE_URL

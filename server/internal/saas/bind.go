@@ -6,17 +6,9 @@ import (
 	"grounded_llm_server/internal/config"
 )
 
-var lookupConfig = config.Current
-
-// BindConfig overrides where this package reads process config (app sets app.config).
+// BindConfig is kept for app wiring compatibility; saas reads config via dedicated loaders.
 func BindConfig(fn func() *config.Config) {
-	if fn != nil {
-		lookupConfig = fn
-	}
-}
-
-func cfg() *config.Config {
-	return lookupConfig()
+	_ = fn
 }
 
 // QuotaLimits mirrors tenant quota caps applied after signup or billing events.
@@ -149,13 +141,6 @@ func provisionAdminUser(tenantID string) (username, password string, err error) 
 		return "", "", errHostNotConfigured
 	}
 	return host.ProvisionAdminUser(tenantID)
-}
-
-func defaultDomainID() string {
-	if host != nil {
-		return host.DefaultDomainID()
-	}
-	return "default"
 }
 
 type hostError string

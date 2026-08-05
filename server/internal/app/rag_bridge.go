@@ -47,15 +47,10 @@ func (ragHost) Disclaimer(locale string) string {
 type (
 	RAGAnswerResult          = rag.AnswerResult
 	pythonRAGContextResponse = rag.ContextResponse
-	ragPrepared              = rag.Prepared
 )
 
 func fetchRAGContext(ctx context.Context, question, tenantID, domainID, locale string) (*pythonRAGContextResponse, error) {
 	return rag.FetchContext(ctx, question, tenantID, domainID, locale)
-}
-
-func buildRAGUserPrompt(question, contextText, fewShot, taskIntro, constraints string) string {
-	return rag.BuildUserPrompt(question, contextText, fewShot, taskIntro, constraints)
 }
 
 func ragMockEnabled() bool {
@@ -64,42 +59,6 @@ func ragMockEnabled() bool {
 
 func mockRAGContextResponse(question, domainID string) *pythonRAGContextResponse {
 	return rag.MockContextResponse(question, domainID)
-}
-
-func publicCitations(fragments []RAGFragment) []RAGFragment {
-	return rag.PublicCitations(fragments)
-}
-
-func extractNumbersFromText(s string) []float64 {
-	return rag.ExtractNumbersFromText(s)
-}
-
-func cleanRAGAnswer(text string) string {
-	return rag.CleanAnswer(text)
-}
-
-func appendRAGDisclaimer(answer, locale string) string {
-	return rag.AppendDisclaimer(answer, locale)
-}
-
-func verifyRAGAnswer(answer string, fragments []RAGFragment, locale string) (bool, string) {
-	return rag.VerifyAnswer(answer, fragments, locale)
-}
-
-func verifyRAGAnswerLocal(body, contextText string) (bool, string) {
-	return rag.VerifyAnswerLocal(body, contextText)
-}
-
-func logRAGOutcome(ctx context.Context, domainID, question string, fragmentCount int, verifyPass bool, verifyReason, sessionID string, softFail bool) {
-	rag.LogOutcome(ctx, domainID, question, fragmentCount, verifyPass, verifyReason, sessionID, softFail)
-}
-
-func prepareRAGMessages(ctx context.Context, q, domainID, tenantID, locale string, history []Message, sessionID string) (ragPrepared, error) {
-	return rag.PrepareMessages(ctx, q, domainID, tenantID, locale, history, sessionID)
-}
-
-func finalizeRAGAnswer(ctx context.Context, raw string, p ragPrepared) RAGAnswerResult {
-	return rag.FinalizeAnswer(ctx, raw, p)
 }
 
 func answerWithRAG(ctx context.Context, q, tenantID, domainID, locale string, history []Message, sessionID string) RAGAnswerResult {

@@ -1,8 +1,6 @@
 package app
 
 import (
-	"github.com/gin-gonic/gin"
-
 	"grounded_llm_server/internal/admin"
 	"grounded_llm_server/internal/oidc"
 )
@@ -22,8 +20,4 @@ func oidcConfigured() bool {
 
 func resetOIDCProvider() {
 	oidc.ResetProvider()
-}
-
-func registerOIDCAuthRoutes(g *gin.RouterGroup) {
-	oidc.RegisterAuthRoutes(g)
 }

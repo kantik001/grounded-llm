@@ -23,30 +23,12 @@ type (
 	BrandingConfig = locale.BrandingConfig
 )
 
-const (
-	ctxKeyLocale = locale.CtxKeyLocale
-	headerLocale = locale.HeaderLocale
-)
-
 func initLocaleConfig(cfg *Config) {
 	locale.Init(cfg)
 }
 
-func normalizeLocale(raw string) string {
-	return locale.NormalizeLocale(raw)
-}
-
-func resolveLocale(c *gin.Context, cfg *Config) string {
-	_ = cfg
-	return locale.ResolveLocale(c)
-}
-
 func ctxLocale(c *gin.Context) string {
 	return locale.CtxLocale(c)
-}
-
-func bundleLocale(localeCode string) string {
-	return locale.BundleLocale(localeCode)
 }
 
 func localeMiddleware(cfg *Config) gin.HandlerFunc {
@@ -68,10 +50,6 @@ func verifyFailHintForLocale(localeCode string) string {
 
 func brandingForLocale(localeCode string) BrandingConfig {
 	return locale.BrandingForLocale(localeCode)
-}
-
-func onboardingForDomainLocale(domainID, localeCode string) []string {
-	return locale.OnboardingForDomainLocale(domainID, localeCode)
 }
 
 func reloadLocaleBundles() error {
