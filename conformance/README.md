@@ -23,6 +23,15 @@ python -m conformance spec --json
 
 Makefile shortcuts: `make conformance-spec`, `make conformance-check URL=...`
 
+### Exit codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | All requested checks passed |
+| non-zero | Spec invalid, HTTP/retrieval failure, or pytest error |
+
+With `--json`, stdout is one object: `{"command": "...", "passed": true|false, ...}`. Pytest chatter (if any) goes to stderr.
+
 ---
 
 ## Quick run (reference implementation)
@@ -38,14 +47,16 @@ pip install -r conformance/requirements.txt
 python -m conformance check --url http://127.0.0.1:8080
 ```
 
+HTTP chat checks (`POST /session`, `/message`, `GET /history`) need auth disabled **or** a valid Telegram/`X-API-Key` setup — same as smoke.
+
 ---
 
 ## What is tested
 
 | Module | Checks |
 |--------|--------|
-| `test_openapi_http.py` | Public paths from OpenAPI return expected HTTP codes |
-| `test_openapi_spec.py` | OpenAPI file validates (same as CI `openapi-validate`) |
+| `test_openapi_spec.py` | OpenAPI file validates (`openapi-spec-validator` pin in `requirements.txt`) |
+| `test_openapi_http.py` | Public GETs return 2xx; `/health`/`/ready`/`openapi.json`; session → message → history |
 | `test_golden_retrieval.py` | Runs eval suites when `CONFORMANCE_RAG_URL` set |
 
 ---
@@ -64,8 +75,9 @@ python -m conformance check --url http://127.0.0.1:8080
 
 | Job | Command |
 |-----|---------|
-| `conformance-spec` | `python -m conformance spec` |
-| `smoke-api` | HTTP + adversarial E2E against running server |
+| `conformance-spec` | `python -m conformance spec` (canonical offline OpenAPI check) |
+| `openapi-validate` | Alias of `conformance-spec` (kept for stable required-check names) |
+| `smoke-api` | `python -m conformance http` + adversarial E2E against running server |
 
 ---
 
