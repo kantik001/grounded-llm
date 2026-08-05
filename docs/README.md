@@ -30,7 +30,7 @@
 | [Legal FAQ pack](en/domain-packs/LEGAL_FAQ.md) | NDA / compliance FAQ (EN) |
 | [Demo script](en/domain-packs/DEMO_SCRIPT.md) | 30-minute live demo (HR) |
 | [Pack registry](../../packs/registry.yaml) | Official packs (`init_pack.py registry --validate`) |
-| [domain-pack-template/](../domain-pack-template/) | Scaffold layout for new packs |
+| [packs/](../packs/) | Official packs + `init_pack.py` scaffold (`pack.yaml` v1) |
 
 Locale bundles and LLM prompts: `config/locales/{en,ru}/`.
 

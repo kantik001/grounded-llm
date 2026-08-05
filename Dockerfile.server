@@ -17,7 +17,7 @@ COPY server/ .
 RUN go mod tidy
 
 # Static Linux binary
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/server
 
 # Final runtime image
 FROM alpine:3.21

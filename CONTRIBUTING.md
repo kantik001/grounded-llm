@@ -106,7 +106,7 @@ We review PRs as time allows. Be patient — this is a community-driven project.
 ### Template packs (`packs/`, `config/`, `eval/`)
 
 - New domain packs should include: config, sample data, eval baseline JSONL.
-- See [packs/README.md](packs/README.md) and [domain-pack-template/](domain-pack-template/).
+- See [packs/README.md](packs/README.md) (`python scripts/init_pack.py` to list/install/scaffold packs).
 
 ### Documentation
 

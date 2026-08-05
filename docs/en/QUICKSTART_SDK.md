@@ -39,7 +39,7 @@ result = client.chat("How many paid vacation days do employees get?", domain_id=
 print(result.last_assistant_message["content"])
 ```
 
-Full example: [examples/python/chat_basic.py](../../examples/python/chat_basic.py)
+Full example: [sdk/python/examples/chat_basic.py](../../sdk/python/examples/chat_basic.py)
 
 ## 5. Production integrators
 

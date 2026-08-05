@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/kantik001/grounded-llm/eval/schemas/adversarial_e2e_case.schema.json",
+  "title": "Grounded adversarial /message E2E eval case",
+  "type": "object",
+  "required": ["domain_id", "question", "adversarial_type"],
+  "additionalProperties": false,
+  "properties": {
+    "domain_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9_-]*$"
+    },
+    "question": { "type": "string", "minLength": 3 },
+    "adversarial_type": {
+      "type": "string",
+      "enum": [
+        "wrong_number",
+        "missing_citation",
+        "cross_domain",
+        "prompt_injection",
+        "pii_trap",
+        "baseline_control"
+      ]
+    },
+    "expect_answer_contains": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "expect_answer_not_contains": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "expect_citations_min": { "type": "integer", "minimum": 0 },
+    "expect_out_of_scope_answer": { "type": "boolean" },
+    "expect_verify_pass": { "type": "boolean" }
+  }
+}

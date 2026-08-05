@@ -1,15 +1,22 @@
 # RAG eval — quality regression by domain
 
-| File | Domain | Questions | Language |
-|------|--------|-----------|----------|
-| `rag_default_baseline.jsonl` | `default` | 12 | RU (legacy demo) |
-| `rag_default_en_baseline.jsonl` | `default` | 21 | EN (HR demo) |
+Retrieval baselines live here (not under `tests/`): CI gates product quality.
+
+| File | Domain | Questions | Language / notes |
+|------|--------|-----------|------------------|
+| `rag_default_baseline.jsonl` | `default` | 12 | **RU** — matches `*_policy_ru.txt`; keep for RU KB coverage |
+| `rag_default_en_baseline.jsonl` | `default` | 21 | **EN** — primary HR demo / Phase A gate |
 | `rag_it_support_baseline.jsonl` | `it_support` | 16 | EN (IT support template) |
 | `rag_legal_faq_baseline.jsonl` | `legal_faq` | 13 | EN (Legal FAQ template) |
 | `rag_adversarial_baseline.jsonl` | mixed | 30 | EN (retrieval adversarial) |
-| `rag_hybrid_baseline.jsonl` | `default` | 7 | EN (keyword-heavy hybrid) |
+| `rag_hybrid_baseline.jsonl` | mixed | 7 | EN (keyword-heavy; only when `RAG_RETRIEVAL_MODE=hybrid`) |
 | **Retrieval total** | — | **99** | All JSONL suites above |
-| `rag_adversarial_e2e.jsonl` | mixed | 5 | EN (adversarial `/message` E2E) |
+| `rag_adversarial_e2e.jsonl` | mixed | 5 | EN (adversarial `/message` E2E; not in 99) |
+
+Schemas (CI via `tests/test_eval_baseline.py`):
+
+- [`schemas/baseline_case.schema.json`](./schemas/baseline_case.schema.json)
+- [`schemas/adversarial_e2e_case.schema.json`](./schemas/adversarial_e2e_case.schema.json)
 
 Line format (baseline):
 
@@ -44,6 +51,7 @@ Adversarial types: `wrong_number`, `missing_citation`, `cross_domain`, `prompt_i
 # Python RAG on :5000
 export PYTHON_RAG_URL=http://localhost:5000/rag/context
 python scripts/run_rag_eval.py --suite default_en
+python scripts/run_rag_eval.py --suite default          # RU suite
 python scripts/run_rag_eval.py --suite it_support
 python scripts/run_rag_eval.py --suite adversarial
 python scripts/run_rag_eval.py --suite all
@@ -55,7 +63,7 @@ make eval-retrieval
 
 | Job | What it checks |
 |-----|----------------|
-| `eval-baseline-validate` | JSONL structure (fast, no RAG) |
+| `eval-baseline-validate` | JSONL + JSON Schema (fast, no RAG) |
 | `eval-retrieval-gate` | Reindex → start Python → **99 retrieval cases** must pass (hybrid suite when `RAG_RETRIEVAL_MODE=hybrid`) |
 
 Local equivalent of the retrieval gate:
@@ -66,4 +74,4 @@ make eval-retrieval-ci
 # or: bash scripts/ci_eval_retrieval.sh
 ```
 
-Reports: `eval/results/`.
+Reports: `eval/results/` (gitignored).

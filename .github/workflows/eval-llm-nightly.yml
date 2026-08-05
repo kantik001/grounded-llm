@@ -55,7 +55,7 @@ jobs:
             exit 0
           fi
           mkdir -p /tmp/grounded-uploads
-          cd server && go mod tidy && go build -o ../server-bin . && cd ..
+          cd server && go mod tidy && go build -o ../server-bin ./cmd/server && cd ..
           ./server-bin &
           echo $! > server.pid
           for i in $(seq 1 60); do

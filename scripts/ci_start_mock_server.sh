@@ -22,7 +22,7 @@ export LOCALES_ROOT="${LOCALES_ROOT:-$ROOT/config/locales}"
 mkdir -p "$UPLOAD_DIR"
 cd server
 go mod tidy
-go build -o ../server-bin .
+go build -o ../server-bin ./cmd/server
 cd ..
 
 ./server-bin &

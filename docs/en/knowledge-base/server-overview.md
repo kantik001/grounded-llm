@@ -1,9 +1,10 @@
 ﻿# Go server overview
 
-**Folder:** `server/`  
+**Folder:** [`server/`](../../../server/README.md)  
 **Role:** orchestrator — Telegram/API auth, PostgreSQL, Python RAG, LLM, verify  
 **Framework:** [Gin](https://gin-gonic.com/)  
-**Port:** `8080`
+**Port:** `8080`  
+**Build:** `cd server && go build -o main ./cmd/server`
 
 | Article | Topic |
 |---------|-------|
@@ -14,34 +15,31 @@
 
 ---
 
-## `server/` files (current)
+## Package layout (current)
 
-| File | Purpose |
-|------|---------|
-| `main.go` | startup, router, migrations |
-| `config.go` | config from env |
-| `llm.go`, `llm_stream.go` | OpenAI-compatible chat/completions + stream |
-| `rag_chat.go`, `rag_pipeline.go` | RAG pipeline, citations |
-| `rag_verify.go` | number verify (local Spec path) |
-| `guardrails_client.go` | optional remote verify → grounded-guardrails `:50052` |
-| `rag_log.go` | `[RAG]` logs |
-| `domains.go` | `domains.json` catalog |
-| `locale.go` | `config/locales/{ru,en}`, `X-Locale` |
-| `domain_resolve.go` | `domain_id` from query/form |
-| `config_paths.go` | config path resolution |
-| `domain_guards.go` | `rag_enabled` |
-| `message_handlers.go`, `sse.go` | `POST /message`, SSE `?stream=1` |
-| `session_handlers.go` | `/session`, `/history` |
-| `admin.go`, `admin_feedback.go` | upload, reindex, feedback summary |
-| `auth_telegram.go`, `api_keys.go`, `auth_combined.go` | Telegram + API key auth |
-| `tenant.go` | `X-Tenant-ID` |
-| `middleware.go`, `ratelimit.go` | CORS, limits |
-| `postgres_store.go` | SQL, migrations |
-| `analytics_store.go`, `feedback.go` | analytics, thumbs up/down |
-| `onboarding.go`, `branding.go` | localized UX API |
-| `metrics.go`, `request_id.go`, `request_path_trace.go` | `/metrics`, request IDs, RAG path step logs |
-| `openapi.go` | `/api/v1/openapi.json` |
-| `routes.go`, `health.go`, `config_reload.go` | routes, health, hot reload |
+Mature Go layout — strangler extract **complete**. See [`server/README.md`](../../../server/README.md).
+
+| Path | Role |
+|------|------|
+| `cmd/server` | `main()` → `app.Run()` |
+| `internal/app` | composition root: `Run()`, `Deps`, thin `*_bridge.go` |
+| `internal/config` | env `Config`, load/validate |
+| `internal/store` | `ChatStore`, Postgres, retention |
+| `internal/auth` | Telegram initData, API keys, HTTP auth middleware |
+| `internal/guardrails` | remote/hybrid gRPC verify client |
+| `internal/metrics` | shared Prometheus counters |
+| `internal/llm` | OpenAI-compatible chat + stream/cache/mock |
+| `internal/rag` | retrieve → prepare → verify → answer |
+| `internal/httpapi` | routes, CORS, health/chat/SSE, rate limit, OpenAPI |
+| `internal/locale` | locale bundles, branding, onboarding |
+| `internal/domain` | domain catalog + RAG guards |
+| `internal/tenant` | tenants, quotas, registry |
+| `internal/admin` | admin HTTP + RBAC + reindex |
+| `internal/oidc` | OIDC SSO |
+| `internal/saas` | signup, plans, Stripe |
+| `internal/audit` | audit helpers |
+| `internal/analytics` | RAG analytics recorder |
+| `gen/guardrails/v1` | protobuf stubs for `:50052` |
 
 **Vision/CV** is outside core; attach via domain pack when needed.
 
@@ -61,56 +59,12 @@ flowchart TB
     GR[grounded-guardrails :50052\noptional]
 
     Web --> Go
-    Agents -->|Retriever| Py
+    Agents --> Go
     Go --> PG
-    Go -->|response cache| Redis
-    Go -->|/rag/context| Py
-    Py -->|embedding cache| Redis
-    Go -->|/v1/chat/completions| LLM
-    Go -.->|GUARDRAILS_MODE=remote/hybrid| GR
+    Go --> Redis
+    Go --> Py
+    Go --> LLM
+    Go --> GR
 ```
 
----
-
-## `main()` startup
-
-1. `loadConfig()` — `.env`
-2. `initGuardrailsClient()` when `GUARDRAILS_MODE` is `remote` / `hybrid`
-3. Postgres + `runAllMigrations`
-4. `loadDomainCatalog()`, `initLocaleConfig()`
-5. `newChatStore`
-6. Gin routes + `localeMiddleware` + `startConfigReloadWatcher`
-7. Listen on `:8080`
-
----
-
-## Key env vars
-
-| Variable | Purpose |
-|----------|---------|
-| `PYTHON_RAG_URL` | POST retrieval |
-| `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` | LLM |
-| `DATABASE_URL` | Postgres |
-| `DATA_DIR` | admin KB upload |
-| `DOMAINS_CONFIG_PATH` | domains catalog |
-| `LOCALES_ROOT`, `DEFAULT_LOCALE` | i18n bundles |
-| `TELEGRAM_BOT_TOKEN` | Web App auth |
-| `API_KEYS`, `API_KEYS_FILE` | integrator keys |
-| `DEFAULT_TENANT_ID`, `ALLOWED_TENANTS` | multi-tenant |
-| `ADMIN_PASSWORD`, `ADMIN_SECRET` | admin |
-| `GUARDRAILS_MODE` | `local` (default) / `remote` / `hybrid` |
-| `GUARDRAILS_GRPC_ADDR` | guardrails address (e.g. `localhost:50052`) |
-| `GUARDRAILS_PII_BLOCK` | enable `pii_block` on remote verify |
-
-See [../GUARDRAILS.md](../GUARDRAILS.md).
-
----
-
-## What to read next
-
-| Topic | File |
-|-------|------|
-| RAG flow | [server-rag_chat.md](./server-rag_chat.md) |
-| Python RAG | [python-api.md](./python-api.md) |
-| Docker | [docker-overview.md](./docker-overview.md) |
-| Guardrails | [../GUARDRAILS.md](../GUARDRAILS.md) |
+See also architecture docs under `docs/en/`.

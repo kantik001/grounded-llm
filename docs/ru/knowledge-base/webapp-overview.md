@@ -1,5 +1,6 @@
 ﻿# `webapp/` — веб-интерфейс
 
+**README папки:** [`webapp/README.md`](../../../webapp/README.md)  
 **Файлы:** `index.html`, `admin.html`, `signup.html`, `embed.html`, `app.js`, `app.css`, `nginx.conf`  
 **Роль:** эталонный UI — чат, админка KB, опциональный SaaS signup, embed-виджет
 

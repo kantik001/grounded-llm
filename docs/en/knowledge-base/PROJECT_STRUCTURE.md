@@ -8,37 +8,32 @@ High-level map of the repository. Detailed articles: [README.md](./README.md).
 
 | Path | Purpose |
 |------|---------|
-| `server/` | Go: auth, sessions, RAG+LLM, admin, verify |
+| `server/` | Go: auth, sessions, RAG+LLM, admin, verify — [`server/README.md`](../../../server/README.md) (`cmd/server` + `internal/`) |
 | `api/` | Python RAG **service** (internal HTTP+gRPC); see `api/README.md` |
-| `rag/` | Chroma, retrieval, domains, document loaders |
+| `proto/` | Guardrails gRPC IDL (`:50052`); Retriever in `api/proto/` — see `proto/README.md`, root `buf.yaml` |
+| `rag/` | Retrieval **engine** (library); HTTP/gRPC in `api/` — see [`rag/README.md`](../../../rag/README.md) |
 | `config/` | Domain pack defaults + `locales/{ru,en}/` |
 | `data/{tenant}/{domain}/` | KB: `.txt`, `.pdf`, `.docx` |
-| `webapp/` | Reference Telegram Web App UI |
-| `migrations/` | PostgreSQL schema |
-| `eval/`, `scripts/` | Quality & ops |
+| `webapp/` | Reference UI — [`webapp/README.md`](../../../webapp/README.md) |
+| `site/` | GitHub Pages landing — [`site/README.md`](../../../site/README.md) |
+| `migrations/` | PostgreSQL schema — see [`migrations/README.md`](../../../migrations/README.md) |
+| `eval/`, `scripts/`, `tests/` | Quality & ops — READMEs under each folder |
+| `sdk/python/` | Python client + CLI for Go API — [`sdk/README.md`](../../../sdk/README.md) |
+| `models/`, `sparse_index/` | Runtime binaries/caches (gitignored) — see folder READMEs |
 | `docs/` | Architecture, deploy, knowledge base (`en/`, `ru/`) |
 
 ---
 
 ## `server/` — Go backend
 
-Single binary `package main`, module **`grounded_llm_server`**.
+Module **`grounded_llm_server`**: `cmd/server` + `internal/` (see [`server/README.md`](../../../server/README.md)).
 
-Key files:
-
-| File | Role |
+| Path | Role |
 |------|------|
-| `main.go`, `routes.go` | startup, routes |
-| `domains.go`, `domain_resolve.go` | domain catalog, `domain_id` in API |
-| `locale.go` | locale bundles, `X-Locale` middleware |
-| `config_paths.go` | JSON lookup under `/config` |
-| `rag_pipeline.go`, `rag_verify.go` | RAG + LLM + verify (local Spec path) |
-| `guardrails_client.go` | optional remote verify → grounded-guardrails `:50052` |
-| `sse.go`, `llm_stream.go` | SSE streaming |
-| `api_keys.go`, `auth_combined.go` | `X-API-Key`, `/api/v1/*` |
-| `tenant.go` | `X-Tenant-ID`, KB path isolation |
-| `postgres_store.go` | Postgres, sessions, messages |
-| `admin.go` | KB upload, reindex |
+| `cmd/server` | process entrypoint |
+| `internal/app` | composition: `Run()`, `Deps`, bridges |
+| `internal/{config,store,auth,guardrails,metrics,llm,rag,httpapi,locale,domain,tenant,admin,oidc,saas,audit,analytics}` | domain packages |
+| `gen/guardrails/v1` | guardrails gRPC stubs |
 
 → [server-overview.md](./server-overview.md)
 
@@ -46,13 +41,16 @@ Key files:
 
 ## `rag/` — RAG engine
 
+Library used by `api/` and scripts — not a network service. Full map + env: [`rag/README.md`](../../../rag/README.md).
+
 | Module | Role |
 |--------|------|
-| `domains_config.py` | `config/domains.json` |
-| `document_loaders.py` | `.txt`, `.pdf`, `.docx` |
-| `vector_store.py` | Chroma indexing, tenant filter |
-| `retrieval.py` | context for Go |
-| `verifier.py` | number verify (mirror Go) |
+| `vector_backend/` | Chroma / Qdrant / pgvector |
+| `vector_store.py` | search, hybrid RRF, readiness |
+| `indexing.py` / `document_loaders.py` | load + chunk KB files |
+| `retrieval.py` | context + few-shot for callers |
+| `sparse_index.py` / `rerank.py` | BM25 hybrid + optional rerank |
+| `verifier.py` | local numeric check |
 
 ---
 

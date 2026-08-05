@@ -14,7 +14,7 @@ api/
 └── requirements*.txt    # runtime + optional vector/connector extras
 ```
 
-Engine code lives in `rag/`. Optional backends: `requirements-qdrant.txt`, `requirements-pgvector.txt`.
+Engine code lives in [`rag/`](../rag/README.md) (library, not this service). Optional backends: `requirements-qdrant.txt`, `requirements-pgvector.txt`.
 
 ```bash
 # HTTP only

@@ -1,0 +1,55 @@
+package app
+
+import (
+	"context"
+
+	"github.com/gin-gonic/gin"
+
+	"grounded_llm_server/internal/admin"
+	"grounded_llm_server/internal/analytics"
+	"grounded_llm_server/internal/audit"
+)
+
+func init() {
+	admin.BindConfig(func() *Config { return config })
+	admin.BindStore(func() *ChatStore { return chatStore })
+	audit.BindStore(func() *ChatStore { return chatStore })
+	audit.BindRequestID(ctxRequestID)
+	analytics.BindStore(func() *ChatStore { return chatStore })
+}
+
+func registerAdminRoutes(router *gin.Engine, cfg *Config) {
+	_ = cfg
+	admin.RegisterRoutes(router)
+}
+
+func loadAdminUsers(cfg *Config) {
+	admin.LoadUsers(cfg)
+}
+
+func saasProvisionAdmin() bool {
+	return admin.SaaSProvisionAdmin()
+}
+
+func provisionSignupAdminUser(tenantID string) (username, password string, err error) {
+	return admin.ProvisionSignupAdminUser(tenantID)
+}
+
+func adminAuthMiddleware(cfg *Config) gin.HandlerFunc {
+	_ = cfg
+	return admin.AuthMiddleware()
+}
+
+func adminBasicAuthEnabled() bool {
+	return admin.BasicAuthEnabled()
+}
+
+func recordAdminAudit(c *gin.Context, opts auditOpts) {
+	audit.Record(c, audit.Opts(opts))
+}
+
+func recordRAGAnalytics(ctx context.Context, telegramID int64, tenantID, domainID, question string, result RAGAnswerResult) {
+	analytics.RecordRAG(ctx, telegramID, tenantID, domainID, question, result)
+}
+
+type auditOpts = audit.Opts

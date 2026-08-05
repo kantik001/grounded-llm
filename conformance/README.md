@@ -40,7 +40,7 @@ With `--json`, stdout is one object: `{"command": "...", "passed": true|false, .
 # Terminal 1 — server with mocks (no LLM/RAG bill)
 export TELEGRAM_AUTH_DISABLED=true LLM_MOCK=true RAG_MOCK=true
 export DATABASE_URL=postgres://grounded:grounded@localhost:5432/grounded?sslmode=disable
-cd server && go run .
+cd server && go run ./cmd/server
 
 # Terminal 2 — conformance
 pip install -r conformance/requirements.txt

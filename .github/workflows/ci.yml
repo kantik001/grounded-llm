@@ -75,6 +75,19 @@ jobs:
           pip install 'grpcio==1.69.0' 'grpcio-tools==1.69.0' 'protobuf>=4.25.0,<6'
           python scripts/gen_retriever_grpc.py --check
 
+  proto-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: bufbuild/buf-setup-action@v1
+        with:
+          version: "1.50.1"
+      - name: buf lint
+        run: buf lint
+      - name: buf breaking (vs main)
+        if: github.event_name == 'pull_request'
+        run: buf breaking --against "https://github.com/${{ github.repository }}.git#branch=main"
+
   conformance-spec:
     runs-on: ubuntu-latest
     steps:
