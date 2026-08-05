@@ -10,6 +10,7 @@ ignore = ["E501"]
 [lint.per-file-ignores]
 # sys.path / load_dotenv before local imports (repo-root bootstrap)
 "api/app.py" = ["E402"]
+"api/grpc_retriever.py" = ["E402"]
 "api/http/app.py" = ["E402", "I001"]
 "tests/test_api_ready.py" = ["E402", "I001"]
 "tests/test_retrieve_metrics.py" = ["E402", "I001"]
