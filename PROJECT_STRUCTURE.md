@@ -18,7 +18,7 @@ High-level map of this repository. Deeper map (per-folder files): [docs/en/knowl
 | `connectors/` | Optional ingest: SharePoint, Google Drive, Confluence |
 | `conformance/` | Spec / OpenAPI conformance CLI |
 | `deploy/` | Helm chart + Terraform references |
-| `.github/` | CI, Dependabot, CODEOWNERS, issue/PR templates — see `.github/README.md` |
+| `.github/` | CI, Dependabot, CODEOWNERS, issue/PR templates — see `.github/AUTOMATION.md` |
 | `docs/en/` | Primary documentation (architecture, deploy, knowledge base) |
 | `docs/ru/` | Russian docs (legacy locale mirror) |
 

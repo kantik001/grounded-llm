@@ -1,7 +1,7 @@
 name: CI
 
 # Single workflow name "CI" keeps branch-protection required check names stable.
-# Shared setup: .github/actions/* and top-level env below. Map: .github/README.md
+# Shared setup: .github/actions/* and top-level env below. Map: .github/AUTOMATION.md
 
 on:
   push:
