@@ -5,7 +5,7 @@ Namespace: {{ .Release.Namespace }}
 
 Components:
   - Go API:     {{ include "grounded-llm.fullname" . }}-server:{{ .Values.server.port }}
-  - Python RAG: {{ include "grounded-llm.fullname" . }}-python:{{ .Values.python.port }}
+  - Python RAG: {{ include "grounded-llm.fullname" . }}-python:{{ .Values.python.port }} (gRPC :{{ .Values.python.grpcPort }})
   {{- if .Values.webapp.enabled }}
   - Web UI:     {{ include "grounded-llm.fullname" . }}-webapp:{{ .Values.webapp.port }}
   {{- end }}
@@ -15,8 +15,9 @@ Health checks:
   - Readiness: GET /ready   (Go probes DB + Python; Python probes data/chroma)
 
 Before production:
-  1. Set secrets via values or external Secret manager (LLM_API_KEY, ADMIN_SECRET, RAG_SERVICE_TOKEN)
+  1. Use values-prod.example.yaml (or equivalent); set secrets via values or external Secret manager
   2. Mount knowledge-base data and config (see docs/en/K8S_DEPLOY.md)
-  3. Configure ingress TLS and backup schedule (docs/en/BACKUP_RESTORE.md)
+  3. Bring Redis yourself if you need caches (REDIS_URL) — not deployed by this chart
+  4. Configure ingress TLS and backup schedule (docs/en/BACKUP_RESTORE.md)
 
-Documentation: docs/en/K8S_DEPLOY.md · docs/en/TRUST_CENTER.md
+Documentation: deploy/README.md · docs/en/K8S_DEPLOY.md · docs/en/TRUST_CENTER.md

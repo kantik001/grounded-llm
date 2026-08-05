@@ -4,6 +4,8 @@ Reference Terraform for deploying Grounded LLM on **AWS**, **GCP**, or **Azure**
 
 These are **starting points**, not production-complete. Extend with secrets, TLS, persistent volumes, and WAF before production.
 
+Folder map: [deploy/terraform/README.md](../../deploy/terraform/README.md).
+
 For Kubernetes, use the Helm chart: [K8S_DEPLOY.md](./K8S_DEPLOY.md).
 
 ---

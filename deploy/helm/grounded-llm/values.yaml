@@ -1,5 +1,6 @@
-# Default values for grounded-llm Helm chart.
-# See docs/en/K8S_DEPLOY.md for production guidance.
+# Default values for grounded-llm Helm chart (demo / local cluster).
+# Production: start from values-prod.example.yaml — see deploy/README.md and docs/en/K8S_DEPLOY.md.
+# Weak defaults below (postgres password "grounded", your-org images) are intentional for smoke installs only.
 
 global:
   imagePullPolicy: IfNotPresent
@@ -55,6 +56,7 @@ python:
     repository: ghcr.io/your-org/grounded-llm-python
     tag: latest
   port: 5000
+  grpcPort: 50051
   resources: {}
   persistence:
     chromaSize: 20Gi

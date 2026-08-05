@@ -32,7 +32,7 @@ Ingress (optional)
             └── guardrails :50052 (optional external — not in Helm yet; see GUARDRAILS.md)
 ```
 
-> **Chart lag:** the Helm chart may not yet ship a Redis Deployment. For caches / `REDIS_URL`, deploy Redis in-cluster (or disable caches). Set `LLM_PROVIDER` / `LLM_BASE_URL` via secrets/env like Compose. See [LLM_PROVIDERS.md](./LLM_PROVIDERS.md).
+> **Chart lag:** Redis is **not** shipped in the chart — bring Redis and set `REDIS_URL` (or disable caches). Python gRPC `:50051` is exposed on the python Service. Set `LLM_PROVIDER` / `LLM_BASE_URL` via secrets/env like Compose. See [LLM_PROVIDERS.md](./LLM_PROVIDERS.md) and [deploy/README.md](../../deploy/README.md).
 
 ## Health probes
 
@@ -58,7 +58,9 @@ Set the same `RAG_SERVICE_TOKEN` on Go server and Python service. Go sends `X-RA
 
 ## Customize values
 
-See `deploy/helm/grounded-llm/values.yaml` for image repos, resource limits, ingress host, and retention defaults.
+- Demo: `deploy/helm/grounded-llm/values.yaml`
+- Production-shaped example: `deploy/helm/grounded-llm/values-prod.example.yaml`
+- Map: [deploy/README.md](../../deploy/README.md)
 
 For external managed Postgres, set `postgres.enabled: false` and point `DATABASE_URL` via a custom values overlay (patch server deployment env).
 

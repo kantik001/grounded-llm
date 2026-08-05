@@ -10,6 +10,9 @@ spec:
     - port: {{ .Values.python.port }}
       targetPort: http
       name: http
+    - port: {{ .Values.python.grpcPort }}
+      targetPort: grpc
+      name: grpc
   selector:
     {{- include "grounded-llm.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: python
@@ -40,9 +43,13 @@ spec:
           ports:
             - containerPort: {{ .Values.python.port }}
               name: http
+            - containerPort: {{ .Values.python.grpcPort }}
+              name: grpc
           env:
             - name: PYTHON_SERVICE_PORT
               value: {{ .Values.python.port | quote }}
+            - name: PYTHON_GRPC_PORT
+              value: {{ .Values.python.grpcPort | quote }}
             - name: ADMIN_SECRET
               valueFrom:
                 secretKeyRef:

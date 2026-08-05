@@ -1,0 +1,84 @@
+# Production-shaped overlay (example — do not commit real secrets)
+#
+# Usage:
+#   helm upgrade --install grounded ./deploy/helm/grounded-llm \
+#     -f deploy/helm/grounded-llm/values-prod.example.yaml \
+#     --set secrets.llmApiKey=... \
+#     --set secrets.adminSecret=... \
+#     --set secrets.adminPassword=... \
+#     --set secrets.ragServiceToken=...
+#
+# Prefer External Secrets / Sealed Secrets over --set in real clusters.
+# See docs/en/K8S_DEPLOY.md and deploy/README.md.
+
+postgres:
+  # Prefer managed Postgres in production:
+  # enabled: false
+  # then set DATABASE_URL on the server via your secret store.
+  enabled: true
+  password: ""   # MUST override — never leave chart default "grounded"
+  storage: 50Gi
+
+server:
+  image:
+    repository: ghcr.io/YOUR_ORG/grounded-llm-server
+    tag: "0.3.0"   # pin release tags; avoid latest
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  env:
+    TELEGRAM_AUTH_DISABLED: "false"
+    RATE_LIMIT_REQUESTS_PER_MINUTE: "60"
+    DEFAULT_LOCALE: en
+    # Bring-your-own Redis (chart does not deploy Redis):
+    # REDIS_URL: redis://redis.grounded.svc:6379/0
+    GROUNDED_ENV: production
+
+python:
+  image:
+    repository: ghcr.io/YOUR_ORG/grounded-llm-python
+    tag: "0.3.0"
+  replicaCount: 2
+  persistence:
+    chromaSize: 50Gi
+  resources:
+    requests:
+      cpu: 500m
+      memory: 2Gi
+    limits:
+      cpu: "2"
+      memory: 4Gi
+  env:
+    FORCE_RAG_REINDEX: "false"
+    DEFAULT_LOCALE: en
+    GROUNDED_ENV: production
+
+webapp:
+  image:
+    repository: ghcr.io/YOUR_ORG/grounded-llm-webapp
+    tag: "0.3.0"
+  replicaCount: 2
+
+ingress:
+  enabled: true
+  className: nginx
+  host: grounded.example.com
+  tls: true
+
+secrets:
+  # Leave empty here; inject at install time or via external Secret.
+  llmApiKey: ""
+  telegramBotToken: ""
+  adminPassword: ""
+  adminSecret: ""
+  ragServiceToken: ""
+
+retention:
+  messageRetentionDays: 90
+  sessionRetentionDays: 90
+  intervalHours: 24
