@@ -108,10 +108,10 @@ conformance-check:
 	pip install -r conformance/requirements.txt
 	python -m conformance check --url $(or $(URL),http://127.0.0.1:8080)
 
-## Full HTTP conformance (requires running server; set CONFORMANCE_BASE_URL)
+## Full HTTP conformance (requires running server)
 conformance-http:
 	pip install -r conformance/requirements.txt
-	pytest conformance/test_openapi_http.py -v --tb=short
+	python -m conformance http --url $(or $(URL),http://127.0.0.1:8080)
 
 ## Adversarial E2E against /message (server on :8080)
 adversarial-e2e:

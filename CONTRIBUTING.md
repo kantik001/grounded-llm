@@ -46,13 +46,13 @@ grounded-llm chat "How many vacation days?"   # after server is up
 | `go-test` | Go unit tests + coverage |
 | `python-lint` | Ruff on `rag/`, `api/`, `tests/`, `scripts/` |
 | `python-test` | pytest + coverage |
-| `openapi-validate` | OpenAPI 3.0 spec validation |
+| `openapi-validate` | Alias of `conformance-spec` (stable required-check name) |
 | `eval-baseline-validate` | JSONL structure validation |
 | `eval-retrieval-gate` | Reindex + retrieval eval (all suites) |
 | `smoke-api` | Health, domains, session, **full `/message` path** (with `LLM_MOCK` + `RAG_MOCK`) |
 | `docker-build` | Build all Docker images |
 | `secret-scan` | gitleaks secret detection |
-| `conformance-spec` | OpenAPI conformance (offline spec tests) |
+| `conformance-spec` | Offline OpenAPI via `python -m conformance spec` |
 
 Dependabot opens **grouped** weekly PRs (Go modules; pip for `api/`, `tests/`, `conformance/`, `sdk/python`; GitHub Actions). Major bumps for `langchain*`, `protobuf`/`grpcio`, `chromadb`, `gunicorn`, `redis`, etc. are ignored until a coordinated upgrade — see `.github/dependabot.yml`.
 
