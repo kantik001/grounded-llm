@@ -11,6 +11,7 @@
 |------|--------|
 | `test_verifier.py` | `rag/verifier.py` — numbers, disclaimer |
 | `test_domains_config.py` | `rag/domains_config.py`, `config/domains.json` |
+| `test_domains_schema.py` | `config/schemas/domains.schema.json` vs `domains.json` |
 | `test_document_loaders.py` | KB formats, load `.txt` |
 
 Dependencies: `tests/requirements-test.txt` (includes `langchain-community`, `pypdf`, `docx2txt`).

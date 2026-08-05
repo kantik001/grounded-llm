@@ -15,4 +15,4 @@ Override root: `LOCALES_ROOT` (e.g. `/config/locales` in Docker).
 
 Server: `DEFAULT_LOCALE` env (default `en`), request headers `X-Locale` / `Accept-Language`, query `?locale=`.
 
-Legacy files in `config/prompts.json` etc. are kept for reference; the Go server loads from `config/locales/` only.
+Pre-locale flat JSON lives under [`config/legacy/`](../legacy/) (not loaded at runtime). Edit only this tree.

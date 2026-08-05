@@ -370,7 +370,7 @@ Strategy: [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md)
 | Signup API | `POST /api/v1/signup` |
 | Stripe webhook | `server/stripe_webhook.go` |
 | Signup UI | `webapp/signup.html` |
-| Tenant registry | `config/tenants.json.example` |
+| Tenant registry | `config/examples/tenants.json.example` |
 
 ---
 
