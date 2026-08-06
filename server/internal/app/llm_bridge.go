@@ -22,7 +22,14 @@ func initRedis() {
 }
 
 func llmRedis() redis.Cmdable {
-	return llm.Redis()
+	// Avoid the classic Go nil-interface trap: a nil *redis.Client boxed as
+	// redis.Cmdable is a non-nil interface and would make WithRedis enable a
+	// backend that panics on first use.
+	c := llm.Redis()
+	if c == nil {
+		return nil
+	}
+	return c
 }
 
 func mockLLMCompletion(messages []Message) (string, error) {

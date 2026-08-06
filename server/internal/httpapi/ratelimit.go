@@ -35,10 +35,15 @@ func NewRateLimiter(limit int, window time.Duration) *RateLimiter {
 // WithRedis enables distributed limiting via Redis ZSET sliding window.
 // Safe to call with nil (no-op). Returns the receiver for chaining.
 func (rl *RateLimiter) WithRedis(c redis.Cmdable) *RateLimiter {
-	if rl != nil && c != nil {
-		rl.rdb = c
-		log.Printf("Rate limiter: Redis backend enabled")
+	if rl == nil || c == nil {
+		return rl
 	}
+	// Defend against typed-nil concrete values boxed in the interface.
+	if rc, ok := c.(*redis.Client); ok && rc == nil {
+		return rl
+	}
+	rl.rdb = c
+	log.Printf("Rate limiter: Redis backend enabled")
 	return rl
 }
 
