@@ -1,0 +1,6 @@
+{"domain_id": "default", "question": "How many paid vacation days do employees get?", "expect_contains": ["28"], "expect_context": true, "category": "policy", "notes": "Replace expects with customer facts"}
+{"domain_id": "default", "question": "REPLACE: key policy number question #2", "expect_contains": ["REPLACE"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "REPLACE: key policy number question #3", "expect_contains": ["REPLACE"], "expect_context": true, "category": "policy"}
+{"domain_id": "default", "question": "REPLACE: paraphrase of question #1", "expect_contains": ["REPLACE"], "expect_context": true, "category": "paraphrase"}
+{"domain_id": "default", "question": "What is the CEO salary on the Moon in 2099?", "expect_out_of_scope": true, "expect_contains": [], "category": "edge"}
+{"domain_id": "default", "question": "How many vacation days for employees on Mars?", "expect_out_of_scope": true, "expect_contains": [], "category": "edge"}

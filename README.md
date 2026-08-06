@@ -6,6 +6,7 @@
 [![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go)](server/go.mod)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](api/requirements.txt)
 [![Eval](https://img.shields.io/badge/eval-99%20cases-brightgreen)](docs/en/BENCHMARK.md)
+[![grounded-bench](https://img.shields.io/badge/grounded--bench-Spec%20NVR%20100%25-brightgreen)](https://github.com/kantik001/grounded-bench)
 [![Pages](https://img.shields.io/badge/docs-GitHub%20Pages-222?logo=github)](https://kantik001.github.io/grounded-llm/)
 
 **Open platform to deploy cited, verified document assistants in days — templates, API, on-prem.**
@@ -17,8 +18,8 @@ Grounded LLM is the **reference implementation** of an open spec for **document-
 | | |
 |---|---|
 | **Cited RAG** | Every answer links to source documents |
-| **Eval-driven quality** | **99** retrieval cases + adversarial gate in CI |
-| **Enterprise-ready deploy** | Docker Compose, Helm, multi-tenant API, on-prem |
+| **Eval-driven quality** | **99** retrieval cases + adversarial gate in CI · [grounded-bench](https://github.com/kantik001/grounded-bench) Spec track |
+| **Enterprise-ready deploy** | Docker Compose, Helm, multi-tenant API, on-prem · [8-week pilot](docs/en/PILOT_OFFER.md) |
 
 **Channels:** Web chat · REST API (`/api/v1`) · Telegram Mini App (optional) · [Landing](https://kantik001.github.io/grounded-llm/)
 

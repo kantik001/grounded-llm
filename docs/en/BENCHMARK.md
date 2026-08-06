@@ -91,8 +91,11 @@ Example output:
 Future: publish leaderboard on GitHub Pages after public launch ([LAUNCH.md](./LAUNCH.md)).
 
 Public **verifiable-generation** metrics (NVR / CP / HR / RR) live in the sibling repo
-[grounded-bench](https://github.com/kantik001/grounded-bench) (offline track, 280 cases, seed 42).
+[grounded-bench](https://github.com/kantik001/grounded-bench) (offline track, **1000** cases, seed 42).
+Reference Spec path: `make score-spec` → system `grounded-llm@0.4.0-spec-faithful` on the [leaderboard](https://github.com/kantik001/grounded-bench/blob/main/leaderboard/index.html).
 This document remains the retrieval / release-bench story for grounded-llm.
+
+**Pilot packaging:** [PILOT_OFFER.md](./PILOT_OFFER.md) · [PILOT_CHECKLIST.md](./PILOT_CHECKLIST.md) · `python scripts/pilot_day0.py --pack hr --tenant <id>`
 
 ---
 

@@ -72,7 +72,7 @@ Ask in the web chat. Show **answer + Sources block** for each.
 
 ## Close (2 min)
 
-- 8-week pilot, fixed fee, KPI report  
+- 8-week pilot, fixed fee, KPI report — see [PILOT_OFFER.md](../PILOT_OFFER.md)
 - Annual license path  
 - Hand [SECURITY_BRIEF.md](../SECURITY_BRIEF.md) to IT contact  
 

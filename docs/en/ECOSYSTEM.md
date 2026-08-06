@@ -49,7 +49,9 @@ Success metric: **new grounded assistant from template in &lt;3 days**, eval pas
 | 🔜 | Hybrid modes documented in Grounded Spec §7 | 1 |
 | ✅ | pgvector adapter (`VECTOR_STORE=pgvector`) | 2, 3 |
 | 🔜 | Benchmark badge + `bench_report.py` in release flow | 2 |
+| ✅ | Spec-faithful row on [grounded-bench](https://github.com/kantik001/grounded-bench) (`make score-spec`) | 2 |
 | 🔜 | 4th domain pack with eval | 4 |
+| ✅ | [8-week pilot offer](./PILOT_OFFER.md) + day-0 script | 4 |
 
 ### Horizon 2 — Platform standard (6–18 months)
 
@@ -81,6 +83,7 @@ Success metric: **new grounded assistant from template in &lt;3 days**, eval pas
 - MCP tools via [mcp-gateway](https://github.com/kantik001/mcp-gateway): `call_tool[server.tool, {...}]`
 - Redis session memory (`session:{id}`)
 - Optional: compose `--profile full` with Grounded LLM GHCR images
+- Offline demo: [docs/DEMO.md](https://github.com/kantik001/grounded-agent/blob/main/docs/DEMO.md) (`LLM_MODE=demo`)
 
 **Non-goals for agent repo:**
 
