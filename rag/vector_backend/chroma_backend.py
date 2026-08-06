@@ -2,23 +2,69 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 import shutil
 from typing import Any
 
 from langchain_chroma import Chroma
 
-from rag.embedding_cache import CachedHuggingFaceEmbeddings
-from rag.indexing import split_kb_documents
+from rag.embedding_cache import CachedHuggingFaceEmbeddings, e5_prefixes_enabled
+from rag.indexing import split_file_documents, split_kb_documents
+from rag.kb_discovery import discover_kb_directories
 from rag.vector_backend.base import VectorBackend
 
 _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 DEFAULT_PERSIST_DIR = os.path.join(_PROJECT_ROOT, "chroma_db")
 EMBEDDING_MODEL = "intfloat/multilingual-e5-small"
 
+_INDEX_META_FILE = "index_meta.json"
+_MANIFEST_FILE = "index_manifest.json"
+
 
 def _persist_dir() -> str:
     return os.environ.get("CHROMA_PERSIST_DIR", DEFAULT_PERSIST_DIR).strip() or DEFAULT_PERSIST_DIR
+
+
+def embedding_signature() -> dict:
+    """Identity of the vectors in the index. A mismatch (model swap, prefix
+    flip) makes existing vectors incompatible with new queries, so load()
+    rebuilds instead of silently mixing embedding spaces."""
+    return {
+        "model": EMBEDDING_MODEL,
+        "e5_prefixes": e5_prefixes_enabled(EMBEDDING_MODEL),
+        "schema": 1,
+    }
+
+
+def _file_sha1(path: str) -> str:
+    h = hashlib.sha1()
+    with open(path, "rb") as fh:
+        for block in iter(lambda: fh.read(1 << 20), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+def scan_kb_files() -> dict[str, dict]:
+    """Current KB state: {tenant/domain/filename: {sha1, path, tenant, domain, filename}}."""
+    from rag.document_loaders import is_supported_filename
+
+    state: dict[str, dict] = {}
+    for tenant_id, domain_id, domain_dir in discover_kb_directories():
+        for name in sorted(os.listdir(domain_dir)):
+            path = os.path.join(domain_dir, name)
+            if not os.path.isfile(path) or not is_supported_filename(name):
+                continue
+            key = f"{tenant_id}/{domain_id}/{name}"
+            state[key] = {
+                "sha1": _file_sha1(path),
+                "path": path,
+                "tenant": tenant_id,
+                "domain": domain_id,
+                "filename": name,
+            }
+    return state
 
 
 class ChromaBackend(VectorBackend):
@@ -29,6 +75,42 @@ class ChromaBackend(VectorBackend):
     def reset(self) -> None:
         self._store = None
 
+    # --- index metadata -------------------------------------------------
+
+    def _meta_path(self) -> str:
+        return os.path.join(_persist_dir(), _INDEX_META_FILE)
+
+    def _manifest_path(self) -> str:
+        return os.path.join(_persist_dir(), _MANIFEST_FILE)
+
+    def _read_json(self, path: str) -> dict | None:
+        try:
+            with open(path, encoding="utf-8") as fh:
+                data = json.load(fh)
+            return data if isinstance(data, dict) else None
+        except (OSError, ValueError):
+            return None
+
+    def _write_json(self, path: str, payload: dict) -> None:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        tmp = path + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as fh:
+            json.dump(payload, fh, ensure_ascii=False, indent=1)
+        os.replace(tmp, path)
+
+    def _signature_matches(self) -> bool:
+        meta = self._read_json(self._meta_path())
+        return bool(meta) and meta.get("embedding") == embedding_signature()
+
+    def _save_index_state(self, manifest: dict[str, dict]) -> None:
+        self._write_json(self._meta_path(), {"embedding": embedding_signature()})
+        self._write_json(
+            self._manifest_path(),
+            {key: {"sha1": st["sha1"]} for key, st in manifest.items()},
+        )
+
+    # --- build / load ----------------------------------------------------
+
     def _create_store(self) -> Chroma | None:
         print("Creating vector store (Chroma)...")
         docs = split_kb_documents()
@@ -38,6 +120,7 @@ class ChromaBackend(VectorBackend):
         print(f"Chunks: {len(docs)}")
         persist_dir = _persist_dir()
         store = Chroma.from_documents(docs, self._embeddings, persist_directory=persist_dir)
+        self._save_index_state(scan_kb_files())
         print(f"Vector store saved to {persist_dir}")
         return store
 
@@ -52,14 +135,87 @@ class ChromaBackend(VectorBackend):
         )
         persist_dir = _persist_dir()
 
-        if force and os.path.isdir(persist_dir):
-            print("FORCE_RAG_REINDEX: removing old chroma_db")
-            shutil.rmtree(persist_dir, ignore_errors=True)
+        has_data = os.path.isdir(persist_dir) and bool(os.listdir(persist_dir))
+        if has_data and not force and not self._signature_matches():
+            print(
+                "Embedding signature changed (model or e5 prefixes) — "
+                "rebuilding vector store to avoid mixing embedding spaces."
+            )
+            force = True
 
-        if os.path.exists(persist_dir) and os.listdir(persist_dir):
+        if force and os.path.isdir(persist_dir):
+            print("Reindex: removing old chroma_db")
+            shutil.rmtree(persist_dir, ignore_errors=True)
+            has_data = False
+
+        if has_data:
             self._store = Chroma(persist_directory=persist_dir, embedding_function=self._embeddings)
         else:
             self._store = self._create_store()
+
+    # --- incremental update ----------------------------------------------
+
+    def refresh(self) -> dict:
+        """Incrementally sync the index with files on disk.
+
+        Diffs the persisted manifest against the current KB tree and only
+        re-embeds added/changed files (deleting stale chunks by metadata),
+        instead of a full rebuild. Falls back to a full rebuild when there
+        is no usable index/manifest yet.
+        """
+        persist_dir = _persist_dir()
+        has_data = os.path.isdir(persist_dir) and bool(os.listdir(persist_dir))
+        manifest = self._read_json(self._manifest_path())
+
+        if not has_data or manifest is None or not self._signature_matches():
+            self._store = None
+            self.load(force_reindex=True)
+            current = scan_kb_files()
+            return {"mode": "full", "files": len(current), "empty": self._store is None}
+
+        self.load()
+        if self._store is None:
+            return {"mode": "full", "files": 0, "empty": True}
+
+        current = scan_kb_files()
+        added = [k for k in current if k not in manifest]
+        removed = [k for k in manifest if k not in current]
+        changed = [
+            k for k in current if k in manifest and manifest[k].get("sha1") != current[k]["sha1"]
+        ]
+
+        for key in removed + changed:
+            tenant, domain, filename = key.split("/", 2)
+            self._store._collection.delete(  # noqa: SLF001
+                where={
+                    "$and": [
+                        {"tenant_id": tenant},
+                        {"domain_id": domain},
+                        {"filename": filename},
+                    ]
+                }
+            )
+
+        chunks_added = 0
+        for key in added + changed:
+            st = current[key]
+            chunks = split_file_documents(st["domain"], st["path"], tenant_id=st["tenant"])
+            if chunks:
+                self._store.add_documents(chunks)
+                chunks_added += len(chunks)
+
+        self._save_index_state(current)
+        summary = {
+            "mode": "incremental",
+            "added": len(added),
+            "changed": len(changed),
+            "removed": len(removed),
+            "chunks_added": chunks_added,
+        }
+        print(f"Incremental reindex: {summary}")
+        return summary
+
+    # --- search -----------------------------------------------------------
 
     def _filter(self, domain_id: str, tenant_id: str) -> dict:
         return {"$and": [{"domain_id": domain_id}, {"tenant_id": tenant_id}]}

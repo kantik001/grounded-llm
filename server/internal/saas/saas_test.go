@@ -19,11 +19,12 @@ import (
 )
 
 type testHost struct {
-	mu       sync.Mutex
-	allowed  map[string]struct{}
-	registry []RegistryEntry
-	quotas   map[string]QuotaLimits
-	dataDir  string
+	mu         sync.Mutex
+	allowed    map[string]struct{}
+	registry   []RegistryEntry
+	quotas     map[string]QuotaLimits
+	dataDir    string
+	seenEvents map[string]struct{}
 }
 
 func (h *testHost) NormalizeTenantID(raw string) string {
@@ -113,6 +114,22 @@ func (h *testHost) ProvisionAdminUser(tenantID string) (string, string, error) {
 }
 
 func (h *testHost) DefaultDomainID() string { return "default" }
+
+func (h *testHost) ClaimStripeEvent(eventID, eventType string) (bool, error) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if h.seenEvents == nil {
+		h.seenEvents = make(map[string]struct{})
+	}
+	if eventID == "" {
+		return true, nil
+	}
+	if _, ok := h.seenEvents[eventID]; ok {
+		return false, nil
+	}
+	h.seenEvents[eventID] = struct{}{}
+	return true, nil
+}
 
 func setupTestHost(t *testing.T) *testHost {
 	t.Helper()
@@ -284,6 +301,7 @@ plans:
 	}
 
 	event := map[string]any{
+		"id":   "evt_test_1",
 		"type": "checkout.session.completed",
 		"data": map[string]any{
 			"object": map[string]any{
@@ -315,6 +333,21 @@ plans:
 	lim, ok := h.quotas["acme-abc"]
 	if !ok || lim.MessagesPerDay != 5000 {
 		t.Fatalf("quotas: %+v ok=%v", lim, ok)
+	}
+
+	// Replay same event id — must stay idempotent (no double apply / still 200).
+	w2 := httptest.NewRecorder()
+	c2, _ := gin.CreateTestContext(w2)
+	c2.Request = httptest.NewRequest(http.MethodPost, "/api/v1/billing/stripe/webhook", strings.NewReader(string(payload)))
+	c2.Request.Header.Set("Stripe-Signature", header)
+	handleStripeWebhook(c2)
+	if w2.Code != http.StatusOK {
+		t.Fatalf("replay status=%d body=%s", w2.Code, w2.Body.String())
+	}
+	var replay map[string]any
+	_ = json.Unmarshal(w2.Body.Bytes(), &replay)
+	if replay["duplicate"] != true {
+		t.Fatalf("expected duplicate=true on replay, got %v", replay)
 	}
 }
 

@@ -40,7 +40,21 @@ def reciprocal_rank_fusion(
         return []
 
     ordered = sorted(scores.items(), key=lambda item: item[1], reverse=True)
-    return [docs_by_key[key] for key, _ in ordered[:k]]
+    out: list[Any] = []
+    for key, score in ordered[:k]:
+        doc = docs_by_key[key]
+        if isinstance(doc, Document):
+            meta = dict(doc.metadata or {})
+            meta["rrf_score"] = float(score)
+            meta["score"] = float(score)
+            out.append(Document(page_content=doc.page_content, metadata=meta))
+        else:
+            meta = getattr(doc, "metadata", None)
+            if isinstance(meta, dict):
+                meta["rrf_score"] = float(score)
+                meta["score"] = float(score)
+            out.append(doc)
+    return out
 
 
 def _key_for(doc: Any) -> str:

@@ -10,6 +10,7 @@ import (
 
 	"grounded_llm_server/internal/config"
 	"grounded_llm_server/internal/store"
+	"grounded_llm_server/internal/tenant"
 )
 
 const (
@@ -33,6 +34,13 @@ func TelegramMiddleware(cfg *config.Config) gin.HandlerFunc {
 				devID = 1
 			}
 			c.Set(CtxKeyTelegramUserID, devID)
+			if err := tenant.BindTelegramMembership(c, devID); err != nil {
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+					"success": false,
+					"error":   "Forbidden: " + err.Error(),
+				})
+				return
+			}
 			c.Next()
 			return
 		}
@@ -63,7 +71,15 @@ func TelegramMiddleware(cfg *config.Config) gin.HandlerFunc {
 
 		c.Set(CtxKeyTelegramUserID, user.ID)
 		c.Set(CtxKeyTelegramUser, user)
+		if err := tenant.BindTelegramMembership(c, user.ID); err != nil {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+				"success": false,
+				"error":   "Forbidden: " + err.Error(),
+			})
+			return
+		}
 		c.Next()
+		return
 	}
 }
 
@@ -89,6 +105,19 @@ func CombinedMiddleware(cfg *config.Config) gin.HandlerFunc {
 				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
 					"success": false,
 					"error":   "Forbidden: API key cannot access chat",
+				})
+				return
+			}
+			// Bind the request to the tenant this key belongs to. Keys without an
+			// explicit tenant are scoped to the default tenant; "*" opts out.
+			boundTenant := strings.TrimSpace(rec.Tenant)
+			if boundTenant == "" {
+				boundTenant = cfg.DefaultTenantID
+			}
+			if err := tenant.BindCredentialTenant(c, boundTenant); err != nil {
+				c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+					"success": false,
+					"error":   "Forbidden: API key is not authorized for the requested tenant",
 				})
 				return
 			}

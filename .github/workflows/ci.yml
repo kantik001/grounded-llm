@@ -114,7 +114,7 @@ jobs:
       - name: Pytest with coverage
         env:
           DOMAINS_CONFIG_PATH: config/domains.json
-        run: pytest tests/ -v --tb=short --cov=rag --cov-report=term-missing
+        run: pytest tests/ -v --tb=short --cov=rag --cov-config=.coveragerc --cov-report=term-missing --cov-fail-under=70
 
   # Alias job: branch protection may still require this check name.
   # Real validation lives in conformance-spec (same openapi-spec-validator pin).
@@ -163,10 +163,13 @@ jobs:
       - name: Reindex Chroma
         env:
           FORCE_RAG_REINDEX: "true"
+          RAG_RETRIEVAL_MODE: hybrid
         run: python scripts/reindex_rag.py
-      - name: Retrieval eval gate (RAG HTTP + all suites)
+      - name: Retrieval eval gate (RAG HTTP + all suites, hybrid default)
         env:
           PYTHON_SERVICE_PORT: "5000"
+          RAG_RETRIEVAL_MODE: hybrid
+          RAG_RERANKER: keyword
         run: bash scripts/ci_eval_retrieval.sh --skip-reindex
 
   smoke-api:

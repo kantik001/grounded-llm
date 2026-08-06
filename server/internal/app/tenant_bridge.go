@@ -36,6 +36,10 @@ func resolveTenantID(c *gin.Context, cfg *Config) (string, error) {
 	return tenant.ResolveID(c, cfg)
 }
 
+func requestTenantOverride(c *gin.Context, raw string) error {
+	return tenant.RequestOverride(c, raw)
+}
+
 func tenantMiddleware(cfg *Config) gin.HandlerFunc {
 	return tenant.Middleware(cfg)
 }

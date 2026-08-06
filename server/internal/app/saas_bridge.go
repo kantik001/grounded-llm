@@ -52,10 +52,6 @@ func (saasHost) TenantIDFree(candidate string) bool {
 	return !tenant.OnAllowlist(normalizeTenantID(candidate))
 }
 
-func (saasHost) TenantsRegistryConfigured() bool {
-	return tenantsRegistryPath() != ""
-}
-
 func (saasHost) RegisterTenant(entry saas.RegistryEntry) error {
 	return registerTenantEntry(tenant.RegistryEntry{
 		TenantID:  entry.TenantID,
@@ -116,4 +112,12 @@ func (saasHost) ProvisionAdminUser(tenantID string) (username, password string, 
 
 func (saasHost) DefaultDomainID() string {
 	return defaultDomainID()
+}
+
+func (saasHost) ClaimStripeEvent(eventID, eventType string) (bool, error) {
+	return tenant.ClaimStripeEvent(eventID, eventType)
+}
+
+func (saasHost) TenantsRegistryConfigured() bool {
+	return tenant.TenantsRegistryConfigured()
 }

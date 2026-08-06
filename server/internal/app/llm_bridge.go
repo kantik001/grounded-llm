@@ -1,6 +1,8 @@
 package app
 
 import (
+	"github.com/redis/go-redis/v9"
+
 	"grounded_llm_server/internal/llm"
 )
 
@@ -17,6 +19,10 @@ type (
 
 func initRedis() {
 	llm.InitRedis()
+}
+
+func llmRedis() redis.Cmdable {
+	return llm.Redis()
 }
 
 func mockLLMCompletion(messages []Message) (string, error) {

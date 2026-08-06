@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -20,7 +22,7 @@ func adminUsersFilePath() string {
 
 // SaaSProvisionAdmin reports whether signup should auto-provision admin users.
 func SaaSProvisionAdmin() bool {
-	return adminUsersFilePath() != ""
+	return adminUsersFilePath() != "" || UsePostgresBackend()
 }
 
 func signupAdminUsername(tenantID string) string {
@@ -37,10 +39,11 @@ func generateAdminPassword() (string, error) {
 
 var adminUsersMu sync.Mutex
 
-// ProvisionSignupAdminUser appends a tenant-scoped admin user to ADMIN_USERS_FILE.
+// ProvisionSignupAdminUser creates a tenant-scoped admin user in Postgres and/or ADMIN_USERS_FILE.
 func ProvisionSignupAdminUser(tenantID string) (username, password string, err error) {
 	path := adminUsersFilePath()
-	if path == "" {
+	pg := UsePostgresBackend()
+	if path == "" && !pg {
 		return "", "", nil
 	}
 
@@ -53,42 +56,62 @@ func ProvisionSignupAdminUser(tenantID string) (username, password string, err e
 	if err != nil {
 		return "", "", err
 	}
+	rec := userRecord{
+		Username:       username,
+		PasswordBcrypt: string(hash),
+		Roles:          []string{RoleAdmin},
+		TenantID:       tenant.NormalizeTenantID(tenantID),
+	}
 
 	adminUsersMu.Lock()
 	defer adminUsersMu.Unlock()
 
-	var entries []userRecord
-	if body, readErr := os.ReadFile(path); readErr == nil {
-		_ = json.Unmarshal(body, &entries)
+	if _, exists := userRegistry[username]; exists {
+		return "", "", fmt.Errorf("admin user already exists for tenant")
 	}
-	for _, e := range entries {
-		if strings.TrimSpace(e.Username) == username {
+	if pg {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		ok, err := st().AdminUserExists(ctx, username)
+		if err != nil {
+			return "", "", err
+		}
+		if ok {
 			return "", "", fmt.Errorf("admin user already exists for tenant")
 		}
-	}
-	entries = append(entries, userRecord{
-		Username:       username,
-		PasswordBcrypt: string(hash),
-		Roles:          []string{RoleAdmin},
-	})
-
-	body, err := json.MarshalIndent(entries, "", "  ")
-	if err != nil {
-		return "", "", err
-	}
-	body = append(body, '\n')
-	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, body, 0o600); err != nil {
-		return "", "", err
-	}
-	if err := os.Rename(tmp, path); err != nil {
-		return "", "", err
+		if err := persistAdminUserPG(rec); err != nil {
+			return "", "", err
+		}
 	}
 
-	userRegistry[username] = userRecord{
-		Username:       username,
-		PasswordBcrypt: string(hash),
-		Roles:          []string{RoleAdmin},
+	if path != "" {
+		var entries []userRecord
+		if body, readErr := os.ReadFile(path); readErr == nil {
+			_ = json.Unmarshal(body, &entries)
+		}
+		for _, e := range entries {
+			if strings.TrimSpace(e.Username) == username {
+				return "", "", fmt.Errorf("admin user already exists for tenant")
+			}
+		}
+		entries = append(entries, rec)
+		body, err := json.MarshalIndent(entries, "", "  ")
+		if err != nil {
+			return "", "", err
+		}
+		body = append(body, '\n')
+		tmp := path + ".tmp"
+		if err := os.WriteFile(tmp, body, 0o600); err != nil {
+			return "", "", err
+		}
+		if err := os.Rename(tmp, path); err != nil {
+			return "", "", err
+		}
 	}
+
+	if userRegistry == nil {
+		userRegistry = make(map[string]userRecord)
+	}
+	userRegistry[username] = rec
 	return username, password, nil
 }

@@ -225,11 +225,17 @@ def admin_reindex():
     if not _reindex_lock.acquire(blocking=False):
         return jsonify({"success": False, "error": "reindex already in progress"}), 409
     try:
-        vs.reset_vector_store()
-        store = vs.load_vector_store(force_reindex=True)
-        if store is None:
+        body = request.get_json(silent=True) or {}
+        full = bool(body.get("full")) or (request.args.get("full") or "").lower() in ("1", "true")
+        if full:
+            vs.reset_vector_store()
+            store = vs.load_vector_store(force_reindex=True)
+            summary = {"mode": "full"}
+        else:
+            store, summary = vs.refresh_vector_store()
+        if store is None or summary.get("empty"):
             return jsonify({"success": False, "error": "No documents to index"}), 400
-        return jsonify({"success": True, "message": "RAG reindexed"}), 200
+        return jsonify({"success": True, "message": "RAG reindexed", "summary": summary}), 200
     except Exception as e:
         app.logger.exception("admin reindex failed")
         return jsonify({"success": False, "error": _client_error_message(e)}), 500

@@ -8,66 +8,207 @@ on:
 permissions:
   contents: write
   packages: write
+  id-token: write
+  attestations: write
+
+env:
+  REGISTRY: ghcr.io
 
 jobs:
+  # Refuse to publish unless the tagged commit already passed the CI workflow.
+  ci-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require green CI for this commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          SHA="${{ github.sha }}"
+          echo "Looking for successful CI run on $SHA"
+          for i in $(seq 1 60); do
+            conclusion=$(gh run list \
+              --repo "${{ github.repository }}" \
+              --workflow CI \
+              --commit "$SHA" \
+              --json conclusion,status,databaseId \
+              --jq '[.[] | select(.status=="completed")] | .[0].conclusion // empty' \
+              2>/dev/null || true)
+            if [ "$conclusion" = "success" ]; then
+              echo "CI gate passed (conclusion=$conclusion)"
+              exit 0
+            fi
+            if [ "$conclusion" = "failure" ] || [ "$conclusion" = "cancelled" ]; then
+              echo "CI gate failed (conclusion=$conclusion)"
+              exit 1
+            fi
+            echo "Waiting for CI… attempt $i/60 (status pending or in progress)"
+            sleep 30
+          done
+          echo "Timed out waiting for CI success on $SHA"
+          exit 1
+
   release:
+    needs: [ci-gate]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 
       - name: Extract version
         id: version
-        run: echo "tag=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          # Push :latest only for stable SemVer (no pre-release suffix).
+          if echo "$TAG" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "push_latest=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "push_latest=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - uses: docker/setup-buildx-action@v4
 
       - name: Log in to GHCR
         uses: docker/login-action@v4
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push server image
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Build server image (local)
         uses: docker/build-push-action@v7
         with:
           context: .
           file: Dockerfile.server
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/grounded-llm-server:${{ steps.version.outputs.tag }}
-            ghcr.io/${{ github.repository_owner }}/grounded-llm-server:latest
+          load: true
+          tags: grounded-llm-server:release
 
-      - name: Build and push python image
+      - name: Build python image (local)
         uses: docker/build-push-action@v7
         with:
           context: .
           file: Dockerfile.python
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/grounded-llm-python:${{ steps.version.outputs.tag }}
-            ghcr.io/${{ github.repository_owner }}/grounded-llm-python:latest
+          load: true
+          tags: grounded-llm-python:release
 
-      - name: Build and push webapp image
+      - name: Build webapp image (local)
         uses: docker/build-push-action@v7
         with:
           context: .
           file: Dockerfile.webapp
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository_owner }}/grounded-llm-webapp:${{ steps.version.outputs.tag }}
-            ghcr.io/${{ github.repository_owner }}/grounded-llm-webapp:latest
+          load: true
+          tags: grounded-llm-webapp:release
+
+      - name: Trivy scan server
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          image-ref: grounded-llm-server:release
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+          ignore-unfixed: true
+
+      - name: Trivy scan webapp
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          image-ref: grounded-llm-webapp:release
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+          ignore-unfixed: true
+
+      - name: Trivy scan python
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          image-ref: grounded-llm-python:release
+          severity: CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
+
+      - name: Push images to GHCR
+        env:
+          OWNER: ${{ github.repository_owner }}
+          TAG: ${{ steps.version.outputs.tag }}
+          PUSH_LATEST: ${{ steps.version.outputs.push_latest }}
+        run: |
+          set -euo pipefail
+          for name in server python webapp; do
+            SRC="grounded-llm-${name}:release"
+            DST="${REGISTRY}/${OWNER}/grounded-llm-${name}:${TAG}"
+            docker tag "$SRC" "$DST"
+            docker push "$DST"
+            if [ "$PUSH_LATEST" = "true" ]; then
+              LATEST="${REGISTRY}/${OWNER}/grounded-llm-${name}:latest"
+              docker tag "$SRC" "$LATEST"
+              docker push "$LATEST"
+            else
+              echo "Skipping :latest for pre-release tag ${TAG}"
+            fi
+          done
+
+      - name: Sign images with cosign (keyless)
+        env:
+          OWNER: ${{ github.repository_owner }}
+          TAG: ${{ steps.version.outputs.tag }}
+          PUSH_LATEST: ${{ steps.version.outputs.push_latest }}
+        run: |
+          set -euo pipefail
+          for name in server python webapp; do
+            IMG="${REGISTRY}/${OWNER}/grounded-llm-${name}:${TAG}"
+            DIGEST=$(docker buildx imagetools inspect "$IMG" --format '{{json .Manifest.Digest}}' 2>/dev/null | tr -d '"' || true)
+            if [ -z "$DIGEST" ]; then
+              cosign sign --yes "$IMG"
+            else
+              cosign sign --yes "${REGISTRY}/${OWNER}/grounded-llm-${name}@${DIGEST}"
+            fi
+            if [ "$PUSH_LATEST" = "true" ]; then
+              cosign sign --yes "${REGISTRY}/${OWNER}/grounded-llm-${name}:latest" || true
+            fi
+          done
+
+      - name: Generate SBOMs (Syft)
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/grounded-llm-server:${{ steps.version.outputs.tag }}
+          format: spdx-json
+          artifact-name: sbom-server.spdx.json
+          output-file: sbom-server.spdx.json
+
+      - name: Generate python SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/grounded-llm-python:${{ steps.version.outputs.tag }}
+          format: spdx-json
+          artifact-name: sbom-python.spdx.json
+          output-file: sbom-python.spdx.json
+
+      - name: Generate webapp SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.REGISTRY }}/${{ github.repository_owner }}/grounded-llm-webapp:${{ steps.version.outputs.tag }}
+          format: spdx-json
+          artifact-name: sbom-webapp.spdx.json
+          output-file: sbom-webapp.spdx.json
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           generate_release_notes: true
+          files: |
+            sbom-server.spdx.json
+            sbom-python.spdx.json
+            sbom-webapp.spdx.json
           body: |
             See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/CHANGELOG.md) for details.
 
-            ## Conformance (Spec v1)
+            ## Supply chain
 
-            Verify this release against [GROUNDED_SPEC_v1.md](https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/docs/en/spec/GROUNDED_SPEC_v1.md):
+            - Images are Trivy-scanned (CRITICAL/HIGH; python CRITICAL) before push.
+            - Cosign keyless signatures are attached to each image digest.
+            - SPDX SBOMs are attached to this release.
+
+            ## Conformance (Spec v1)
 
             ```bash
             pip install -r conformance/requirements.txt
@@ -82,3 +223,44 @@ jobs:
             docker pull ghcr.io/${{ github.repository_owner }}/grounded-llm-python:${{ steps.version.outputs.tag }}
             docker pull ghcr.io/${{ github.repository_owner }}/grounded-llm-webapp:${{ steps.version.outputs.tag }}
             ```
+
+  publish-pypi:
+    needs: [ci-gate]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - name: Sync SDK version from git tag
+        working-directory: sdk/python
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          python - <<'PY'
+          import os, pathlib, re
+          version = os.environ["GITHUB_REF_NAME"].lstrip("v")
+          pyproject = pathlib.Path("pyproject.toml")
+          text = re.sub(r'(?m)^version = ".*"', f'version = "{version}"', pyproject.read_text(encoding="utf-8"), count=1)
+          pyproject.write_text(text, encoding="utf-8")
+          init = pathlib.Path("grounded_llm/__init__.py")
+          if init.exists():
+              init.write_text(
+                  re.sub(r'__version__\s*=\s*["\'].*["\']', f'__version__ = "{version}"', init.read_text(encoding="utf-8"), count=1),
+                  encoding="utf-8",
+              )
+          print("sdk version", version)
+          PY
+      - name: Build wheel
+        working-directory: sdk/python
+        run: |
+          pip install build
+          python -m build
+      - name: Publish to PyPI (Trusted Publisher)
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: sdk/python/dist
+        continue-on-error: true

@@ -131,8 +131,24 @@ func VerifyAnswer(answer string, fragments []store.RAGFragment, locale string) (
 	}
 }
 
-// VerifyAnswerLocal is the in-process numeric check (Spec v1 behavior).
+// VerifyAnswerLocal runs the in-process checks: numeric grounding (Spec v1)
+// plus lexical faithfulness of sentences (Spec v2, mode via VERIFY_FAITHFULNESS).
 func VerifyAnswerLocal(body, contextText string) (bool, string) {
+	if ok, reason := verifyNumbersLocal(body, contextText); !ok {
+		return false, reason
+	}
+	ok, reason := VerifyFaithfulnessLocal(body, contextText)
+	if !ok {
+		return false, "Unsupported claim(s): " + reason
+	}
+	if reason != "" {
+		log.Printf("verify faithfulness (warn): %s", reason)
+	}
+	return true, "Verification passed"
+}
+
+// verifyNumbersLocal is the numeric grounding check (Spec v1 behavior).
+func verifyNumbersLocal(body, contextText string) (bool, string) {
 	numsAns := ExtractNumbersFromText(body)
 	if len(numsAns) == 0 {
 		return true, "Verification passed"

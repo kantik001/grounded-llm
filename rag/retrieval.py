@@ -1,11 +1,16 @@
 """RAG retrieval: build context for Go orchestration by domain_id."""
 
+from __future__ import annotations
+
 import json
+import logging
 import os
 from typing import Any, Dict, List, Optional
 
 from rag.domains_config import get_domain, normalize_domain_id
 from rag.vector_store import search
+
+logger = logging.getLogger(__name__)
 
 _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 _few_shot_cache: dict[str, dict] = {}
@@ -109,24 +114,44 @@ def retrieve_rag_context(
         empty["error"] = f"No information found in documents for domain «{name}»."
         return empty
 
-    from rag.rerank import keyword_overlap_score
+    from rag.rerank import score_pair, reranker_mode
+
+    mode = reranker_mode()
+    if mode == "none":
+        mode = "keyword"
 
     for f in fragments:
-        print(f"[RAG:{domain_id}] source: {f.metadata.get('filename')}")
+        logger.info("rag_hit domain=%s source=%s", domain_id, f.metadata.get("filename"))
 
     context_parts: List[str] = []
     fr_json: List[Dict[str, Any]] = []
-    for frag in fragments:
+    for rank, frag in enumerate(fragments):
         source_name = frag.metadata.get("filename", "Unknown source")
         page = frag.metadata.get("page")
         page_label = f", p. {int(page) + 1}" if page is not None else ""
         context_parts.append(f"Fragment '{source_name}'{page_label}:\n{frag.page_content}")
+        # Prefer explicit vector/RRF score from metadata when present; else reranker score.
+        meta_score = frag.metadata.get("score")
+        if meta_score is None:
+            meta_score = frag.metadata.get("rrf_score")
+        if meta_score is not None:
+            try:
+                score = float(meta_score)
+            except (TypeError, ValueError):
+                score = float(score_pair(q, frag.page_content or "", mode))
+        else:
+            # Blend lexical relevance with reciprocal rank so top hits stay ordered.
+            lexical = float(score_pair(q, frag.page_content or "", mode))
+            rank_prior = 1.0 / (rank + 1)
+            score = 0.7 * lexical + 0.3 * rank_prior
         entry: Dict[str, Any] = {
             "filename": source_name,
             "content": frag.page_content,
             "excerpt": _excerpt(frag.page_content),
-            "score": float(keyword_overlap_score(q, frag.page_content or "")),
+            "score": round(score, 6),
         }
+        if frag.metadata.get("chunk_id"):
+            entry["chunk_id"] = str(frag.metadata["chunk_id"])
         if page is not None:
             try:
                 entry["page"] = int(page) + 1

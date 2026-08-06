@@ -1,10 +1,15 @@
 package tenant
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"strings"
+	"time"
+
+	"grounded_llm_server/internal/store"
 )
 
 func quotasFilePath() string {
@@ -12,13 +17,29 @@ func quotasFilePath() string {
 }
 
 // UpsertQuota writes or updates quota limits for a tenant.
+// Prefer Postgres when available; also dual-writes JSON when TENANT_QUOTAS_FILE is set.
 func UpsertQuota(tenantID string, limits QuotaLimits) error {
+	id := NormalizeTenantID(tenantID)
 	path := quotasFilePath()
+	pg := UsePostgresBackend()
+
+	if pg {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := saasStore().UpsertTenantQuota(ctx, id, store.TenantQuotaLimits{
+			MessagesPerDay: limits.MessagesPerDay,
+			StorageMB:      limits.StorageMB,
+			MaxDomains:     limits.MaxDomains,
+		}); err != nil {
+			return err
+		}
+	}
+
 	if path == "" {
 		if quotaRegistry == nil {
 			quotaRegistry = make(map[string]QuotaLimits)
 		}
-		quotaRegistry[NormalizeTenantID(tenantID)] = limits
+		quotaRegistry[id] = limits
 		return nil
 	}
 
@@ -30,7 +51,6 @@ func UpsertQuota(tenantID string, limits QuotaLimits) error {
 		_ = json.Unmarshal(body, &entries)
 	}
 
-	id := NormalizeTenantID(tenantID)
 	updated := false
 	for i, e := range entries {
 		if NormalizeTenantID(e.TenantID) == id {
@@ -68,6 +88,33 @@ func UpsertQuota(tenantID string, limits QuotaLimits) error {
 	}
 	quotaRegistry[id] = limits
 	return nil
+}
+
+// LoadQuotas hydrates in-memory quotas from JSON and/or Postgres.
+func LoadQuotasFromStore() {
+	if !UsePostgresBackend() {
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	rows, err := saasStore().ListTenantQuotas(ctx)
+	if err != nil {
+		log.Printf("tenant_quotas load error: %v", err)
+		return
+	}
+	if quotaRegistry == nil {
+		quotaRegistry = make(map[string]QuotaLimits)
+	}
+	for id, lim := range rows {
+		quotaRegistry[NormalizeTenantID(id)] = QuotaLimits{
+			MessagesPerDay: lim.MessagesPerDay,
+			StorageMB:      lim.StorageMB,
+			MaxDomains:     lim.MaxDomains,
+		}
+	}
+	if len(rows) > 0 {
+		log.Printf("Tenant quotas: merged %d row(s) from Postgres", len(rows))
+	}
 }
 
 // ApplyPlanQuotasFunc applies plan-derived limits; wired from app (plans stay in app).

@@ -52,8 +52,26 @@ func ValidateProduction(cfg *Config, adminUserCount int) error {
 	if len(cfg.CORSAllowedOrigins) == 1 && cfg.CORSAllowedOrigins[0] == "*" {
 		problems = append(problems, "CORS_ALLOWED_ORIGINS=* is not allowed in production")
 	}
+	if !envTruthy("TENANT_MEMBERSHIP_ENFORCE") {
+		problems = append(problems, "TENANT_MEMBERSHIP_ENFORCE must be enabled in production")
+	}
+	faith := strings.ToLower(strings.TrimSpace(os.Getenv("VERIFY_FAITHFULNESS")))
+	if faith != "" && faith != "enforce" {
+		problems = append(problems, "VERIFY_FAITHFULNESS must be enforce in production (got "+faith+")")
+	}
+	if faith == "" {
+		problems = append(problems, "VERIFY_FAITHFULNESS must be set to enforce in production")
+	}
+	if strings.TrimSpace(os.Getenv("METRICS_TOKEN")) == "" {
+		problems = append(problems, "METRICS_TOKEN must be set in production")
+	}
 	if len(problems) == 0 {
 		return nil
 	}
 	return fmt.Errorf("production safety check failed:\n  - %s", strings.Join(problems, "\n  - "))
+}
+
+func envTruthy(key string) bool {
+	v := strings.ToLower(strings.TrimSpace(os.Getenv(key)))
+	return v == "1" || v == "true" || v == "yes" || v == "on"
 }

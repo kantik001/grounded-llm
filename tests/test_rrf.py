@@ -34,3 +34,12 @@ def test_rrf_single_list():
 def test_rrf_empty_returns_empty():
     assert reciprocal_rank_fusion([], k=5) == []
     assert reciprocal_rank_fusion([], [], k=5) == []
+
+
+def test_rrf_attaches_score_metadata():
+    dense = [_doc("a"), _doc("b")]
+    sparse = [_doc("a")]
+    fused = reciprocal_rank_fusion(dense, sparse, k=2, rrf_k=60)
+    assert "rrf_score" in fused[0].metadata
+    assert fused[0].metadata["score"] == fused[0].metadata["rrf_score"]
+    assert fused[0].metadata["rrf_score"] > fused[1].metadata["rrf_score"]

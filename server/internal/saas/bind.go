@@ -43,6 +43,9 @@ type Host interface {
 	AdminProvisioningEnabled() bool
 	ProvisionAdminUser(tenantID string) (username, password string, err error)
 	DefaultDomainID() string
+	// ClaimStripeEvent returns true if this delivery should be processed.
+	// Duplicate event ids must return false (idempotent OK).
+	ClaimStripeEvent(eventID, eventType string) (bool, error)
 }
 
 var host Host
@@ -141,6 +144,13 @@ func provisionAdminUser(tenantID string) (username, password string, err error) 
 		return "", "", errHostNotConfigured
 	}
 	return host.ProvisionAdminUser(tenantID)
+}
+
+func claimStripeEvent(eventID, eventType string) (bool, error) {
+	if host == nil {
+		return true, nil
+	}
+	return host.ClaimStripeEvent(eventID, eventType)
 }
 
 type hostError string

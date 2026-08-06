@@ -1,0 +1,49 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "grounded-llm.fullname" . }}-default
+  labels:
+    {{- include "grounded-llm.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "grounded-llm.selectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow traffic from within the release (webapp→server, server→python/postgres/redis)
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "grounded-llm.selectorLabels" . | nindent 14 }}
+    {{- if .Values.ingress.enabled }}
+    # Ingress controller (label may vary by cluster — override via values)
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              {{- toYaml .Values.networkPolicy.ingressNamespaceLabels | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.webapp.port }}
+        - protocol: TCP
+          port: {{ .Values.server.port }}
+    {{- end }}
+  egress:
+    # DNS
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Intra-release
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "grounded-llm.selectorLabels" . | nindent 14 }}
+    # External LLM / OIDC / Stripe (HTTPS)
+    - ports:
+        - protocol: TCP
+          port: 443
+{{- end }}

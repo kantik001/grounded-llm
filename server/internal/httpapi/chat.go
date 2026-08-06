@@ -24,7 +24,7 @@ func NewSession(c *gin.Context) {
 	domainID := strings.TrimSpace(req.DomainID)
 	domainID, err := s.NormalizeDomainID(domainID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
+		JSONError(c, http.StatusBadRequest, err)
 		return
 	}
 
@@ -71,12 +71,17 @@ func History(c *gin.Context) {
 		return
 	}
 	st := s.Store()
-	msgs, err := st.ListMessages(c.Request.Context(), id, tgUser.ID)
+	tenantID := s.TenantID(c)
+	msgs, err := st.ListMessages(c.Request.Context(), id, tgUser.ID, tenantID)
 	if err != nil {
+		if err == store.ErrSessionNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"success": false, "error": "Session not found"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Database error"})
 		return
 	}
-	domainID, _ := st.SessionDomainID(c.Request.Context(), id, tgUser.ID)
+	domainID, _ := st.SessionDomainID(c.Request.Context(), id, tgUser.ID, tenantID)
 	c.JSON(http.StatusOK, gin.H{
 		"success":    true,
 		"session_id": id,
@@ -131,7 +136,7 @@ func Feedback(c *gin.Context) {
 	s := requireServices()
 	tgUser, err := s.ActorUser(c)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"success": false, "error": err.Error()})
+		JSONError(c, http.StatusUnauthorized, err)
 		return
 	}
 	var req feedbackRequest
@@ -145,7 +150,7 @@ func Feedback(c *gin.Context) {
 	}
 	ctx := c.Request.Context()
 	st := s.Store()
-	if err := st.SaveMessageFeedback(ctx, tgUser.ID, req.MessageID, req.Rating); err != nil {
+	if err := st.SaveMessageFeedback(ctx, tgUser.ID, s.TenantID(c), req.MessageID, req.Rating); err != nil {
 		if err == store.ErrSessionNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"success": false, "error": "Message not found"})
 			return
@@ -199,7 +204,7 @@ func Onboarding(c *gin.Context) {
 	loc := s.Locale(c)
 	domainID, err := s.NormalizeDomainID(domain.IDFromQuery(c))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
+		JSONError(c, http.StatusBadRequest, err)
 		return
 	}
 	questions := locale.OnboardingForDomainLocale(domainID, loc)

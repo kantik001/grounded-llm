@@ -44,7 +44,7 @@ jobs:
         uses: github/codeql-action/analyze@v4
         with:
           category: /language:go
-          upload: false
+          upload: true
 
   analyze-python:
     name: analyze (python)
@@ -66,4 +66,4 @@ jobs:
         uses: github/codeql-action/analyze@v4
         with:
           category: /language:python
-          upload: false
+          upload: true

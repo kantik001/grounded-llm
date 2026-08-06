@@ -35,15 +35,22 @@ server:
     TELEGRAM_AUTH_DISABLED: "false"
     RATE_LIMIT_REQUESTS_PER_MINUTE: "60"
     DEFAULT_LOCALE: en
+    GROUNDED_ENV: production
+    TENANT_MEMBERSHIP_ENFORCE: "true"
+    TENANT_MEMBERSHIP_AUTO_DEFAULT: "true"
+    VERIFY_FAITHFULNESS: enforce
     # Bring-your-own Redis (chart does not deploy Redis):
     # REDIS_URL: redis://redis.grounded.svc:6379/0
-    GROUNDED_ENV: production
+    # OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
 
 python:
   image:
     repository: ghcr.io/YOUR_ORG/grounded-llm-python
     tag: "0.3.0"
-  replicaCount: 2
+  # Keep 1 while Chroma lives on a single ReadWriteOnce PVC: a second replica
+  # cannot mount the volume on most storage classes. Scale out only after
+  # moving retrieval state to a shared backend (RAG_BACKEND=pgvector/qdrant).
+  replicaCount: 1
   persistence:
     chromaSize: 50Gi
   resources:
@@ -69,6 +76,16 @@ ingress:
   className: nginx
   host: grounded.example.com
   tls: true
+
+networkPolicy:
+  enabled: true
+  ingressNamespaceLabels:
+    kubernetes.io/metadata.name: ingress-nginx
+
+podDisruptionBudget:
+  enabled: true
+  serverMinAvailable: 1
+  pythonMinAvailable: 1
 
 secrets:
   # Leave empty here; inject at install time or via external Secret.

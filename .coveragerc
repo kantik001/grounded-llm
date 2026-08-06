@@ -1,0 +1,18 @@
+[run]
+branch = False
+source = rag
+omit =
+    rag/vector_backend/qdrant_backend.py
+    rag/vector_backend/pgvector_backend.py
+    rag/vector_backend/chroma_backend.py
+    # Embedding/disk cache and live vector stores need integration harnesses.
+    rag/embedding_cache.py
+
+[report]
+fail_under = 70
+show_missing = True
+skip_covered = False
+exclude_lines =
+    pragma: no cover
+    if TYPE_CHECKING:
+    raise NotImplementedError

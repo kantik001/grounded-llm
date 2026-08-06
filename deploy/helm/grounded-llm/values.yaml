@@ -107,7 +107,22 @@ ingress:
   enabled: false
   className: nginx
   host: grounded.example.com
+  # tls: true renders spec.tls with tlsSecretName (default: <release>-tls).
+  # Pair with cert-manager annotations for automatic certificates.
   tls: false
+  tlsSecretName: ""
+  annotations: {}
+
+networkPolicy:
+  enabled: false
+  # Labels on the ingress-controller namespace (override per cluster).
+  ingressNamespaceLabels:
+    kubernetes.io/metadata.name: ingress-nginx
+
+podDisruptionBudget:
+  enabled: false
+  serverMinAvailable: 1
+  pythonMinAvailable: 1
 
 secrets:
   # Set via --set or external Secrets manager in production

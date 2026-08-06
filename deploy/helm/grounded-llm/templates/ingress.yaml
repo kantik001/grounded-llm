@@ -5,8 +5,18 @@ metadata:
   name: {{ include "grounded-llm.fullname" . }}
   labels:
     {{- include "grounded-llm.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   ingressClassName: {{ .Values.ingress.className }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host }}
+      secretName: {{ .Values.ingress.tlsSecretName | default (printf "%s-tls" (include "grounded-llm.fullname" .)) }}
+  {{- end }}
   rules:
     - host: {{ .Values.ingress.host }}
       http:

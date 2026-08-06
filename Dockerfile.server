@@ -23,14 +23,19 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/server
 FROM alpine:3.21
 
 RUN apk --no-cache add ca-certificates curl \
-    && mkdir -p /app/data
+    && addgroup -g 10001 app \
+    && adduser -D -u 10001 -G app app \
+    && mkdir -p /app/data /data/uploads \
+    && chown -R app:app /app /data
 
-WORKDIR /root/
+WORKDIR /app
 
 # Binary from builder + SQL migrations + JSON configs
-COPY --from=builder /build/main .
-COPY migrations /migrations
-COPY config /config
+COPY --from=builder --chown=app:app /build/main .
+COPY --chown=app:app migrations /migrations
+COPY --chown=app:app config /config
+
+USER app
 
 EXPOSE 8080
 

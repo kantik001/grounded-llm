@@ -14,6 +14,12 @@ import (
 // CtxKeyTenantID is the gin context key for the resolved tenant id.
 const CtxKeyTenantID = "tenant_id"
 
+// CtxKeyTenantExplicit marks that the client explicitly requested a tenant (header/query).
+const CtxKeyTenantExplicit = "tenant_id_explicit"
+
+// CtxKeyBoundTenant is the tenant the presented credentials are bound to ("*" = any).
+const CtxKeyBoundTenant = "tenant_id_bound"
+
 var allowedTenants map[string]struct{}
 
 // InitAllowlist builds the tenant allowlist from config and ALLOWED_TENANTS.
@@ -81,6 +87,7 @@ func ResolveID(c *gin.Context, cfg *config.Config) (string, error) {
 	if raw == "" {
 		raw = strings.TrimSpace(c.Query("tenant_id"))
 	}
+	explicit := raw != ""
 	if raw == "" {
 		raw = cfg.DefaultTenantID
 	}
@@ -94,8 +101,59 @@ func ResolveID(c *gin.Context, cfg *config.Config) (string, error) {
 		}
 	}
 	c.Set(CtxKeyTenantID, id)
+	if explicit {
+		c.Set(CtxKeyTenantExplicit, true)
+	}
+	if members, ok := MemberTenants(c); ok && !memberContains(members, id) {
+		return "", fmt.Errorf("credentials are not authorized for tenant %q", id)
+	}
 	return id, nil
 }
+
+// ExplicitID returns the resolved tenant and whether the client requested it explicitly.
+func ExplicitID(c *gin.Context) (string, bool) {
+	explicit := false
+	if v, ok := c.Get(CtxKeyTenantExplicit); ok {
+		explicit, _ = v.(bool)
+	}
+	return CtxID(c), explicit
+}
+
+// BoundTenant returns the tenant the request credentials are bound to, if any.
+func BoundTenant(c *gin.Context) (string, bool) {
+	if v, ok := c.Get(CtxKeyBoundTenant); ok {
+		if s, ok := v.(string); ok && s != "" {
+			return s, true
+		}
+	}
+	return "", false
+}
+
+// BindCredentialTenant pins the request to the tenant its credentials belong to.
+// A bound tenant of "*" permits any allowlisted tenant (integration gateways).
+// Returns an error when the client explicitly requested a different tenant.
+func BindCredentialTenant(c *gin.Context, boundTenant string) error {
+	bound := NormalizeTenantID(boundTenant)
+	if bound == "" || bound == "*" {
+		if bound == "*" {
+			c.Set(CtxKeyBoundTenant, "*")
+		}
+		return nil
+	}
+	if requested, explicit := ExplicitID(c); explicit && requested != bound {
+		return fmt.Errorf("credentials are not authorized for tenant %q", requested)
+	}
+	if len(allowedTenants) > 0 {
+		if _, ok := allowedTenants[bound]; !ok {
+			return fmt.Errorf("credential tenant %q is not on the allowlist", bound)
+		}
+	}
+	c.Set(CtxKeyTenantID, bound)
+	c.Set(CtxKeyBoundTenant, bound)
+	return nil
+}
+
+// RequestOverride is defined in membership.go (also enforces Telegram memberships).
 
 // Middleware resolves tenant id on each request.
 func Middleware(cfg *config.Config) gin.HandlerFunc {

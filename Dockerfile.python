@@ -30,6 +30,16 @@ COPY data/ ./data/
 RUN python scripts/gen_retriever_grpc.py \
     && chmod +x /app/api/entrypoint.sh
 
+# Non-root runtime user; runtime-writable dirs (index caches, uploads, HF cache).
+RUN groupadd -g 10001 app \
+    && useradd -m -u 10001 -g app app \
+    && mkdir -p /app/chroma_db /app/sparse_index /app/data \
+    && chown -R app:app /app
+
+ENV HF_HOME=/home/app/.cache/huggingface
+
+USER app
+
 EXPOSE 5000 50051
 
 ENTRYPOINT ["tini", "--"]

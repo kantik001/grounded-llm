@@ -42,15 +42,21 @@ git push origin v0.3.0
 
 The [Release workflow](../../.github/workflows/release.yml) will:
 
-- Publish GHCR images (`grounded-llm-server`, `-python`, `-webapp`)
-- Create GitHub Release with notes
+1. **CI gate** — wait for a successful `CI` workflow run on the tagged commit (no publish without green CI)
+2. Build server/python/webapp images locally, **Trivy-scan** them (CRITICAL/HIGH; python CRITICAL)
+3. Push version tags to GHCR; push `:latest` **only** for stable SemVer (`v1.2.3`, not `v1.2.3-rc1`)
+4. **Cosign** keyless-sign image digests
+5. Attach SPDX **SBOMs** to the GitHub Release
+6. Create the GitHub Release with notes
 
 ---
 
 ## Post-release checklist
 
 - [ ] Verify Pages site (`Deploy site` workflow) — landing shows **v0.3.0**
-- [ ] Verify GHCR tags `:0.3.0` and `:latest`
+- [ ] Verify GHCR tags `:0.3.0` (and `:latest` only for stable tags)
+- [ ] Verify cosign signatures: `cosign verify ghcr.io/<owner>/grounded-llm-server:<tag>`
+- [ ] Verify SBOM artifacts on the GitHub Release
 - [ ] Run `python -m conformance all --url <prod> --rag-url <rag>` on staging
 - [ ] Smoke: `LLM_PROVIDER=ollama` (or cloud) + Redis `X-Cache` + `grpcurl` Retriever if exposed internally
 - [ ] Announce: Spec v1 + RFC-0001 + conformance CLI + template packs

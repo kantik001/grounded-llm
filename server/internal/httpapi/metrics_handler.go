@@ -2,14 +2,17 @@ package httpapi
 
 import (
 	"context"
+	"crypto/subtle"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 
+	"grounded_llm_server/internal/config"
 	"grounded_llm_server/internal/llm"
 	"grounded_llm_server/internal/metrics"
 )
@@ -30,8 +33,28 @@ func MetricsMiddleware() gin.HandlerFunc {
 	}
 }
 
+// metricsAuthorized gates /metrics: if METRICS_TOKEN is set, a matching
+// Bearer token is required. In production an unset token closes the endpoint
+// (metrics expose per-tenant/model counters).
+func metricsAuthorized(c *gin.Context) bool {
+	token := strings.TrimSpace(os.Getenv("METRICS_TOKEN"))
+	if token == "" {
+		return !config.IsProductionEnv()
+	}
+	authz := strings.TrimSpace(c.GetHeader("Authorization"))
+	presented, ok := strings.CutPrefix(authz, "Bearer ")
+	if !ok {
+		return false
+	}
+	return subtle.ConstantTimeCompare([]byte(strings.TrimSpace(presented)), []byte(token)) == 1
+}
+
 // Metrics scrapes Prometheus text exposition.
 func Metrics(c *gin.Context) {
+	if !metricsAuthorized(c) {
+		c.JSON(http.StatusForbidden, gin.H{"success": false, "error": "metrics access requires METRICS_TOKEN bearer auth"})
+		return
+	}
 	c.Header("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
 	var b strings.Builder
 	fmt.Fprintf(&b, "# HELP grounded_http_requests_total Total HTTP requests handled\n")

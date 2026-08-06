@@ -26,17 +26,33 @@ def load_kb_documents() -> List[Document]:
     return all_docs
 
 
+def _make_splitter() -> RecursiveCharacterTextSplitter:
+    return RecursiveCharacterTextSplitter(
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=CHUNK_OVERLAP,
+    )
+
+
 def split_kb_documents() -> List[Document]:
     """Load all KB files, split into chunks, assign stable chunk_id metadata."""
     all_docs = load_kb_documents()
     if not all_docs:
         return []
 
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=CHUNK_SIZE,
-        chunk_overlap=CHUNK_OVERLAP,
-    )
-    chunks = splitter.split_documents(all_docs)
+    chunks = _make_splitter().split_documents(all_docs)
+    _assign_chunk_ids(chunks)
+    return chunks
+
+
+def split_file_documents(domain_id: str, file_path: str, tenant_id: str = "default") -> List[Document]:
+    """Load and chunk a single KB file (incremental index updates).
+
+    Chunk ids match a full rebuild: sequence numbers are counted per
+    (tenant, domain, filename), so re-splitting one file in isolation
+    yields identical chunk_id values.
+    """
+    docs = load_file(domain_id, file_path, tenant_id=tenant_id)
+    chunks = _make_splitter().split_documents(docs)
     _assign_chunk_ids(chunks)
     return chunks
 

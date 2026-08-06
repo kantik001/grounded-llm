@@ -17,6 +17,10 @@ func init() {
 	httpapi.Bind(chatHTTPServices{})
 }
 
+func initTracing() {
+	httpapi.InitTracing(context.Background())
+}
+
 type chatHTTPServices struct{}
 
 func (chatHTTPServices) Store() *store.ChatStore { return chatStore }
@@ -27,8 +31,8 @@ func (chatHTTPServices) ActorUser(c *gin.Context) (*store.TelegramUser, error) {
 func (chatHTTPServices) ResolveTenant(c *gin.Context) (string, error) {
 	return resolveTenantID(c, config)
 }
-func (chatHTTPServices) SetTenantID(c *gin.Context, tenantID string) {
-	c.Set(ctxKeyTenantID, tenantID)
+func (chatHTTPServices) RequestTenantOverride(c *gin.Context, raw string) error {
+	return requestTenantOverride(c, raw)
 }
 func (chatHTTPServices) TenantID(c *gin.Context) string { return ctxTenantID(c) }
 func (chatHTTPServices) NormalizeTenantID(raw string) string {
