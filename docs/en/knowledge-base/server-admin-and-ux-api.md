@@ -1,11 +1,11 @@
 ﻿# Admin and UX API
 
-**Files:** `admin.go`, `admin_quotas.go`, `quota_usage.go`, `tenant_quotas.go`, `audit.go`, `audit_store.go`, `admin_feedback.go`, `domains.go`, `onboarding.go`, `branding.go`, `feedback.go`, `analytics_store.go`, `locale.go`  
+**Files:** `internal/admin/{handlers,routes,rbac}.go`, `internal/store/{analytics_store,audit_store,quota}.go`, `internal/domain/catalog.go`, `internal/locale/locale.go`, `internal/httpapi/*` (branding, onboarding, feedback, metrics)  
 **Client:** [webapp-overview.md](./webapp-overview.md)
 
 ---
 
-## `admin.go` — knowledge base upload
+## Admin handlers (`internal/admin/handlers.go`)
 
 ### Authorization
 

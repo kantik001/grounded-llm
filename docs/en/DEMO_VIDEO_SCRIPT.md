@@ -52,7 +52,7 @@ Or show `sdk/python/examples/chat_basic.py`.
 
 ## 3:50 — Quality gate (30 s)
 
-> “Retrieval regressions are caught in CI — 46 eval cases across EN, RU, and IT packs.”
+> “Retrieval regressions are caught in CI — **99** eval cases across EN, RU, IT, and Legal packs.”
 
 Show: GitHub Actions `eval-retrieval-gate` green (screenshot or browser).
 

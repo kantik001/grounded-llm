@@ -2,7 +2,7 @@
 
 **Source:** `rag/domains_config.py`  
 **Config:** `config/domains.json`  
-**Used by:** `rag/vector_store.py`, `rag/retrieval.py`, Go (`server/domains.go`), tests
+**Used by:** `rag/vector_store.py`, `rag/retrieval.py`, Go (`internal/domain/catalog.go`), tests
 
 ---
 
@@ -66,6 +66,6 @@ In Docker: `/config/domains.json`.
 
 ## Go mirror
 
-`server/domains.go` — same catalog for `GET /domains` and guards in `domain_guards.go`.
+`internal/domain/catalog.go` — same catalog for `GET /domains` and guards in `internal/domain/guards.go`.
 
 After JSON change: restart Python; Go — SIGHUP or `CONFIG_RELOAD_INTERVAL_SEC`.

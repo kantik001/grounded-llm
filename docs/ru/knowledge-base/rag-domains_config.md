@@ -2,7 +2,7 @@
 
 **Исходник:** `rag/domains_config.py`  
 **Конфиг:** `config/domains.json`  
-**Используют:** `rag/vector_store.py`, `rag/retrieval.py`, Go (`server/domains.go`), тесты
+**Используют:** `rag/vector_store.py`, `rag/retrieval.py`, Go (`internal/domain/catalog.go`), тесты
 
 ---
 
@@ -66,6 +66,6 @@
 
 ## Зеркало на Go
 
-`server/domains.go` — тот же каталог для `GET /domains` и проверок в `domain_guards.go`.
+`internal/domain/catalog.go` — тот же каталог для `GET /domains` и проверок в `internal/domain/guards.go`.
 
 После правки JSON: перезапуск Python; Go — SIGHUP или `CONFIG_RELOAD_INTERVAL_SEC`.

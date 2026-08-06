@@ -18,6 +18,10 @@ High-level map of the repository. Detailed articles: [README.md](./README.md).
 | `site/` | GitHub Pages landing — [`site/README.md`](../../../site/README.md) |
 | `migrations/` | PostgreSQL schema — see [`migrations/README.md`](../../../migrations/README.md) |
 | `eval/`, `scripts/`, `tests/` | Quality & ops — READMEs under each folder |
+| `packs/` | Official template packs + `init_pack.py` — [`packs/README.md`](../../../packs/README.md) |
+| `connectors/` | Optional ingest (SharePoint, Drive, Confluence) — [`connectors/README.md`](../../../connectors/README.md) |
+| `conformance/` | Spec / OpenAPI CLI — [`conformance/README.md`](../../../conformance/README.md) |
+| `deploy/` | Helm + Terraform — [`deploy/README.md`](../../../deploy/README.md) |
 | `sdk/python/` | Python client + CLI for Go API — [`sdk/README.md`](../../../sdk/README.md) |
 | `models/`, `sparse_index/` | Runtime binaries/caches (gitignored) — see folder READMEs |
 | `docs/` | Architecture, deploy, knowledge base (`en/`, `ru/`) |

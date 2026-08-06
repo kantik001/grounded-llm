@@ -1,4 +1,6 @@
-# Phase 10 — SaaS billing & self-serve signup
+﻿# Phase 10 — SaaS billing & self-serve signup
+
+> **Historical note:** This phase plan is **complete** (delivery archive). Some file paths may predate the Go strangler layout (server/cmd/server + server/internal/*). Canonical layout: [server/README.md](../../server/README.md) · [knowledge-base/server-overview.md](./knowledge-base/server-overview.md).
 
 **Goal:** Stripe webhook → tenant quotas, public signup API + UI, tenant registry.
 

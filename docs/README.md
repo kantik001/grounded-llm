@@ -20,6 +20,12 @@
 | Guardrails gRPC verify (optional) | [GUARDRAILS.md](en/GUARDRAILS.md) |
 | Locale guide | [LOCALE_GUIDE.md](en/LOCALE_GUIDE.md) |
 | Knowledge base (deep dives) | [en/knowledge-base/](en/knowledge-base/README.md) |
+| Vector stores / hybrid | [VECTOR_STORE.md](en/VECTOR_STORE.md) |
+| SDK quickstart | [QUICKSTART_SDK.md](en/QUICKSTART_SDK.md) |
+| Analytics | [ANALYTICS_GUIDE.md](en/ANALYTICS_GUIDE.md) |
+| Embed widget | [EMBED.md](en/EMBED.md) |
+| K8s / Terraform | [K8S_DEPLOY.md](en/K8S_DEPLOY.md) · [TERRAFORM.md](en/TERRAFORM.md) |
+| Demo (5 min) | [DEMO.md](en/DEMO.md) |
 
 ## Reference templates
 
@@ -34,14 +40,6 @@
 
 Locale bundles and LLM prompts: `config/locales/{en,ru}/`.
 
-## Blog (published in repo)
-
-| Article | File |
-|---------|------|
-| Retrieval eval gate in CI | [retrieval-eval-gate-in-ci.md](en/blog/retrieval-eval-gate-in-ci.md) |
-
-Platform launch articles for dev.to are **not** stored in this repository until published (canonical URL on dev.to).
-
 ## Phase plans (delivery history)
 
 | Phase | Doc |
@@ -53,13 +51,13 @@ Platform launch articles for dev.to are **not** stored in this repository until 
 
 ## Russian documentation
 
-[`docs/ru/`](ru/) — architecture, deploy, roadmap summary, knowledge-base (RU).  
-**Canonical** for phases 4–11, spec, conformance: [en/ROADMAP.md](en/ROADMAP.md).
+[`docs/ru/`](ru/) — **полный зеркальный набор** для изучения продукта (архитектура, деплой, KB, packs, SDK, ops).  
+**Канон** для Spec / RFC / PHASE 4–11: [en/](en/).
 
-| RU hub | [ru/README.md](ru/README.md) |
-|--------|------------------------------|
+| RU hub | [ru/README.md](ru/README.md) — путь чтения |
+|--------|--------------------------------------------|
+| Knowledge base (RU) | [ru/knowledge-base/README.md](ru/knowledge-base/README.md) |
 | Standard strategy (RU) | [ru/STANDARD_STRATEGY.md](ru/STANDARD_STRATEGY.md) |
-| Launch checklist (RU) | [ru/LAUNCH.md](ru/LAUNCH.md) |
 
 ## Phase A deliverables (reference)
 

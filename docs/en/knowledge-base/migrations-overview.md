@@ -1,8 +1,7 @@
 # PostgreSQL migrations (`migrations/*.sql`)
 
 **Folder:** `migrations/` — see also [`migrations/README.md`](../../../migrations/README.md)  
-**Files:** `001_init.sql` … `003_*.sql`, `005_message_citations.sql` … `009_pgvector.sql` (no `004`)  
-**Applied by:** Go server on startup (`server/postgres_store.go` → `runAllMigrations`)  
+**Applied by:** Go server on startup (`internal/app/main.go` → `store.RunAllMigrations` in `internal/store/postgres_store.go`)  
 **DB:** PostgreSQL 16 (Compose service `postgres`)
 
 ---
@@ -26,7 +25,7 @@ Files are numbered in order — schema evolution, not multiple databases.
 ```mermaid
 sequenceDiagram
     participant DC as docker compose up server
-    participant Go as server (main.go + postgres_store.go)
+    participant Go as server (cmd/server → app.Run)
     participant PG as PostgreSQL
 
     DC->>Go: container start
@@ -154,7 +153,40 @@ Table **`audit_log`** — append-only admin events:
 | `success` | Outcome |
 | `details` | JSONB (e.g. error message, file size) |
 
-Written from `server/admin.go` + `server/audit_store.go`. Read via `GET /admin/audit-log`.
+Written from `internal/admin` + `internal/store/audit_store.go`. Read via `GET /admin/audit-log`.
+
+---
+
+## `008_reindex_jobs.sql` — async reindex queue
+
+Job table for background KB reindex (admin triggers → worker poll).
+
+---
+
+## `009_pgvector.sql` — pgvector extension
+
+`CREATE EXTENSION vector` when using `VECTOR_STORE=pgvector`.
+
+---
+
+## `010_saas_tenants.sql` — SaaS identity
+
+| Table | Purpose |
+|-------|---------|
+| `saas_tenants` | org signup: plan, Stripe customer id |
+| `tenant_quotas` | messages/day, storage, max domains |
+| `stripe_webhook_events` | idempotent webhook processing |
+
+See [SAAS.md](../SAAS.md), [BILLING.md](../BILLING.md).
+
+---
+
+## `011_admin_users_membership.sql` — admin + tenant binding
+
+| Table | Purpose |
+|-------|---------|
+| `admin_users` | persisted admin accounts (bcrypt, roles, tenant_id) |
+| `user_tenant_memberships` | Telegram user ↔ tenant (multi-tenant chat) |
 
 ---
 
@@ -167,6 +199,10 @@ Written from `server/admin.go` + `server/audit_store.go`. Read via `GET /admin/a
 005_message_citations.sql
 006_tenant_id.sql
 007_audit_log.sql
+008_reindex_jobs.sql
+009_pgvector.sql
+010_saas_tenants.sql
+011_admin_users_membership.sql
 ```
 
 Go sorts by name. **New migration:** e.g. `007_something.sql` — do not edit old files after production deploy.
@@ -177,12 +213,14 @@ Go sorts by name. **New migration:** e.g. `007_something.sql` — do not edit ol
 
 | Table | Example in code |
 |-------|-----------------|
-| `users` | `UpsertUser` in `postgres_store.go` |
+| `users` | `UpsertUser` in `internal/store/postgres_store.go` |
 | `chat_sessions` | session create, `domain_id`, `tenant_id` |
 | `messages` | chat persistence, `citations` |
-| `message_feedback` | `server/feedback.go` |
-| `analytics_events` | `server/analytics_store.go` |
-| `audit_log` | `server/audit_store.go`, `server/admin.go` |
+| `message_feedback` | `internal/httpapi` + `internal/store` |
+| `analytics_events` | `internal/store/analytics_store.go` |
+| `audit_log` | `internal/store/audit_store.go`, `internal/admin` |
+| `saas_tenants` | `internal/store/saas_store.go`, `internal/saas` |
+| `admin_users` | `internal/admin/users_persist.go` |
 
 ---
 
@@ -196,5 +234,9 @@ Go sorts by name. **New migration:** e.g. `007_something.sql` — do not edit ol
 | **005** | `citations JSONB` on assistant messages |
 | **006** | `tenant_id` on sessions |
 | **007** | `audit_log` admin events |
+| **008** | reindex job queue |
+| **009** | pgvector extension |
+| **010** | SaaS tenants, quotas, Stripe webhooks |
+| **011** | admin_users, user_tenant_memberships |
 
 Migrations are **versioned SQL schema**. Go applies each file once and records the name in `schema_migrations`.

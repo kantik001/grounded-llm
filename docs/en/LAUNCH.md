@@ -39,7 +39,7 @@ gh workflow run "Deploy site" --ref main
 | **Hacker News** | Show HN — focus on spec + conformance + on-prem |
 | **Reddit** | r/selfhosted, r/MachineLearning, r/LangChain — follow sub rules |
 | **LinkedIn / X** | Short demo video, link to spec + benchmark |
-| **Dev.to / blog** | Publish on dev.to first; repo keeps [retrieval eval gate](./blog/retrieval-eval-gate-in-ci.md) only until platform post is live |
+| **Dev.to / blog** | Publish on [dev.to](https://dev.to/) first; keep canonical URL there (do not store unpublished drafts in this repo) |
 | **Product Hunt** | Optional — after stable public site |
 
 Message (one line):

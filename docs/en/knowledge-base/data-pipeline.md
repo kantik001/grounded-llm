@@ -22,7 +22,7 @@ flowchart LR
 | Parsing | `rag/document_loaders.py` |
 | Chunk + embed | `rag/vector_store.py` |
 | Retrieval | `POST /rag/context` |
-| Answer | `server/rag_pipeline.go` |
+| Answer | `internal/rag/pipeline.go` |
 
 ---
 

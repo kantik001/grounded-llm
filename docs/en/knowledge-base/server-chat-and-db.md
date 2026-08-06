@@ -1,6 +1,6 @@
 ﻿# Chat and database
 
-**Files:** `message_handlers.go`, `session_handlers.go`, `chat_session.go`, `postgres_store.go`, `sse.go`  
+**Files:** `internal/httpapi/{message,chat,sse}.go`, `internal/store/postgres_store.go`  
 **Schema:** [migrations-overview.md](./migrations-overview.md)
 
 ---

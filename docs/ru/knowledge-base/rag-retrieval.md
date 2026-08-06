@@ -2,7 +2,7 @@
 
 **Исходник:** `rag/retrieval.py`  
 **Эндпоинт:** `POST /rag/context`  
-**Дальше:** Go `server/rag_pipeline.go` → LLM
+**Дальше:** Go `internal/rag/pipeline.go` → LLM
 
 ---
 

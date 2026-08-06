@@ -1,4 +1,6 @@
-# Phase 8 — Connectors & multi-cloud
+﻿# Phase 8 — Connectors & multi-cloud
+
+> **Historical note:** This phase plan is **complete** (delivery archive). Some file paths may predate the Go strangler layout (server/cmd/server + server/internal/*). Canonical layout: [server/README.md](../../server/README.md) · [knowledge-base/server-overview.md](./knowledge-base/server-overview.md).
 
 **Goal:** Enterprise ingest connectors, Azure deploy reference, intranet embed widget.
 

@@ -1,4 +1,6 @@
-# Phase 9 — Launch & live connectors
+﻿# Phase 9 — Launch & live connectors
+
+> **Historical note:** This phase plan is **complete** (delivery archive). Some file paths may predate the Go strangler layout (server/cmd/server + server/internal/*). Canonical layout: [server/README.md](../../server/README.md) · [knowledge-base/server-overview.md](./knowledge-base/server-overview.md).
 
 **Goal:** Live Google Drive + Confluence connectors, hosted/billing prep, public launch playbook.
 

@@ -16,12 +16,12 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "docs" / "assets" / "demo.gif"
 
 W, H = 720, 900
-HEADER_BG = (42, 171, 238)
-BG = (229, 221, 213)
-USER_BUBBLE = (220, 248, 198)
+HEADER_BG = (30, 58, 95)  # slate navy — closer to current webapp chrome
+BG = (236, 239, 243)
+USER_BUBBLE = (214, 228, 240)
 BOT_BUBBLE = (255, 255, 255)
 CITE_BG = (240, 248, 255)
-CITE_BORDER = (42, 171, 238)
+CITE_BORDER = (30, 120, 140)
 TEXT = (17, 17, 17)
 HINT = (112, 111, 111)
 WHITE = (255, 255, 255)
@@ -83,7 +83,12 @@ def fetch_chat() -> tuple[str, str, str]:
 def _draw_header(draw: ImageDraw.ImageDraw, title_font, sub_font) -> None:
     draw.rectangle([0, 0, W, 130], fill=HEADER_BG)
     draw.text((20, 22), "Grounded LLM", font=title_font, fill=WHITE)
-    draw.text((20, 52), "Answers grounded in your knowledge base", font=sub_font, fill=WHITE)
+    draw.text(
+        (20, 52),
+        "Answers grounded in your knowledge base (RAG).",
+        font=sub_font,
+        fill=WHITE,
+    )
     draw.rounded_rectangle([20, 82, 260, 112], radius=8, fill=WHITE)
     draw.text((32, 90), "Domain: HR Policies", font=sub_font, fill=TEXT)
 
@@ -119,9 +124,12 @@ def _bubble(
 
 def _citation_box(draw: ImageDraw.ImageDraw, y: int, filename: str, font, small) -> int:
     box_h = 72
-    draw.rounded_rectangle([44, y, W - 44, y + box_h], radius=10, outline=CITE_BORDER, width=2, fill=CITE_BG)
-    draw.text((58, y + 12), "Source citation", font=small, fill=HINT)
-    draw.text((58, y + 32), filename, font=font, fill=CITE_BORDER)
+    draw.rounded_rectangle(
+        [44, y, W - 44, y + box_h], radius=10, outline=CITE_BORDER, width=2, fill=CITE_BG
+    )
+    draw.text((58, y + 12), "Sources", font=small, fill=HINT)
+    cite = f"{filename} — Vacation policy"
+    draw.text((58, y + 32), cite, font=font, fill=CITE_BORDER)
     return y + box_h + 12
 
 
@@ -177,7 +185,12 @@ def build_frames(question: str, answer: str, citation: str) -> list[Image.Image]
     y = _bubble(draw, 24, y, question, user=True, font=body)
     y = _bubble(draw, 24, y, answer, user=False, font=body, max_w=480)
     y = _citation_box(draw, y, citation, body, small)
-    draw.text((24, y + 4), "Verified: numbers match knowledge base", font=small, fill=(34, 139, 34))
+    draw.text(
+        (24, y + 4),
+        "Reference information from the knowledge base.",
+        font=small,
+        fill=HINT,
+    )
     _composer(draw, "", body)
     frames.append(img)
 

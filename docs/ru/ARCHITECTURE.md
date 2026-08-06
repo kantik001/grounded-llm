@@ -54,7 +54,7 @@
 4. Python: эмбеддинги (с Redis при `REDIS_URL`) → vector store (Chroma / Qdrant / pgvector) → hybrid/rerank → фрагменты
 5. Go → OpenAI-совместимый LLM (`LLM_PROVIDER`)
 6. **Verify** после LLM:
-   - `GUARDRAILS_MODE=local` (по умолчанию): in-process проверка чисел в `server/rag_verify.go`
+   - `GUARDRAILS_MODE=local` (по умолчанию): in-process проверка чисел в `internal/rag/verify.go`
    - `remote` / `hybrid`: gRPC `VerifyText` → grounded-guardrails `:50052` (hybrid при сбое сети откатывается на local)
 7. Дисклеймер → Postgres (`citations[]`); прошедшие verify ответы могут попасть в response cache
 

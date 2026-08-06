@@ -2,7 +2,7 @@
 
 **Source:** `rag/retrieval.py`  
 **Endpoint:** `POST /rag/context`  
-**Next:** Go `server/rag_chat.go` → LLM
+**Next:** Go `internal/rag/pipeline.go` → LLM
 
 ---
 

@@ -1,8 +1,8 @@
 # Миграции PostgreSQL (`migrations/*.sql`)
 
 **Папка:** `migrations/` — также [`migrations/README.md`](../../../migrations/README.md)  
-**Файлы:** `001_init.sql` … `003_*.sql`, `005_message_citations.sql` … `009_pgvector.sql` (нет `004`)  
-**Кто применяет:** Go-сервер при старте (`server/postgres_store.go` → `runAllMigrations`)  
+**Файлы:** `001`–`003`, `005`–`011` (нет `004`; см. [EN migrations-overview](../en/knowledge-base/migrations-overview.md))  
+**Кто применяет:** Go-сервер при старте (`internal/app/main.go` → `store.RunAllMigrations`)  
 **СУБД:** PostgreSQL 16 (контейнер `postgres` в `docker-compose.yml`)
 
 ---
@@ -155,15 +155,66 @@ Go сортирует по имени. **Новая миграция:** напр
 
 ---
 
+## `007_audit_log.sql`
+
+Таблица `audit_log` — действия админки (`kb_upload`, `kb_reindex`, login, …).  
+Код: `internal/store/audit_store.go`, `internal/admin`.
+
+---
+
+## `008_reindex_jobs.sql`
+
+Очередь асинхронного reindex (admin → worker).
+
+---
+
+## `009_pgvector.sql`
+
+`CREATE EXTENSION vector` для `VECTOR_STORE=pgvector`.
+
+---
+
+## `010_saas_tenants.sql`
+
+| Таблица | Назначение |
+|---------|------------|
+| `saas_tenants` | signup org, plan, Stripe customer |
+| `tenant_quotas` | лимиты сообщений / storage / domains |
+| `stripe_webhook_events` | идемпотентность webhook |
+
+См. [../SAAS.md](../SAAS.md), [../BILLING.md](../BILLING.md).
+
+---
+
+## `011_admin_users_membership.sql`
+
+| Таблица | Назначение |
+|---------|------------|
+| `admin_users` | admin-аккаунты (bcrypt, roles, tenant_id) |
+| `user_tenant_memberships` | Telegram user ↔ tenant |
+
+---
+
+## Порядок файлов
+
+```
+001 … 003, 005 … 011  (нет 004)
+```
+
+---
+
 ## Как Go использует таблицы
 
 | Таблица | Пример в коде |
 |---------|----------------|
-| `users` | `UpsertUser` в `postgres_store.go` |
+| `users` | `UpsertUser` в `internal/store/postgres_store.go` |
 | `chat_sessions` | создание сессии, `domain_id`, `tenant_id` |
 | `messages` | чат, поле `citations` |
-| `message_feedback` | `server/feedback.go` |
-| `analytics_events` | `server/analytics_store.go` |
+| `message_feedback` | `internal/httpapi` + `internal/store` |
+| `analytics_events` | `internal/store/analytics_store.go` |
+| `audit_log` | `internal/store/audit_store.go` |
+| `saas_tenants` | `internal/store/saas_store.go`, `internal/saas` |
+| `admin_users` | `internal/admin/users_persist.go` |
 
 ---
 
@@ -171,10 +222,15 @@ Go сортирует по имени. **Новая миграция:** напр
 
 | Файл | Что добавляет |
 |------|----------------|
-| **001** | users, chat_sessions, messages + индексы |
-| **002** | колонка `domain_id` в сессии |
-| **003** | message_feedback, analytics_events |
-| **005** | `citations JSONB` у сообщений ассистента |
-| **006** | `tenant_id` в сессии |
+| **001** | users, chat_sessions, messages |
+| **002** | `domain_id` |
+| **003** | feedback, analytics_events |
+| **005** | citations JSONB |
+| **006** | `tenant_id` |
+| **007** | audit_log |
+| **008** | reindex jobs |
+| **009** | pgvector extension |
+| **010** | SaaS tenants / quotas / Stripe |
+| **011** | admin_users, memberships |
 
-Миграции — **версионированная схема БД**. Go применяет каждый файл один раз и пишет имя в `schema_migrations`.
+Миграции — **версионированная схема БД**. Go применяет каждый файл один раз (`store.RunAllMigrations`) и пишет имя в `schema_migrations`.

@@ -1,7 +1,9 @@
-"""Simplified Pillow fallback for docs/assets/architecture.png.
+"""Fallback generator for docs/assets/architecture.png.
 
-The canonical README diagram is the icon-rich PNG committed in docs/assets/.
-Run this only if you need a quick text-only variant without external image tools.
+The canonical README diagram is the icon-rich PNG in docs/assets/ (designed
+for readability). Run this script only to regenerate a text-only fallback:
+
+    python scripts/gen_architecture_png.py
 """
 from __future__ import annotations
 
@@ -13,13 +15,20 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "docs" / "assets" / "architecture.png"
 
-W, H = 1600, 1040
+W, H = 1536, 1024
+BG = "#eef2f7"
+BLUE = "#2563eb"
+TEAL = "#0d9488"
+SLATE = "#1e293b"
+MUTED = "#64748b"
+WHITE = "#ffffff"
 
 
 def font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
     candidates = [
         r"C:\Windows\Fonts\segoeuib.ttf" if bold else r"C:\Windows\Fonts\segoeui.ttf",
         r"C:\Windows\Fonts\arialbd.ttf" if bold else r"C:\Windows\Fonts\arial.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" if bold else "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
     ]
     for p in candidates:
         if Path(p).exists():
@@ -27,156 +36,309 @@ def font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont | ImageFont.Im
     return ImageFont.load_default()
 
 
+def rounded(d: ImageDraw.ImageDraw, xy, fill, outline, r=12, width=2):
+    d.rounded_rectangle(xy, radius=r, fill=fill, outline=outline, width=width)
+
+
+def arrow(
+    d: ImageDraw.ImageDraw,
+    p1,
+    p2,
+    color=BLUE,
+    width=2,
+    label: str | None = None,
+    label_font=None,
+    dashed=False,
+):
+    x1, y1 = p1
+    x2, y2 = p2
+    if dashed:
+        length = math.hypot(x2 - x1, y2 - y1) or 1
+        dx, dy = (x2 - x1) / length, (y2 - y1) / length
+        pos = 0.0
+        on = True
+        while pos < length - 14:
+            seg = 10 if on else 7
+            nx = min(pos + seg, length - 14)
+            if on:
+                d.line([(x1 + dx * pos, y1 + dy * pos), (x1 + dx * nx, y1 + dy * nx)], fill=color, width=width)
+            pos = nx
+            on = not on
+    else:
+        d.line([p1, p2], fill=color, width=width)
+    ang = math.atan2(y2 - y1, x2 - x1)
+    s = 11
+    d.polygon(
+        [
+            (x2, y2),
+            (x2 - s * math.cos(ang - 0.35), y2 - s * math.sin(ang - 0.35)),
+            (x2 - s * math.cos(ang + 0.35), y2 - s * math.sin(ang + 0.35)),
+        ],
+        fill=color,
+    )
+    if label and label_font:
+        mx, my = (x1 + x2) / 2, (y1 + y2) / 2
+        lw = d.textlength(label, font=label_font)
+        d.rounded_rectangle([mx - lw / 2 - 6, my - 11, mx + lw / 2 + 6, my + 9], radius=4, fill=WHITE)
+        d.text((mx - lw / 2, my - 9), label, fill=MUTED, font=label_font)
+
+
+def label_box(
+    d: ImageDraw.ImageDraw,
+    xy,
+    title: str,
+    lines: list[str],
+    *,
+    outline=BLUE,
+    title_font,
+    sub_font,
+    icon_fn=None,
+):
+    x0, y0, x1, y1 = xy
+    rounded(d, xy, WHITE, outline, r=14)
+    cx = (x0 + x1) // 2
+    if icon_fn:
+        icon_fn(d, cx, y0 + 28)
+    ty = y0 + 52 if icon_fn else y0 + 20
+    tw = d.textlength(title, font=title_font)
+    d.text((cx - tw / 2, ty), title, fill=SLATE, font=title_font)
+    ly = ty + 26
+    for line in lines:
+        lw = d.textlength(line, font=sub_font)
+        d.text((cx - lw / 2, ly), line, fill=MUTED, font=sub_font)
+        ly += 18
+
+
+# --- simple line icons (center x, top y) ---
+
+
+def icon_globe(d, cx, cy):
+    d.ellipse([cx - 14, cy - 14, cx + 14, cy + 14], outline=BLUE, width=2)
+    d.line([(cx, cy - 14), (cx, cy + 14)], fill=BLUE, width=2)
+    d.ellipse([cx - 8, cy - 14, cx + 8, cy + 14], outline=BLUE, width=1)
+
+
+def icon_code(d, cx, cy):
+    d.line([(cx - 12, cy), (cx - 4, cy - 8)], fill=BLUE, width=2)
+    d.line([(cx - 12, cy), (cx - 4, cy + 8)], fill=BLUE, width=2)
+    d.line([(cx + 12, cy), (cx + 4, cy - 8)], fill=BLUE, width=2)
+    d.line([(cx + 12, cy), (cx + 4, cy + 8)], fill=BLUE, width=2)
+    d.line([(cx - 3, cy + 10), (cx + 3, cy - 10)], fill=BLUE, width=2)
+
+
+def icon_plane(d, cx, cy):
+    d.polygon([(cx - 12, cy + 6), (cx + 14, cy), (cx - 12, cy - 6)], fill=BLUE)
+
+
+def icon_robot(d, cx, cy):
+    rounded(d, [cx - 12, cy - 10, cx + 12, cy + 10], WHITE, BLUE, r=4)
+    d.line([(cx, cy - 10), (cx, cy - 16)], fill=BLUE, width=2)
+    d.ellipse([cx - 3, cy - 18, cx + 3, cy - 12], fill=BLUE)
+    d.ellipse([cx - 6, cy - 4, cx - 2, cy], fill=BLUE)
+    d.ellipse([cx + 2, cy - 4, cx + 6, cy], fill=BLUE)
+
+
+def icon_shield(d, cx, cy, check=False):
+    pts = [(cx, cy - 14), (cx + 12, cy - 6), (cx + 10, cy + 10), (cx, cy + 16), (cx - 10, cy + 10), (cx - 12, cy - 6)]
+    d.polygon(pts, outline=BLUE, fill="#eff6ff")
+    if check:
+        d.line([(cx - 5, cy + 2), (cx - 1, cy + 6), (cx + 7, cy - 4)], fill=TEAL, width=2)
+
+
+def icon_nodes(d, cx, cy):
+    for ox, oy in [(-10, -6), (10, -6), (0, 8)]:
+        d.ellipse([cx + ox - 5, cy + oy - 5, cx + ox + 5, cy + oy + 5], fill=BLUE)
+    d.line([(cx - 5, cy - 4), (cx + 5, cy - 4)], fill=BLUE, width=1)
+    d.line([(cx, cy + 3), (cx - 8, cy - 2)], fill=BLUE, width=1)
+    d.line([(cx, cy + 3), (cx + 8, cy - 2)], fill=BLUE, width=1)
+
+
+def icon_brain(d, cx, cy):
+    d.arc([cx - 14, cy - 12, cx, cy + 12], 90, 270, fill=BLUE, width=2)
+    d.arc([cx, cy - 12, cx + 14, cy + 12], 270, 90, fill=BLUE, width=2)
+    d.line([(cx, cy - 12), (cx, cy + 12)], fill=BLUE, width=1)
+
+
+def icon_search(d, cx, cy):
+    d.ellipse([cx - 12, cy - 12, cx + 4, cy + 4], outline=TEAL, width=2)
+    d.line([(cx + 2, cy + 2), (cx + 12, cy + 12)], fill=TEAL, width=2)
+
+
+def icon_db(d, cx, cy):
+    d.ellipse([cx - 14, cy - 12, cx + 14, cy - 2], outline="#7c3aed", width=2)
+    d.rectangle([cx - 14, cy - 7, cx + 14, cy + 8], outline="#7c3aed", width=2)
+    d.ellipse([cx - 14, cy + 2, cx + 14, cy + 12], outline="#7c3aed", width=2)
+
+
+def icon_stack(d, cx, cy):
+    for i, dy in enumerate([8, 0, -8]):
+        rounded(d, [cx - 16, cy + dy - 4, cx + 16, cy + dy + 4], "#fff7ed", "#ea580c", r=3, width=1)
+
+
+def icon_cloud(d, cx, cy):
+    d.ellipse([cx - 16, cy - 2, cx - 2, cy + 10], fill="#eab308")
+    d.ellipse([cx - 8, cy - 10, cx + 10, cy + 6], fill="#eab308")
+    d.ellipse([cx + 2, cy - 4, cx + 16, cy + 10], fill="#eab308")
+
+
+def icon_guard(d, cx, cy):
+    icon_shield(d, cx, cy, check=False)
+    d.line([(cx - 4, cy + 2), (cx, cy + 6), (cx + 6, cy - 4)], fill=TEAL, width=2)
+
+
+def flow_box(d, xy, title, subtitle, icon_fn, f_title, f_sub, *, icon_kwargs=None):
+    x0, y0, x1, y1 = xy
+    rounded(d, xy, WHITE, BLUE, r=12)
+    cx = (x0 + x1) // 2
+    if icon_fn:
+        if icon_kwargs:
+            icon_fn(d, cx, y0 + 22, **icon_kwargs)
+        else:
+            icon_fn(d, cx, y0 + 22)
+    tw = d.textlength(title, font=f_title)
+    d.text((cx - tw / 2, y0 + 48), title, fill=SLATE, font=f_title)
+    if subtitle:
+        sw = d.textlength(subtitle, font=f_sub)
+        d.text((cx - sw / 2, y0 + 72), subtitle, fill=MUTED, font=f_sub)
+
+
 def main() -> None:
-    img = Image.new("RGB", (W, H), "#ffffff")
+    img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
 
-    f_title = font(34, True)
-    f_sec = font(18, True)
-    f_box = font(16, True)
-    f_sub = font(13)
-    f_cap = font(14)
-    f_arrow = font(12)
+    f_title = font(32, True)
+    f_band = font(17, True)
+    f_box = font(15, True)
+    f_sub = font(12)
+    f_cap = font(13)
+    f_lbl = font(11)
 
-    def rounded(xy, fill, outline, r=14, width=2):
-        d.rounded_rectangle(xy, radius=r, fill=fill, outline=outline, width=width)
-
-    def box(xy, fill, outline, title, subtitle=None):
-        rounded(xy, fill, outline)
-        x0, y0, x1, y1 = xy
-        tw = d.textlength(title, font=f_box)
-        tx = x0 + (x1 - x0 - tw) / 2
-        if subtitle:
-            ty = y0 + (y1 - y0) / 2 - 16
-            d.text((tx, ty), title, fill="#1a1a2e", font=f_box)
-            sw = d.textlength(subtitle, font=f_sub)
-            d.text((x0 + (x1 - x0 - sw) / 2, ty + 22), subtitle, fill="#4a5568", font=f_sub)
-        else:
-            th = 20
-            d.text((tx, y0 + (y1 - y0 - th) / 2), title, fill="#1a1a2e", font=f_box)
-
-    def arrow(p1, p2, color="#2d3748", label=None, dashed=False):
-        x1, y1 = p1
-        x2, y2 = p2
-        if dashed:
-            length = math.hypot(x2 - x1, y2 - y1) or 1
-            dx, dy = (x2 - x1) / length, (y2 - y1) / length
-            pos = 0.0
-            on = True
-            while pos < length - 12:
-                seg = 8 if on else 6
-                nx = min(pos + seg, length - 12)
-                if on:
-                    d.line(
-                        [(x1 + dx * pos, y1 + dy * pos), (x1 + dx * nx, y1 + dy * nx)],
-                        fill=color,
-                        width=2,
-                    )
-                pos = nx
-                on = not on
-        else:
-            d.line([p1, p2], fill=color, width=2)
-        ang = math.atan2(y2 - y1, x2 - x1)
-        s = 10
-        d.polygon(
-            [
-                (x2, y2),
-                (x2 - s * math.cos(ang - 0.4), y2 - s * math.sin(ang - 0.4)),
-                (x2 - s * math.cos(ang + 0.4), y2 - s * math.sin(ang + 0.4)),
-            ],
-            fill=color,
-        )
-        if label:
-            mx, my = (x1 + x2) / 2, (y1 + y2) / 2
-            lw = d.textlength(label, font=f_arrow)
-            d.rectangle([mx - lw / 2 - 4, my - 10, mx + lw / 2 + 4, my + 8], fill="#ffffff")
-            d.text((mx - lw / 2, my - 8), label, fill="#4a5568", font=f_arrow)
-
-    title = "Grounded LLM Architecture (v0.3)"
+    title = "Grounded LLM Architecture"
     tw = d.textlength(title, font=f_title)
-    d.text(((W - tw) / 2, 28), title, fill="#1a365d", font=f_title)
+    d.text(((W - tw) / 2, 24), title, fill="#0f172a", font=f_title)
 
-    rounded((80, 90, 1520, 210), "#ebf5ff", "#90cdf4", r=18)
-    d.text((100, 102), "Clients", fill="#2b6cb0", font=f_sec)
-    for x0, y0, x1, y1, t, s in [
-        (120, 135, 360, 195, "Web chat", None),
-        (390, 135, 680, 195, "Python SDK / REST", None),
-        (710, 135, 1000, 195, "Telegram Mini App", None),
-        (1030, 135, 1400, 195, "Agents", "gRPC clients"),
-    ]:
-        box((x0, y0, x1, y1), "#ffffff", "#63b3ed", t, s)
+    # --- Clients ---
+    d.text((72, 108), "Clients", fill=BLUE, font=f_band)
+    clients = [
+        (100, 130, 300, 210, "Web chat", icon_globe),
+        (330, 130, 560, 210, "Python SDK / REST", icon_code),
+        (590, 130, 820, 210, "Telegram Mini App", icon_plane),
+        (850, 130, 1100, 210, "Agents (gRPC)", icon_robot),
+    ]
+    for x0, y0, x1, y1, t, ic in clients:
+        flow_box(d, (x0, y0, x1, y1), t, None, ic, f_box, f_sub)
 
-    rounded((80, 260, 1520, 470), "#ebf8ff", "#63b3ed", r=18)
-    d.text((100, 272), "Go server :8080", fill="#2b6cb0", font=f_sec)
-    for x0, y0, x1, y1, t, s in [
-        (120, 320, 320, 410, "Auth", None),
-        (360, 320, 600, 410, "REST API v1", None),
-        (640, 320, 920, 410, "LLM orchestration", "tokens · TTFT · cache"),
-        (960, 320, 1180, 410, "Numeric verify", None),
-        (1220, 320, 1440, 410, "Admin", None),
-    ]:
-        box((x0, y0, x1, y1), "#ffffff", "#4299e1", t, s)
-    for a, b in [((320, 365), (360, 365)), ((600, 365), (640, 365)), ((920, 365), (960, 365))]:
-        arrow(a, b)
-    d.text(
-        (100, 430),
-        "/metrics  ·  X-Cache: HIT|MISS on cached answers",
-        fill="#4a5568",
-        font=f_sub,
+    # --- Go server ---
+    rounded(d, (72, 250, 1464, 430), WHITE, "#93c5fd", r=16, width=2)
+    d.text((92, 262), "Go server :8080", fill=BLUE, font=f_band)
+    go_boxes = [
+        (100, 300, 320, 400, "Auth & Admin", icon_shield, {}),
+        (360, 300, 580, 400, "REST API v1", icon_nodes, None),
+        (620, 300, 900, 400, "LLM orchestration", icon_brain, None),
+        (940, 300, 1180, 400, "Numeric verify", icon_shield, {"check": True}),
+    ]
+    for x0, y0, x1, y1, t, ic, ikw in go_boxes:
+        flow_box(d, (x0, y0, x1, y1), t, "local default" if t == "Numeric verify" else None, ic, f_box, f_sub, icon_kwargs=ikw)
+    for a, b in [((320, 350), (360, 350)), ((580, 350), (620, 350)), ((900, 350), (940, 350))]:
+        arrow(d, a, b, width=2)
+
+    # Optional guardrails beside verify
+    label_box(
+        d,
+        (1220, 300, 1450, 400),
+        "grounded-guardrails :50052",
+        ["VerifyText (optional)", "numeric + PII rules"],
+        outline=TEAL,
+        title_font=f_box,
+        sub_font=f_sub,
+        icon_fn=icon_guard,
+    )
+    arrow(d, (1180, 350), (1220, 350), color=TEAL, dashed=True, label="optional remote|hybrid", label_font=f_lbl)
+
+    # --- Backends ---
+    d.text((72, 468), "Backends & Services", fill=BLUE, font=f_band)
+
+    label_box(
+        d,
+        (72, 500, 360, 680),
+        "Python RAG",
+        ["HTTP :5000 · hybrid BM25+RRF", "gRPC Retriever :50051", "Chroma / Qdrant / pgvector"],
+        outline=TEAL,
+        title_font=f_box,
+        sub_font=f_sub,
+        icon_fn=icon_search,
+    )
+    label_box(
+        d,
+        (390, 500, 620, 680),
+        "Storage",
+        ["PostgreSQL", "Files · data/{tenant}/{domain}"],
+        outline="#7c3aed",
+        title_font=f_box,
+        sub_font=f_sub,
+        icon_fn=icon_db,
+    )
+    label_box(
+        d,
+        (650, 500, 880, 680),
+        "Redis :6379",
+        ["Embedding cache", "LLM response cache (X-Cache)"],
+        outline="#ea580c",
+        title_font=f_box,
+        sub_font=f_sub,
+        icon_fn=icon_stack,
+    )
+    label_box(
+        d,
+        (910, 500, 1180, 680),
+        "LLM (OpenAI-compatible)",
+        ["Cloud / OpenRouter", "Ollama profile · vLLM profile"],
+        outline="#ca8a04",
+        title_font=f_box,
+        sub_font=f_sub,
+        icon_fn=icon_cloud,
+    )
+    label_box(
+        d,
+        (1210, 500, 1464, 680),
+        "grounded-guardrails :50052",
+        ["VerifyText (optional)", "sibling compose"],
+        outline=TEAL,
+        title_font=f_box,
+        sub_font=f_sub,
+        icon_fn=icon_guard,
     )
 
-    arrow((240, 195), (220, 320))
-    arrow((535, 195), (480, 320))
-    arrow((855, 195), (780, 320))
+    # Client → Go (first three only)
+    arrow(d, (200, 210), (210, 300))
+    arrow(d, (445, 210), (470, 300))
+    arrow(d, (705, 210), (760, 300))
 
-    rounded((60, 540, 470, 900), "#f0fff4", "#68d391", r=18)
-    d.text((80, 555), "Python RAG", fill="#276749", font=f_sec)
-    box((85, 595, 445, 665), "#ffffff", "#48bb78", "HTTP :5000", "/rag/context")
-    box((85, 685, 445, 755), "#ffffff", "#48bb78", "gRPC Retriever :50051", "grounded.rag.v1")
-    box((85, 775, 445, 865), "#ffffff", "#48bb78", "Hybrid BM25 + RRF", "Chroma / Qdrant / pgvector")
+    # REST → Python RAG
+    arrow(d, (470, 400), (220, 500), label="/rag/context", label_font=f_lbl)
 
-    rounded((500, 540, 820, 820), "#faf5ff", "#b794f4", r=18)
-    d.text((520, 555), "Storage", fill="#553c9a", font=f_sec)
-    box((520, 595, 800, 680), "#ffffff", "#9f7aea", "PostgreSQL", "sessions · messages")
-    box((520, 710, 800, 800), "#ffffff", "#9f7aea", "Files", "data/{tenant}/{domain}")
+    # Agents → gRPC Retriever (bypass Go)
+    path = [(975, 210), (1140, 210), (1140, 640), (360, 640), (360, 680)]
+    for i in range(len(path) - 1):
+        if i < len(path) - 2:
+            d.line([path[i], path[i + 1]], fill=TEAL, width=2)
+        else:
+            arrow(d, path[i], path[i + 1], color=TEAL, width=2)
+    d.rounded_rectangle([1148, 390, 1248, 408], radius=4, fill=WHITE)
+    d.text((1155, 392), "gRPC :50051", fill=TEAL, font=f_lbl)
 
-    rounded((850, 540, 1170, 820), "#fffaf0", "#ed8936", r=18)
-    d.text((870, 555), "Redis :6379", fill="#c05621", font=f_sec)
-    box((870, 595, 1150, 680), "#ffffff", "#dd6b20", "Embedding cache", "Python · TTL 1h")
-    box((870, 710, 1150, 800), "#ffffff", "#dd6b20", "Response cache", "Go · X-Cache · TTL 24h")
+    # LLM orchestration → backends (subtle)
+    arrow(d, (760, 400), (760, 460), color=MUTED, width=1)
+    arrow(d, (760, 460), (1045, 460), color=MUTED, width=1)
+    arrow(d, (1045, 460), (1045, 500), color=MUTED, width=1)
+    d.text((820, 442), "/v1/chat/completions", fill=MUTED, font=f_lbl)
 
-    rounded((1200, 540, 1540, 860), "#fffff0", "#d69e2e", r=18)
-    d.text((1220, 555), "LLM (OpenAI-compatible)", fill="#975a16", font=f_sec)
-    box((1220, 595, 1520, 665), "#ffffff", "#ecc94b", "Cloud / OpenRouter", "LLM_PROVIDER=openai")
-    box((1220, 685, 1520, 755), "#ffffff", "#ecc94b", "Ollama", "--profile ollama")
-    box((1220, 775, 1520, 845), "#ffffff", "#ecc94b", "vLLM", "--profile vllm")
-
-    arrow((480, 410), (265, 595), label="/rag/context")
-    # Agents → gRPC Retriever (around the right edge)
-    pts = [(1215, 195), (1560, 195), (1560, 720), (445, 720)]
-    for i in range(len(pts) - 1):
-        d.line([pts[i], pts[i + 1]], fill="#718096", width=2)
-    d.polygon([(445, 720), (457, 714), (457, 726)], fill="#718096")
-    gw = d.textlength("gRPC", font=f_arrow)
-    d.rectangle([1490 - gw / 2 - 4, 440, 1490 + gw / 2 + 4, 460], fill="#ffffff")
-    d.text((1490 - gw / 2, 442), "gRPC", fill="#4a5568", font=f_arrow)
-
-    arrow((780, 410), (1010, 710), label="response cache")
-    arrow((780, 410), (660, 595))
-    arrow((780, 410), (1360, 595), label="/v1/chat/completions")
-    arrow((1330, 410), (660, 750))
-    # embeddings cache: under the bottom row
-    epts = [(265, 865), (265, 920), (1010, 920), (1010, 800)]
-    for i in range(len(epts) - 1):
-        d.line([epts[i], epts[i + 1]], fill="#2d3748", width=2)
-    d.polygon([(1010, 800), (1004, 812), (1016, 812)], fill="#2d3748")
-    ew = d.textlength("embeddings", font=f_arrow)
-    d.rectangle([620 - ew / 2 - 4, 902, 620 + ew / 2 + 4, 922], fill="#ffffff")
-    d.text((620 - ew / 2, 904), "embeddings", fill="#4a5568", font=f_arrow)
-
-    cap = "v0.3 — local inference · Redis caches · gRPC Retriever · hybrid BM25+RRF · Prometheus metrics"
+    cap = (
+        "LOCAL INFERENCE · REDIS CACHES · gRPC RETRIEVER :50051 · "
+        "OPTIONAL GUARDRAILS :50052 · HYBRID BM25+RRF"
+    )
     cw = d.textlength(cap, font=f_cap)
-    d.text(((W - cw) / 2, 980), cap, fill="#718096", font=f_cap)
+    d.text(((W - cw) / 2, 960), cap, fill=MUTED, font=f_cap)
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     img.save(OUT, "PNG", optimize=True)
