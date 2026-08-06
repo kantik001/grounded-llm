@@ -79,7 +79,6 @@ func TelegramMiddleware(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 		c.Next()
-		return
 	}
 }
 

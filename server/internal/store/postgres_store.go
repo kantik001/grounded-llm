@@ -94,13 +94,6 @@ func migrationApplied(ctx context.Context, pool *pgxpool.Pool, filename string) 
 	return n > 0, err
 }
 
-func markMigrationApplied(ctx context.Context, pool *pgxpool.Pool, filename string) error {
-	_, err := pool.Exec(ctx,
-		`INSERT INTO schema_migrations (filename) VALUES ($1) ON CONFLICT DO NOTHING`, filename,
-	)
-	return err
-}
-
 // RunAllMigrations applies all .sql files from dir in name order (tracks schema_migrations).
 // Each file is applied and recorded in a single transaction.
 func RunAllMigrations(ctx context.Context, pool *pgxpool.Pool, dir string) error {
