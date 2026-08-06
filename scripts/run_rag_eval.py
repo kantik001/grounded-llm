@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import sys
 from datetime import datetime, timezone
@@ -90,6 +91,52 @@ def fetch_context(rag_url: str, question: str, domain_id: str, timeout: int) -> 
     return {"http_status": resp.status_code, **body}
 
 
+def ranking_metrics(case: Dict[str, Any], fragments: List[Dict[str, Any]]) -> Dict[str, Any] | None:
+    """Recall@k / nDCG@k against golden sources.
+
+    A case opts in with "expect_sources": ["file.txt", ...] (filenames) or
+    "expect_chunks": ["tenant/domain/file.txt/0", ...] (chunk ids, stricter).
+    Relevance is binary; each golden item is counted once at its best rank.
+    """
+    by_chunk = bool(case.get("expect_chunks"))
+    expected = case.get("expect_chunks") or case.get("expect_sources")
+    if not expected:
+        return None
+    expected_set = {str(s).strip().lower() for s in expected if str(s).strip()}
+    if not expected_set:
+        return None
+
+    key = "chunk_id" if by_chunk else "filename"
+    ranked = [str(f.get(key) or "").strip().lower() for f in fragments]
+
+    recall = len(expected_set & set(ranked)) / len(expected_set)
+
+    dcg = 0.0
+    seen: set[str] = set()
+    for rank, item in enumerate(ranked):
+        if item in expected_set and item not in seen:
+            dcg += 1.0 / math.log2(rank + 2)
+            seen.add(item)
+    ideal = sum(1.0 / math.log2(r + 2) for r in range(min(len(expected_set), max(len(ranked), 1))))
+    ndcg = dcg / ideal if ideal else 0.0
+
+    # Citation precision@k: fraction of retrieved items that are relevant goldens.
+    # Empty retrieval → 0 when goldens exist (cannot cite correctly with no hits).
+    if ranked:
+        relevant_hits = sum(1 for item in ranked if item in expected_set)
+        citation_precision = relevant_hits / len(ranked)
+    else:
+        citation_precision = 0.0
+
+    return {
+        "recall_at_k": round(recall, 3),
+        "ndcg_at_k": round(ndcg, 3),
+        "citation_precision_at_k": round(citation_precision, 3),
+        "k": len(ranked),
+        "granularity": "chunk" if by_chunk else "source",
+    }
+
+
 def check_retrieval(case: Dict[str, Any], ctx: Dict[str, Any]) -> Dict[str, Any]:
     ok = ctx.get("success") is True and resp_status_ok(ctx)
     context_text = (ctx.get("context") or "").lower()
@@ -142,11 +189,20 @@ def run_suite(
     cases = load_cases(path)
     results = []
     passed = 0
+    recalls: List[float] = []
+    ndcgs: List[float] = []
+    precisions: List[float] = []
     for i, case in enumerate(cases):
         q = case["question"]
         domain_id = case.get("domain_id", "default")
         ctx = fetch_context(rag_url, q, domain_id, timeout)
         check = check_retrieval(case, ctx)
+        ranking = ranking_metrics(case, ctx.get("fragments") or [])
+        if ranking:
+            check["ranking"] = ranking
+            recalls.append(ranking["recall_at_k"])
+            ndcgs.append(ranking["ndcg_at_k"])
+            precisions.append(ranking["citation_precision_at_k"])
         if check["passed"]:
             passed += 1
         results.append(
@@ -160,13 +216,21 @@ def run_suite(
             }
         )
     total = len(cases)
-    return {
+    summary: Dict[str, Any] = {
         "suite": suite_name,
         "total": total,
         "passed": passed,
         "pass_rate": round(passed / total, 3) if total else 0.0,
         "cases": results,
     }
+    if recalls:
+        summary["ranking"] = {
+            "cases_with_goldens": len(recalls),
+            "mean_recall_at_k": round(sum(recalls) / len(recalls), 3),
+            "mean_ndcg_at_k": round(sum(ndcgs) / len(ndcgs), 3),
+            "mean_citation_precision_at_k": round(sum(precisions) / len(precisions), 3),
+        }
+    return summary
 
 
 def main() -> int:
@@ -207,6 +271,27 @@ def main() -> int:
         summary = run_suite(name, path, args.rag_url, args.timeout)
         report["suites"].append(summary)
         print(f"[{name}] {summary['passed']}/{summary['total']} passed ({summary['pass_rate']})")
+        ranking = summary.get("ranking")
+        if ranking:
+            print(
+                f"[{name}] ranking (n={ranking['cases_with_goldens']}): "
+                f"Recall@k={ranking['mean_recall_at_k']} nDCG@k={ranking['mean_ndcg_at_k']} "
+                f"CiteP@k={ranking['mean_citation_precision_at_k']}"
+            )
+            min_recall = float(os.environ.get("EVAL_MIN_RECALL", "0") or 0)
+            min_ndcg = float(os.environ.get("EVAL_MIN_NDCG", "0") or 0)
+            min_cite = float(os.environ.get("EVAL_MIN_CITATION_PRECISION", "0") or 0)
+            if (
+                ranking["mean_recall_at_k"] < min_recall
+                or ranking["mean_ndcg_at_k"] < min_ndcg
+                or ranking["mean_citation_precision_at_k"] < min_cite
+            ):
+                print(
+                    f"  RANKING GATE FAILED: recall>={min_recall} ndcg>={min_ndcg} "
+                    f"cite_precision>={min_cite}",
+                    file=sys.stderr,
+                )
+                exit_code = 1
         if summary["passed"] < summary["total"]:
             exit_code = 1
             for c in summary["cases"]:

@@ -16,6 +16,7 @@ import (
 )
 
 type stripeEvent struct {
+	ID   string          `json:"id"`
 	Type string          `json:"type"`
 	Data stripeEventData `json:"data"`
 }
@@ -55,6 +56,18 @@ func handleStripeWebhook(c *gin.Context) {
 	var ev stripeEvent
 	if err := json.Unmarshal(payload, &ev); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "invalid event JSON"})
+		return
+	}
+
+	claimed, err := claimStripeEvent(ev.ID, ev.Type)
+	if err != nil {
+		log.Printf("stripe webhook claim %s: %v", ev.ID, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "event claim failed"})
+		return
+	}
+	if !claimed {
+		// Idempotent replay — already processed successfully.
+		c.JSON(http.StatusOK, gin.H{"success": true, "received": true, "duplicate": true})
 		return
 	}
 
@@ -150,7 +163,7 @@ func verifyStripeSignature(payload []byte, header, secret string, tolerance time
 		return stripeWebhookError("missing Stripe-Signature header")
 	}
 	var timestamp int64
-	signatures := make(map[string]struct{})
+	var signatures [][]byte
 	for _, part := range strings.Split(header, ",") {
 		kv := strings.SplitN(strings.TrimSpace(part), "=", 2)
 		if len(kv) != 2 {
@@ -164,7 +177,11 @@ func verifyStripeSignature(payload []byte, header, secret string, tolerance time
 			}
 			timestamp = ts
 		case "v1":
-			signatures[kv[1]] = struct{}{}
+			raw, err := hex.DecodeString(kv[1])
+			if err != nil {
+				continue
+			}
+			signatures = append(signatures, raw)
 		}
 	}
 	if timestamp == 0 || len(signatures) == 0 {
@@ -180,9 +197,11 @@ func verifyStripeSignature(payload []byte, header, secret string, tolerance time
 	_, _ = mac.Write([]byte(strconv.FormatInt(timestamp, 10)))
 	_, _ = mac.Write([]byte("."))
 	_, _ = mac.Write(payload)
-	expected := hex.EncodeToString(mac.Sum(nil))
-	if _, ok := signatures[expected]; !ok {
-		return stripeWebhookError("signature mismatch")
+	expected := mac.Sum(nil)
+	for _, sig := range signatures {
+		if hmac.Equal(expected, sig) {
+			return nil
+		}
 	}
-	return nil
+	return stripeWebhookError("signature mismatch")
 }

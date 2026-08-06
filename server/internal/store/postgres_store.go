@@ -18,13 +18,13 @@ import (
 
 const maxSessionMessages = 80
 
-// ChatStore тАФ ╨┐╨╡╤А╤Б╨╕╤Б╤В╨╡╨╜╤В╨╜╨╛╨╡ ╤Е╤А╨░╨╜╨╕╨╗╨╕╤Й╨╡ ╤З╨░╤В╨░ (PostgreSQL + ╤Д╨░╨╣╨╗╤Л ╨╜╨░ ╨┤╨╕╤Б╨║╨╡).
+// ChatStore is persistent chat storage (PostgreSQL + on-disk files).
 type ChatStore struct {
 	Pool      *pgxpool.Pool
 	uploadDir string
 }
 
-// ╨Я╨╛╨┤╨║╨╗╤О╤З╨░╨╡╤В╤Б╤П ╨║ Postgres ╨╕ ╤Б╨╛╨╖╨┤╨░╤С╤В ChatStore ╤Б ╨║╨░╤В╨░╨╗╨╛╨│╨╛╨╝ ╨╖╨░╨│╤А╤Г╨╖╨╛╨║.
+// New connects to Postgres and returns a ChatStore with the upload directory.
 func New(ctx context.Context, databaseURL, uploadDir string) (*ChatStore, error) {
 	if strings.TrimSpace(databaseURL) == "" {
 		return nil, fmt.Errorf("DATABASE_URL is not set")
@@ -32,7 +32,7 @@ func New(ctx context.Context, databaseURL, uploadDir string) (*ChatStore, error)
 	if err := os.MkdirAll(uploadDir, 0o755); err != nil {
 		return nil, fmt.Errorf("upload dir: %w", err)
 	}
-	pool, err := pgxpool.New(ctx, databaseURL)
+	pool, err := openPool(ctx, databaseURL)
 	if err != nil {
 		return nil, fmt.Errorf("postgres connect: %w", err)
 	}
@@ -43,22 +43,36 @@ func New(ctx context.Context, databaseURL, uploadDir string) (*ChatStore, error)
 	return &ChatStore{Pool: pool, uploadDir: uploadDir}, nil
 }
 
-// ╨Ч╨░╨║╤А╤Л╨▓╨░╨╡╤В ╨┐╤Г╨╗ ╤Б╨╛╨╡╨┤╨╕╨╜╨╡╨╜╨╕╨╣ PostgreSQL.
+// Close shuts down the PostgreSQL connection pool.
 func (st *ChatStore) Close() {
 	if st != nil && st.Pool != nil {
 		st.Pool.Close()
 	}
 }
 
-// ╨Я╤А╨╕╨╝╨╡╨╜╤П╨╡╤В ╨╛╨┤╨╕╨╜ SQL-╤Д╨░╨╣╨╗ ╨╝╨╕╨│╤А╨░╤Ж╨╕╨╕ ╨║ ╨▒╨░╨╖╨╡.
-func runMigrations(ctx context.Context, pool *pgxpool.Pool, sqlPath string) error {
+// runMigrations applies a single SQL migration file inside a transaction together
+// with the schema_migrations insert, so a partial apply cannot be marked done.
+func runMigrations(ctx context.Context, pool *pgxpool.Pool, sqlPath, filename string) error {
 	body, err := os.ReadFile(sqlPath)
 	if err != nil {
 		return fmt.Errorf("read migration %s: %w", sqlPath, err)
 	}
-	_, err = pool.Exec(ctx, string(body))
+	tx, err := pool.Begin(ctx)
 	if err != nil {
+		return fmt.Errorf("begin migration tx: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	if _, err = tx.Exec(ctx, string(body)); err != nil {
 		return fmt.Errorf("apply migration: %w", err)
+	}
+	if _, err = tx.Exec(ctx,
+		`INSERT INTO schema_migrations (filename) VALUES ($1) ON CONFLICT DO NOTHING`, filename,
+	); err != nil {
+		return fmt.Errorf("record migration: %w", err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit migration: %w", err)
 	}
 	return nil
 }
@@ -80,14 +94,8 @@ func migrationApplied(ctx context.Context, pool *pgxpool.Pool, filename string) 
 	return n > 0, err
 }
 
-func markMigrationApplied(ctx context.Context, pool *pgxpool.Pool, filename string) error {
-	_, err := pool.Exec(ctx,
-		`INSERT INTO schema_migrations (filename) VALUES ($1) ON CONFLICT DO NOTHING`, filename,
-	)
-	return err
-}
-
-// ╨Я╤А╨╕╨╝╨╡╨╜╤П╨╡╤В ╨▓╤Б╨╡ .sql ╨╕╨╖ ╨║╨░╤В╨░╨╗╨╛╨│╨░ ╨╝╨╕╨│╤А╨░╤Ж╨╕╨╣ ╨┐╨╛ ╨┐╨╛╤А╤П╨┤╨║╤Г ╨╕╨╝╨╡╨╜╨╕ (╤Б ╤Г╤З╤С╤В╨╛╨╝ schema_migrations).
+// RunAllMigrations applies all .sql files from dir in name order (tracks schema_migrations).
+// Each file is applied and recorded in a single transaction.
 func RunAllMigrations(ctx context.Context, pool *pgxpool.Pool, dir string) error {
 	if err := ensureSchemaMigrationsTable(ctx, pool); err != nil {
 		return fmt.Errorf("schema_migrations table: %w", err)
@@ -120,18 +128,15 @@ func RunAllMigrations(ctx context.Context, pool *pgxpool.Pool, dir string) error
 			log.Printf("Skip migration (already applied): %s", base)
 			continue
 		}
-		if err := runMigrations(ctx, pool, f); err != nil {
+		if err := runMigrations(ctx, pool, f, base); err != nil {
 			return fmt.Errorf("%s: %w", f, err)
-		}
-		if err := markMigrationApplied(ctx, pool, base); err != nil {
-			return fmt.Errorf("record migration %s: %w", base, err)
 		}
 		log.Printf("Applied migration: %s", base)
 	}
 	return nil
 }
 
-// ╨Ш╤Й╨╡╤В ╨║╨░╤В╨░╨╗╨╛╨│ migrations (env MIGRATIONS_DIR ╨╕╨╗╨╕ ╤В╨╕╨┐╨╛╨▓╤Л╨╡ ╨┐╤Г╤В╨╕).
+// FindMigrationsDir locates the migrations directory (MIGRATIONS_DIR or common paths).
 func FindMigrationsDir() (string, error) {
 	if p := os.Getenv("MIGRATIONS_DIR"); p != "" {
 		if st, err := os.Stat(p); err == nil && st.IsDir() {
@@ -150,21 +155,21 @@ func FindMigrationsDir() (string, error) {
 	return "", fmt.Errorf("migrations directory not found")
 }
 
-// ╨У╨╡╨╜╨╡╤А╨╕╤А╤Г╨╡╤В ╤Б╨╗╤Г╤З╨░╨╣╨╜╤Л╨╣ id ╤Б╨╡╤Б╤Б╨╕╨╕ ╤З╨░╤В╨░ (hex).
+// newSessionID generates a random chat session id (hex).
 func newSessionID() string {
 	b := make([]byte, 16)
 	_, _ = rand.Read(b)
 	return hex.EncodeToString(b)
 }
 
-// ╨У╨╡╨╜╨╡╤А╨╕╤А╤Г╨╡╤В token ╨┤╨╗╤П URL ╨╖╨░╨│╤А╤Г╨╢╨╡╨╜╨╜╨╛╨│╨╛ ╨╕╨╖╨╛╨▒╤А╨░╨╢╨╡╨╜╨╕╤П.
+// newImageToken generates a token for an uploaded image URL.
 func newImageToken() string {
 	b := make([]byte, 16)
 	_, _ = rand.Read(b)
 	return hex.EncodeToString(b)
 }
 
-// UpsertUser ╤Б╨╛╨╖╨┤╨░╤С╤В ╨╕╨╗╨╕ ╨╛╨▒╨╜╨╛╨▓╨╗╤П╨╡╤В ╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╤П ╨┐╨╛ telegram_id.
+// UpsertUser creates or updates a user by telegram_id.
 func (st *ChatStore) UpsertUser(ctx context.Context, u *TelegramUser) (int64, error) {
 	var id int64
 	err := st.Pool.QueryRow(ctx, `
@@ -181,7 +186,7 @@ func (st *ChatStore) UpsertUser(ctx context.Context, u *TelegramUser) (int64, er
 	return id, err
 }
 
-// NULL ╨▓ SQL ╨┤╨╗╤П ╨┐╤Г╤Б╤В╨╛╨╣ ╤Б╤В╤А╨╛╨║╨╕, ╨╕╨╜╨░╤З╨╡ ╤Г╨║╨░╨╖╨░╤В╨╡╨╗╤М ╨╜╨░ ╨╖╨╜╨░╤З╨╡╨╜╨╕╨╡.
+// nullIfEmpty returns SQL NULL for an empty string, otherwise a pointer to the value.
 func nullIfEmpty(s string) *string {
 	s = strings.TrimSpace(s)
 	if s == "" {
@@ -190,7 +195,7 @@ func nullIfEmpty(s string) *string {
 	return &s
 }
 
-// CreateSession ╤Б╨╛╨╖╨┤╨░╤С╤В ╨╜╨╛╨▓╤Г╤О ╤Б╨╡╤Б╤Б╨╕╤О ╨┤╨╗╤П ╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╤П.
+// CreateSession creates a new chat session for a user.
 func (st *ChatStore) CreateSession(ctx context.Context, userID int64, tenantID, domainID string) (string, error) {
 	sid := newSessionID()
 	_, err := st.Pool.Exec(ctx,
@@ -200,13 +205,14 @@ func (st *ChatStore) CreateSession(ctx context.Context, userID int64, tenantID, 
 	return sid, err
 }
 
-// SessionDomainID ╨▓╨╛╨╖╨▓╤А╨░╤Й╨░╨╡╤В domain_id ╤Б╨╡╤Б╤Б╨╕╨╕ (╤Б ╨┐╤А╨╛╨▓╨╡╤А╨║╨╛╨╣ ╨▓╨╗╨░╨┤╨╡╨╗╤М╤Ж╨░).
-func (st *ChatStore) SessionDomainID(ctx context.Context, sessionID string, telegramID int64) (string, error) {
+// SessionDomainID returns the session domain_id (with ownership check).
+func (st *ChatStore) SessionDomainID(ctx context.Context, sessionID string, telegramID int64, tenantID string) (string, error) {
 	var domainID string
 	err := st.Pool.QueryRow(ctx, `
 		SELECT cs.domain_id FROM chat_sessions cs
 		JOIN users u ON u.id = cs.user_id
-		WHERE cs.id = $1 AND u.telegram_id = $2`, sessionID, telegramID,
+		WHERE cs.id = $1 AND u.telegram_id = $2 AND cs.tenant_id = $3`,
+		sessionID, telegramID, tenantID,
 	).Scan(&domainID)
 	if err != nil {
 		return "", errSessionNotFound
@@ -214,20 +220,20 @@ func (st *ChatStore) SessionDomainID(ctx context.Context, sessionID string, tele
 	return domainID, nil
 }
 
-// sessionOwned ╨┐╤А╨╛╨▓╨╡╤А╤П╨╡╤В, ╤З╤В╨╛ ╤Б╨╡╤Б╤Б╨╕╤П ╨┐╤А╨╕╨╜╨░╨┤╨╗╨╡╨╢╨╕╤В telegram-╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╤О.
-func (st *ChatStore) sessionOwned(ctx context.Context, sessionID string, telegramID int64) (bool, error) {
+// sessionOwned checks that the session belongs to the Telegram user.
+func (st *ChatStore) sessionOwned(ctx context.Context, sessionID string, telegramID int64, tenantID string) (bool, error) {
 	var ok bool
 	err := st.Pool.QueryRow(ctx, `
 		SELECT EXISTS (
 			SELECT 1 FROM chat_sessions cs
 			JOIN users u ON u.id = cs.user_id
-			WHERE cs.id = $1 AND u.telegram_id = $2
-		)`, sessionID, telegramID,
+			WHERE cs.id = $1 AND u.telegram_id = $2 AND cs.tenant_id = $3
+		)`, sessionID, telegramID, tenantID,
 	).Scan(&ok)
 	return ok, err
 }
 
-// GetOrCreateSession ╨▓╨╛╨╖╨▓╤А╨░╤Й╨░╨╡╤В ╤Б╤Г╤Й╨╡╤Б╤В╨▓╤Г╤О╤Й╤Г╤О ╤Б╨╡╤Б╤Б╨╕╤О ╨╕╨╗╨╕ ╤Б╨╛╨╖╨┤╨░╤С╤В ╨╜╨╛╨▓╤Г╤О.
+// GetOrCreateSession returns an existing session or creates a new one.
 func (st *ChatStore) GetOrCreateSession(ctx context.Context, sessionID string, u *TelegramUser, tenantID, domainID string) (string, string, error) {
 	userID, err := st.UpsertUser(ctx, u)
 	if err != nil {
@@ -235,12 +241,12 @@ func (st *ChatStore) GetOrCreateSession(ctx context.Context, sessionID string, u
 	}
 	sessionID = strings.TrimSpace(sessionID)
 	if sessionID != "" {
-		owned, err := st.sessionOwned(ctx, sessionID, u.ID)
+		owned, err := st.sessionOwned(ctx, sessionID, u.ID, tenantID)
 		if err != nil {
 			return "", "", err
 		}
 		if owned {
-			domain, err := st.SessionDomainID(ctx, sessionID, u.ID)
+			domain, err := st.SessionDomainID(ctx, sessionID, u.ID, tenantID)
 			if err != nil {
 				return "", "", err
 			}
@@ -251,9 +257,9 @@ func (st *ChatStore) GetOrCreateSession(ctx context.Context, sessionID string, u
 	return sid, domainID, err
 }
 
-// ListMessages ╨▓╨╛╨╖╨▓╤А╨░╤Й╨░╨╡╤В ╨╕╤Б╤В╨╛╤А╨╕╤О ╤Б╨╡╤Б╤Б╨╕╨╕ ╨┤╨╗╤П UI.
-func (st *ChatStore) ListMessages(ctx context.Context, sessionID string, telegramID int64) ([]ChatMessage, error) {
-	owned, err := st.sessionOwned(ctx, sessionID, telegramID)
+// ListMessages returns session history for the UI.
+func (st *ChatStore) ListMessages(ctx context.Context, sessionID string, telegramID int64, tenantID string) ([]ChatMessage, error) {
+	owned, err := st.sessionOwned(ctx, sessionID, telegramID, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -306,7 +312,7 @@ func (st *ChatStore) ListMessages(ctx context.Context, sessionID string, telegra
 	return out, rows.Err()
 }
 
-// ╨Я╤Г╨▒╨╗╨╕╤З╨╜╤Л╨╣ URL ╨╝╨╡╨┤╨╕╨░╤Д╨░╨╣╨╗╨░ ╨┐╨╛ token.
+// mediaURL builds the public media URL for a token.
 func mediaURL(token string) string {
 	return "/api/media/" + token
 }
@@ -323,7 +329,7 @@ func citationsJSONValue(c []RAGFragment) ([]byte, error) {
 	return json.Marshal(c)
 }
 
-// AppendMessage ╤Б╨╛╤Е╤А╨░╨╜╤П╨╡╤В ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╡ ╨╕ ╨╛╨▒╤А╨╡╨╖╨░╨╡╤В ╨╕╤Б╤В╨╛╤А╨╕╤О ╨┤╨╛ maxSessionMessages.
+// AppendMessage persists a message and trims history to maxSessionMessages.
 func (st *ChatStore) AppendMessage(ctx context.Context, sessionID string, m ChatMessage) (int64, error) {
 	citJSON, err := citationsJSONValue(m.Citations)
 	if err != nil {
@@ -353,7 +359,7 @@ func (st *ChatStore) AppendMessage(ctx context.Context, sessionID string, m Chat
 	return id, err
 }
 
-// NULL ╨┤╨╗╤П ╨┐╤Г╤Б╤В╨╛╨│╨╛ image_token ╨┐╤А╨╕ INSERT.
+// nullToken returns SQL NULL for an empty image_token on INSERT.
 func nullToken(s string) *string {
 	s = strings.TrimSpace(s)
 	if s == "" {
@@ -362,7 +368,7 @@ func nullToken(s string) *string {
 	return &s
 }
 
-// NULL ╨┤╨╗╤П ╨╜╤Г╨╗╨╡╨▓╨╛╨╣ ╤Г╨▓╨╡╤А╨╡╨╜╨╜╨╛╤Б╤В╨╕ ╨║╨╗╨░╤Б╤Б╨╕╤Д╨╕╨║╨░╤Ж╨╕╨╕.
+// nullConfidence returns SQL NULL for zero classification confidence.
 func nullConfidence(v float64) *float64 {
 	if v <= 0 {
 		return nil
@@ -370,9 +376,9 @@ func nullConfidence(v float64) *float64 {
 	return &v
 }
 
-// HistoryForLLM тАФ ╨┐╨╛╤Б╨╗╨╡╨┤╨╜╨╕╨╡ ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╤П ╤Б╨╡╤Б╤Б╨╕╨╕ ╨▓ ╤Д╨╛╤А╨╝╨░╤В╨╡ LLM.
-func (st *ChatStore) HistoryForLLM(ctx context.Context, sessionID string, telegramID int64, excludeLastN int) ([]Message, error) {
-	msgs, err := st.ListMessages(ctx, sessionID, telegramID)
+// HistoryForLLM returns recent session messages formatted for the LLM.
+func (st *ChatStore) HistoryForLLM(ctx context.Context, sessionID string, telegramID int64, tenantID string, excludeLastN int) ([]Message, error) {
+	msgs, err := st.ListMessages(ctx, sessionID, telegramID, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -389,7 +395,7 @@ func (st *ChatStore) HistoryForLLM(ctx context.Context, sessionID string, telegr
 	return TrimHistoryMessages(out, 24), nil
 }
 
-// SaveImage ╤Б╨╛╤Е╤А╨░╨╜╤П╨╡╤В JPEG/PNG ╨╜╨░ ╨┤╨╕╤Б╨║, ╨▓╨╛╨╖╨▓╤А╨░╤Й╨░╨╡╤В token ╨┤╨╗╤П URL.
+// SaveImage writes image bytes to disk and returns a URL token.
 func (st *ChatStore) SaveImage(data []byte) (string, error) {
 	token := newImageToken()
 	path := filepath.Join(st.uploadDir, token+".bin")
@@ -399,7 +405,7 @@ func (st *ChatStore) SaveImage(data []byte) (string, error) {
 	return token, nil
 }
 
-// UserCanAccessImage ╨┐╤А╨╛╨▓╨╡╤А╤П╨╡╤В, ╤З╤В╨╛ ╤Д╨░╨╣╨╗ ╨┐╤А╨╕╨╜╨░╨┤╨╗╨╡╨╢╨╕╤В ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╤О ╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╤П.
+// UserCanAccessImage checks that the image belongs to the user's message.
 func (st *ChatStore) UserCanAccessImage(ctx context.Context, token string, telegramID int64) (bool, error) {
 	var ok bool
 	err := st.Pool.QueryRow(ctx, `
@@ -413,7 +419,7 @@ func (st *ChatStore) UserCanAccessImage(ctx context.Context, token string, teleg
 	return ok, err
 }
 
-// ReadImage ╨▓╨╛╨╖╨▓╤А╨░╤Й╨░╨╡╤В ╨▒╨░╨╣╤В╤Л ╤Д╨░╨╣╨╗╨░ ╨┐╨╛ token.
+// ReadImage returns file bytes for a token.
 func (st *ChatStore) ReadImage(token string) ([]byte, error) {
 	token = strings.TrimSpace(token)
 	if token == "" || strings.Contains(token, "..") || strings.Contains(token, "/") {
@@ -427,7 +433,7 @@ type FeedbackSummaryRow struct {
 	Count  int64 `json:"count"`
 }
 
-// FeedbackSummary тАФ ╨░╨│╤А╨╡╨│╨░╤В ╨╛╤Ж╨╡╨╜╨╛╨║ ╤Б╨╛╨╛╨▒╤Й╨╡╨╜╨╕╨╣.
+// FeedbackSummary aggregates message feedback ratings.
 func (st *ChatStore) FeedbackSummary(ctx context.Context) ([]FeedbackSummaryRow, error) {
 	rows, err := st.Pool.Query(ctx, `
 		SELECT rating, COUNT(*)::bigint
@@ -477,18 +483,20 @@ func (st *ChatStore) PurgeSessionsOlderThan(ctx context.Context, days int) (int6
 	return tag.RowsAffected(), nil
 }
 
-// ╨Ц╨┤╤С╤В ╨│╨╛╤В╨╛╨▓╨╜╨╛╤Б╤В╨╕ Postgres ╨┐╤А╨╕ ╤Б╤В╨░╤А╤В╨╡ (docker compose).
+// WaitForPostgres waits for Postgres to become ready at startup (e.g. docker compose).
 func WaitForPostgres(ctx context.Context, databaseURL string, attempts int) (*pgxpool.Pool, error) {
 	var lastErr error
 	for i := 0; i < attempts; i++ {
-		pool, err := pgxpool.New(ctx, databaseURL)
+		pool, err := openPool(ctx, databaseURL)
 		if err == nil {
 			if err = pool.Ping(ctx); err == nil {
 				return pool, nil
 			}
 			pool.Close()
+			lastErr = err
+		} else {
+			lastErr = err
 		}
-		lastErr = err
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import heapq
 import os
 import pickle
 import re
-import shutil
 
 from langchain_core.documents import Document
 from rank_bm25 import BM25Plus
@@ -107,9 +107,12 @@ class BM25SparseIndex:
         return self.is_ready()
 
     def clear_persisted(self) -> None:
-        base = os.path.dirname(_persist_path())
-        if os.path.isdir(base):
-            shutil.rmtree(base, ignore_errors=True)
+        # Remove only the pickle payload — the directory may contain
+        # tracked files (README, .gitkeep) when it lives inside the repo.
+        try:
+            os.remove(_persist_path())
+        except OSError:
+            pass
         self.reset()
 
     def search(
@@ -135,13 +138,10 @@ class BM25SparseIndex:
             return []
 
         scores = bm25.get_scores(tokens)
-        ranked = sorted(
-            zip(indices, scores),
-            key=lambda item: item[1],
-            reverse=True,
-        )
+        # O(n log k) instead of full sort — matters on large per-tenant corpora.
+        ranked = heapq.nlargest(k, zip(indices, scores), key=lambda item: item[1])
         out: list[Document] = []
-        for idx, score in ranked[:k]:
+        for idx, score in ranked:
             if score <= 0:
                 continue
             out.append(self._chunks[idx])

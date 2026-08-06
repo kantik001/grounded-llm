@@ -51,7 +51,10 @@ func Message(c *gin.Context) {
 		text = strings.TrimSpace(req.Text)
 		domainIDRaw = strings.TrimSpace(req.DomainID)
 		if tid := strings.TrimSpace(req.TenantID); tid != "" {
-			s.SetTenantID(c, s.NormalizeTenantID(tid))
+			if err := s.RequestTenantOverride(c, tid); err != nil {
+				s.JSONError(c, http.StatusForbidden, err)
+				return
+			}
 		}
 	}
 
@@ -107,6 +110,7 @@ func Message(c *gin.Context) {
 	s.LogRequest(c, "message_sent", map[string]any{"domain_id": sessionDomain, "session_id": sid})
 
 	tr := BeginPathTrace(CtxRequestID(c), tenantID)
+	defer tr.End()
 	tr.Step("message.accept", map[string]any{
 		"domain_id": sessionDomain, "session_id": sid, "stream": WantsStream(c),
 	})
@@ -121,7 +125,7 @@ func Message(c *gin.Context) {
 
 func respondWithMessages(c *gin.Context, sid, domainID, tenantID string, telegramID int64, extra gin.H, status int) {
 	s := requireServices()
-	msgs, err := s.Store().ListMessages(c.Request.Context(), sid, telegramID)
+	msgs, err := s.Store().ListMessages(c.Request.Context(), sid, telegramID, tenantID)
 	if err != nil {
 		log.Printf("ListMessages after reply: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Database error"})
@@ -143,7 +147,7 @@ func respondWithMessages(c *gin.Context, sid, domainID, tenantID string, telegra
 func handleTextMessage(c *gin.Context, sid, domainID, tenantID, locale string, telegramID int64, text string) {
 	s := requireServices()
 	ctx := c.Request.Context()
-	prior, err := s.Store().HistoryForLLM(ctx, sid, telegramID, 0)
+	prior, err := s.Store().HistoryForLLM(ctx, sid, telegramID, tenantID, 0)
 	if err != nil {
 		log.Printf("HistoryForLLM: %v", err)
 		c.JSON(http.StatusInternalServerError, AttachRequestID(c, gin.H{"success": false, "error": "History error"}))

@@ -31,3 +31,12 @@ class VectorBackend(ABC):
     @abstractmethod
     def reset(self) -> None:
         """Drop cached client handles (tests / hot reload)."""
+
+    def refresh(self) -> dict:
+        """Sync the index with files on disk.
+
+        Backends may override with an incremental implementation (see
+        ChromaBackend); the default is a full rebuild.
+        """
+        self.load(force_reindex=True)
+        return {"mode": "full"}

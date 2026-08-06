@@ -33,10 +33,12 @@ data/{tenant}/{domain}/  →  loaders → chunk → embed → vector (+ optional
 | `QDRANT_URL` / `QDRANT_COLLECTION` | `http://127.0.0.1:6333` / `grounded_llm` | Qdrant |
 | `PGVECTOR_URL` or `DATABASE_URL` | — | pgvector DSN |
 | `PGVECTOR_COLLECTION` | `grounded_chunks` | Table/collection name |
-| `RAG_RETRIEVAL_MODE` | `vector` | `vector` \| `hybrid` (dense + BM25 + RRF) |
+| `RAG_RETRIEVAL_MODE` | `vector` | `vector` \| `hybrid` (dense + BM25 + RRF); Compose/CI default to `hybrid` |
 | `RAG_RRF_K` | `60` | RRF constant |
-| `RAG_RERANKER` | `none` | `none` \| `keyword` \| `cross_encoder` |
+| `RAG_RERANKER` | `none` | `none` \| `keyword` \| `cross_encoder`; Compose defaults to `keyword` |
 | `RAG_CROSS_ENCODER_MODEL` | `cross-encoder/ms-marco-MiniLM-L-6-v2` | When cross-encoder on |
+| `RAG_E5_PREFIXES` | auto | `query:`/`passage:` prefixes; auto-on for e5 models, index rebuilds on flip |
+| `DATA_DIR` | `./data` | KB root, shared with the Go server (uploads) |
 | `SPARSE_INDEX_DIR` | project `sparse_index/` | BM25 persist — see [`sparse_index/README.md`](../sparse_index/README.md) |
 | `REDIS_URL` | — | Embedding cache |
 | `EMBEDDING_CACHE_TTL_SEC` | `3600` | Cache TTL |
@@ -50,8 +52,9 @@ Optional pip extras: `api/requirements-qdrant.txt`, `api/requirements-pgvector.t
 ## Ops
 
 ```bash
-python scripts/reindex_rag.py          # rebuild indexes from data/
-# or POST /admin/reindex via api/ / Go admin
+python scripts/reindex_rag.py          # full rebuild from data/
+# POST /admin/reindex               → incremental (only added/changed/removed files re-embedded)
+# POST /admin/reindex {"full":true} → full rebuild
 ```
 
 Quality gates: [`eval/`](../eval/README.md). Architecture: [`docs/en/ARCHITECTURE.md`](../docs/en/ARCHITECTURE.md).

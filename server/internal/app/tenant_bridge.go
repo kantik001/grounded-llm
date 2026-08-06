@@ -16,8 +16,6 @@ func init() {
 	tenant.BindApplyPlanQuotas(applyPlanQuotasFromPlans)
 }
 
-const ctxKeyTenantID = tenant.CtxKeyTenantID
-
 type (
 	TenantQuotaLimits = tenant.QuotaLimits
 	TenantQuotaUsage  = tenant.QuotaUsage
@@ -36,6 +34,10 @@ func resolveTenantID(c *gin.Context, cfg *Config) (string, error) {
 	return tenant.ResolveID(c, cfg)
 }
 
+func requestTenantOverride(c *gin.Context, raw string) error {
+	return tenant.RequestOverride(c, raw)
+}
+
 func tenantMiddleware(cfg *Config) gin.HandlerFunc {
 	return tenant.Middleware(cfg)
 }
@@ -50,10 +52,6 @@ func kbDataDir(tenantID, domainID string) string {
 
 func adminTenantID(c *gin.Context) string {
 	return tenant.AdminID(c)
-}
-
-func tenantsRegistryPath() string {
-	return tenant.RegistryPath()
 }
 
 func loadTenantRegistry() {

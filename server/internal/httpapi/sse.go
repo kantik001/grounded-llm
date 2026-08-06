@@ -26,7 +26,7 @@ func sseMessage(c *gin.Context, sid, domainID, tenantID string, telegramID int64
 	c.Header("X-Accel-Buffering", "no")
 
 	ctx := c.Request.Context()
-	prior, err := s.Store().HistoryForLLM(ctx, sid, telegramID, 0)
+	prior, err := s.Store().HistoryForLLM(ctx, sid, telegramID, tenantID, 0)
 	if err != nil {
 		writeSSE(c, "error", mustJSON(AttachRequestID(c, gin.H{"error": "History error"})))
 		return
@@ -61,7 +61,7 @@ func sseMessage(c *gin.Context, sid, domainID, tenantID string, telegramID int64
 				writeSSE(c, "error", mustJSON(AttachRequestID(c, gin.H{"error": "Failed to save assistant reply"})))
 				return
 			}
-			msgs, err := s.Store().ListMessages(ctx, sid, telegramID)
+			msgs, err := s.Store().ListMessages(ctx, sid, telegramID, tenantID)
 			if err != nil {
 				writeSSE(c, "error", mustJSON(AttachRequestID(c, gin.H{"error": "Database error"})))
 				return
@@ -86,7 +86,7 @@ func sseMessage(c *gin.Context, sid, domainID, tenantID string, telegramID int64
 
 	prepared, err := rag.PrepareMessages(ctx, text, domainID, tenantID, locale, prior, sid)
 	if err != nil {
-		writeSSE(c, "error", mustJSON(AttachRequestID(c, gin.H{"error": err.Error()})))
+		writeSSE(c, "error", mustJSON(AttachRequestID(c, gin.H{"error": s.PublicAPIError(err)})))
 		return
 	}
 	if prepared.SoftFail || !prepared.OK {
@@ -135,7 +135,7 @@ func sseMessage(c *gin.Context, sid, domainID, tenantID string, telegramID int64
 		return
 	}
 
-	msgs, err := s.Store().ListMessages(ctx, sid, telegramID)
+	msgs, err := s.Store().ListMessages(ctx, sid, telegramID, tenantID)
 	if err != nil {
 		writeSSE(c, "error", mustJSON(AttachRequestID(c, gin.H{"error": "Database error"})))
 		return

@@ -42,6 +42,9 @@ func TestValidateProduction_FailsOnInsecure(t *testing.T) {
 
 func TestValidateProduction_OK(t *testing.T) {
 	t.Setenv("GROUNDED_ENV", "production")
+	t.Setenv("TENANT_MEMBERSHIP_ENFORCE", "true")
+	t.Setenv("VERIFY_FAITHFULNESS", "enforce")
+	t.Setenv("METRICS_TOKEN", "metrics-token-for-prod")
 	cfg := &Config{
 		TelegramAuthDisabled: false,
 		LLMMock:              false,

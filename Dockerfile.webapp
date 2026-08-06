@@ -12,6 +12,9 @@ COPY webapp/admin.js /usr/share/nginx/html/
 COPY webapp/embed.html /usr/share/nginx/html/
 COPY webapp/embed.css /usr/share/nginx/html/
 COPY webapp/embed.js /usr/share/nginx/html/
+COPY webapp/signup.html /usr/share/nginx/html/
+COPY webapp/signup.css /usr/share/nginx/html/
+COPY webapp/signup.js /usr/share/nginx/html/
 
 EXPOSE 80
 

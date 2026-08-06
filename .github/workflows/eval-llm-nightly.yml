@@ -6,7 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  llm-e2e:
+  # LLM-only smoke: mock RAG, real LLM provider (validates prompt/completion path).
+  llm-e2e-mock-rag:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -24,16 +25,13 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v7
-
       - uses: actions/setup-go@v7
         with:
           go-version: "1.25"
           cache-dependency-path: server/go.sum
-
       - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
-
       - name: Start server (RAG mock, real LLM)
         env:
           DATABASE_URL: postgres://grounded:grounded@localhost:5432/grounded?sslmode=disable
@@ -62,13 +60,105 @@ jobs:
             curl -sf http://127.0.0.1:8080/health && break
             sleep 1
           done
-
-      - name: LLM E2E smoke
+      - name: LLM E2E smoke (mock RAG)
         env:
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-        run: bash scripts/llm_e2e_smoke.sh http://127.0.0.1:8080
-
+        run: |
+          if [ -z "$LLM_API_KEY" ]; then exit 0; fi
+          bash scripts/llm_e2e_smoke.sh http://127.0.0.1:8080
       - name: Stop server
         if: always()
         run: |
           if [ -f server.pid ]; then kill $(cat server.pid) 2>/dev/null || true; fi
+
+  # Real retrieval + real LLM: Python RAG indexed from data/, Go server with RAG_MOCK=false.
+  llm-e2e-real-rag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: grounded
+          POSTGRES_PASSWORD: grounded
+          POSTGRES_DB: grounded
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U grounded -d grounded"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version: "1.25"
+          cache-dependency-path: server/go.sum
+      - uses: ./.github/actions/setup-python-ci
+        with:
+          cache: "true"
+          cache-dependency-path: api/requirements.txt
+      - uses: ./.github/actions/cache-hf-e5
+      - name: Install RAG + prefetch embeddings
+        run: |
+          pip install -r api/requirements.txt requests
+          python -c "from langchain_huggingface import HuggingFaceEmbeddings; HuggingFaceEmbeddings(model_name='intfloat/multilingual-e5-small')"
+      - name: Reindex + start Python RAG
+        env:
+          FORCE_RAG_REINDEX: "true"
+          RAG_RETRIEVAL_MODE: hybrid
+          RAG_RERANKER: keyword
+          DATA_DIR: ${{ github.workspace }}/data
+          PYTHON_SERVICE_PORT: "5000"
+        run: |
+          python scripts/reindex_rag.py
+          export FORCE_RAG_REINDEX=false
+          export PYTHONPATH="${GITHUB_WORKSPACE}${PYTHONPATH:+:$PYTHONPATH}"
+          python -m flask --app api.http.app run -h 127.0.0.1 -p 5000 &
+          echo $! > rag.pid
+          for i in $(seq 1 90); do
+            curl -sf http://127.0.0.1:5000/health && break
+            sleep 2
+          done
+      - name: Start Go server (real RAG + real LLM)
+        env:
+          DATABASE_URL: postgres://grounded:grounded@localhost:5432/grounded?sslmode=disable
+          TELEGRAM_AUTH_DISABLED: "true"
+          RAG_MOCK: "false"
+          LLM_MOCK: "false"
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
+          LLM_MODEL: ${{ vars.LLM_MODEL }}
+          PYTHON_RAG_URL: http://127.0.0.1:5000/rag/context
+          DOMAINS_CONFIG_PATH: ${{ github.workspace }}/config/domains.json
+          LOCALES_ROOT: ${{ github.workspace }}/config/locales
+          MIGRATIONS_DIR: ${{ github.workspace }}/migrations
+          DATA_DIR: ${{ github.workspace }}/data
+          UPLOAD_DIR: /tmp/grounded-uploads
+          SERVER_PORT: "8080"
+          VERIFY_FAITHFULNESS: warn
+        run: |
+          if [ -z "$LLM_API_KEY" ]; then
+            echo "Skip: LLM_API_KEY secret not configured"
+            exit 0
+          fi
+          mkdir -p /tmp/grounded-uploads
+          cd server && go build -o ../server-bin ./cmd/server && cd ..
+          ./server-bin &
+          echo $! > server.pid
+          for i in $(seq 1 60); do
+            curl -sf http://127.0.0.1:8080/health && break
+            sleep 1
+          done
+      - name: Real RAG + LLM E2E
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: |
+          if [ -z "$LLM_API_KEY" ]; then exit 0; fi
+          bash scripts/llm_rag_e2e_smoke.sh http://127.0.0.1:8080
+      - name: Stop
+        if: always()
+        run: |
+          if [ -f server.pid ]; then kill $(cat server.pid) 2>/dev/null || true; fi
+          if [ -f rag.pid ]; then kill $(cat rag.pid) 2>/dev/null || true; fi

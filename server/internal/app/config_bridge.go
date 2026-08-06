@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"log"
 
 	"grounded_llm_server/internal/admin"
@@ -17,7 +18,15 @@ func loadConfig() *Config {
 }
 
 func validateProductionConfig(cfg *Config) error {
-	return cfgpkg.ValidateProduction(cfg, admin.UserCount())
+	if err := cfgpkg.ValidateProduction(cfg, admin.UserCount()); err != nil {
+		return err
+	}
+	if cfgpkg.IsProductionEnv() {
+		if n := admin.PlaintextPasswordCount(); n > 0 {
+			return fmt.Errorf("production safety check failed: %d admin user(s) in ADMIN_USERS_FILE use plaintext \"password\" — switch to \"password_bcrypt\"", n)
+		}
+	}
+	return nil
 }
 
 func logStartup(cfg *Config) {

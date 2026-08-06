@@ -93,6 +93,18 @@ def set_embedding(text: str, model: str, vector: Sequence[float], ttl_sec: int =
         logger.debug("embedding cache set failed: %s", exc)
 
 
+def e5_prefixes_enabled(model_name: str) -> bool:
+    """E5-family models are trained with "query:"/"passage:" prefixes; skipping
+    them measurably hurts dense retrieval. Auto-on for e5 models, overridable
+    via RAG_E5_PREFIXES=0/1."""
+    raw = (os.environ.get("RAG_E5_PREFIXES") or "").strip().lower()
+    if raw in ("1", "true", "yes", "on"):
+        return True
+    if raw in ("0", "false", "no", "off"):
+        return False
+    return "e5" in model_name.lower()
+
+
 class CachedHuggingFaceEmbeddings:
     """LangChain-compatible wrapper around HuggingFaceEmbeddings with Redis cache on embed_query."""
 
@@ -102,8 +114,20 @@ class CachedHuggingFaceEmbeddings:
         self._model_name = model_name
         self._inner = HuggingFaceEmbeddings(model_name=model_name)
         self._ttl = int(os.environ.get("EMBEDDING_CACHE_TTL_SEC", "3600") or "3600")
+        self._e5 = e5_prefixes_enabled(model_name)
+
+    @property
+    def uses_e5_prefixes(self) -> bool:
+        return self._e5
+
+    def _query_text(self, text: str) -> str:
+        return f"query: {text}" if self._e5 else text
+
+    def _passage_text(self, text: str) -> str:
+        return f"passage: {text}" if self._e5 else text
 
     def embed_query(self, text: str) -> list[float]:
+        text = self._query_text(text)
         cached = get_embedding(text, self._model_name)
         if cached is not None:
             return cached
@@ -112,6 +136,7 @@ class CachedHuggingFaceEmbeddings:
         return vec
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        texts = [self._passage_text(t) for t in texts]
         out: list[list[float]] = []
         missing_idx: list[int] = []
         missing_texts: list[str] = []

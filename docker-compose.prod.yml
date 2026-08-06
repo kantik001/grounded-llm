@@ -4,10 +4,11 @@
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 #
 # Required in .env when GROUNDED_ENV=production:
-#   POSTGRES_PASSWORD, ADMIN_PASSWORD, ADMIN_SECRET, RAG_SERVICE_TOKEN
+#   POSTGRES_PASSWORD, ADMIN_PASSWORD, ADMIN_SECRET, RAG_SERVICE_TOKEN, METRICS_TOKEN
 #   DATABASE_URL must NOT use grounded:grounded
 #   TELEGRAM_AUTH_DISABLED must be false
 #   LLM_MOCK / RAG_MOCK must be unset/false
+#   TENANT_MEMBERSHIP_ENFORCE=true, VERIFY_FAITHFULNESS=enforce
 
 name: grounded_llm
 
@@ -32,6 +33,11 @@ services:
     expose:
       - "5000"
       - "50051"
+    # Drop host bind-mounts of source trees; use image + named volumes only.
+    volumes: !reset
+      - chroma_data:/app/chroma_db
+      - kb_data:/app/data
+      - config_data:/config:ro
     environment:
       - GROUNDED_ENV=production
       - PYTHON_SERVICE_PORT=5000
@@ -48,9 +54,10 @@ services:
       - DEFAULT_LOCALE=${DEFAULT_LOCALE:-en}
       - GUNICORN_WORKERS=${GUNICORN_WORKERS:-2}
       - GUNICORN_TIMEOUT=${GUNICORN_TIMEOUT:-120}
-      - RAG_RETRIEVAL_MODE=${RAG_RETRIEVAL_MODE:-vector}
+      - RAG_RETRIEVAL_MODE=${RAG_RETRIEVAL_MODE:-hybrid}
       - RAG_RERANKER=${RAG_RERANKER:-keyword}
       - RAG_CROSS_ENCODER_MODEL=${RAG_CROSS_ENCODER_MODEL:-}
+      - DATA_DIR=/app/data
     deploy:
       resources:
         limits:
@@ -58,6 +65,10 @@ services:
           cpus: "2.0"
 
   server:
+    volumes: !reset
+      - uploads_data:/data/uploads
+      - kb_data:/app/data
+      - config_data:/config:ro
     environment:
       - GROUNDED_ENV=production
       - PYTHON_RAG_URL=http://python:5000/rag/context
@@ -85,6 +96,10 @@ services:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
       - ADMIN_SECRET=${ADMIN_SECRET:?ADMIN_SECRET is required}
       - RAG_SERVICE_TOKEN=${RAG_SERVICE_TOKEN:?RAG_SERVICE_TOKEN is required}
+      - METRICS_TOKEN=${METRICS_TOKEN:?METRICS_TOKEN is required}
+      - TENANT_MEMBERSHIP_ENFORCE=true
+      - TENANT_MEMBERSHIP_AUTO_DEFAULT=${TENANT_MEMBERSHIP_AUTO_DEFAULT:-true}
+      - VERIFY_FAITHFULNESS=enforce
       - MESSAGE_RETENTION_DAYS=${MESSAGE_RETENTION_DAYS:-90}
       - SESSION_RETENTION_DAYS=${SESSION_RETENTION_DAYS:-365}
       - RETENTION_INTERVAL_HOURS=${RETENTION_INTERVAL_HOURS:-24}
@@ -100,6 +115,8 @@ services:
           cpus: "1.0"
 
   webapp:
+    # Image already contains static assets — no host bind-mounts in production.
+    volumes: !reset []
     ports:
       - "80:80"
     deploy:
@@ -107,3 +124,7 @@ services:
         limits:
           memory: 128M
           cpus: "0.5"
+
+volumes:
+  kb_data:
+  config_data:

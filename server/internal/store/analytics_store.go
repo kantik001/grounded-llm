@@ -8,7 +8,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// LogAnalyticsEvent записывает продуктовое событие (user_id опционален).
+// LogAnalyticsEvent records a product analytics event (user_id is optional).
 func (st *ChatStore) LogAnalyticsEvent(ctx context.Context, telegramID int64, eventType string, payload map[string]any) error {
 	if payload == nil {
 		payload = map[string]any{}
@@ -34,13 +34,13 @@ func (st *ChatStore) LogAnalyticsEvent(ctx context.Context, telegramID int64, ev
 	return err
 }
 
-// LogEvent записывает продуктовое событие (без PII в payload).
+// LogEvent records a product event (no PII in payload).
 func (st *ChatStore) LogEvent(ctx context.Context, telegramID int64, eventType string, payload map[string]any) error {
 	return st.LogAnalyticsEvent(ctx, telegramID, eventType, payload)
 }
 
-// SaveMessageFeedback сохраняет оценку ответа ассистента (1 или -1).
-func (st *ChatStore) SaveMessageFeedback(ctx context.Context, telegramID int64, messageID int64, rating int) error {
+// SaveMessageFeedback stores an assistant reply rating (1 or -1) for the tenant.
+func (st *ChatStore) SaveMessageFeedback(ctx context.Context, telegramID int64, tenantID string, messageID int64, rating int) error {
 	if rating != 1 && rating != -1 {
 		return errors.New("rating must be 1 or -1")
 	}
@@ -54,8 +54,8 @@ func (st *ChatStore) SaveMessageFeedback(ctx context.Context, telegramID int64, 
 		SELECT EXISTS (
 			SELECT 1 FROM messages m
 			JOIN chat_sessions cs ON cs.id = m.session_id
-			WHERE m.id = $1 AND m.role = 'assistant' AND cs.user_id = $2
-		)`, messageID, userID,
+			WHERE m.id = $1 AND m.role = 'assistant' AND cs.user_id = $2 AND cs.tenant_id = $3
+		)`, messageID, userID, tenantID,
 	).Scan(&ok)
 	if err != nil {
 		return err

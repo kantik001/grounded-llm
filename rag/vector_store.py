@@ -39,6 +39,18 @@ def load_vector_store(force_reindex: bool = False):
     return backend
 
 
+def refresh_vector_store() -> tuple[object, dict]:
+    """Incrementally sync indexes with the KB tree (admin reindex).
+
+    Only added/changed/removed files are re-embedded in the dense index;
+    the sparse BM25 index is rebuilt from chunks (cheap, in-memory).
+    """
+    backend = get_vector_backend()
+    summary = backend.refresh()
+    ensure_sparse_index(force_reindex=True)
+    return backend, summary
+
+
 def readiness_index_check() -> tuple[str, bool]:
     """Cheap index/backend smoke for GET /ready (no embedding model load).
 

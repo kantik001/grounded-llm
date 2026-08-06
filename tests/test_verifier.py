@@ -1,5 +1,11 @@
 from langchain_core.documents import Document
-from rag.verifier import RAG_ANSWER_DISCLAIMER, extract_numbers, strip_source_attribution, verify_answer
+from rag.verifier import (
+    RAG_ANSWER_DISCLAIMER,
+    extract_numbers,
+    strip_source_attribution,
+    unsupported_sentences,
+    verify_answer,
+)
 
 
 def test_extract_numbers_decimal_comma():
@@ -27,3 +33,33 @@ def test_strip_source_line():
     assert "Source" not in body
     assert "Journal" not in body
     assert "Fact" in body
+
+
+_FAITH_CTX = (
+    "Возврат товара возможен в течение 14 дней с момента покупки. "
+    "Для возврата необходим чек и заявление."
+)
+
+
+def test_unsupported_sentences_passes_grounded():
+    body = "Возврат товара возможен в течение 14 дней. Для возврата необходим чек и заявление."
+    assert unsupported_sentences(body, _FAITH_CTX) == []
+
+
+def test_unsupported_sentences_flags_fabrication():
+    body = (
+        "Возврат товара возможен в течение 14 дней. "
+        "Компенсация выплачивается биткоинами через мобильное приложение банка."
+    )
+    flagged = unsupported_sentences(body, _FAITH_CTX)
+    assert len(flagged) == 1
+    assert "биткоинами" in flagged[0]
+
+
+def test_unsupported_sentences_tolerates_inflection():
+    body = "Для возврата товара потребуется заявление вместе с чеком."
+    assert unsupported_sentences(body, _FAITH_CTX) == []
+
+
+def test_unsupported_sentences_skips_short():
+    assert unsupported_sentences("Да, конечно.", _FAITH_CTX) == []

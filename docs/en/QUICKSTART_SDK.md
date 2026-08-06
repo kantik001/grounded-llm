@@ -16,8 +16,16 @@ python scripts/reindex_rag.py
 
 ## 2. Install the SDK
 
+**Python:**
+
 ```bash
 pip install -e "sdk/python[dev]"
+```
+
+**TypeScript / JavaScript:**
+
+```bash
+cd sdk/js && npm install && npm run build
 ```
 
 ## 3. One-liner CLI
@@ -69,5 +77,6 @@ for token in client.stream_message_deltas("How many vacation days?", session_id=
 ## See also
 
 - [sdk/python/README.md](../../sdk/python/README.md)
+- [sdk/js/README.md](../../sdk/js/README.md)
 - [OpenAPI](http://localhost:8080/api/v1/openapi.json)
 - [CASE_STUDY_HR_PILOT.md](./CASE_STUDY_HR_PILOT.md)

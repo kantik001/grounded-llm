@@ -4,13 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
+
+// stripeHTTPClient bounds outbound Stripe calls (http.DefaultClient has no timeout).
+var stripeHTTPClient = &http.Client{Timeout: 15 * time.Second}
 
 func stripeAPIBase() string {
 	if base := strings.TrimSpace(os.Getenv("STRIPE_API_BASE")); base != "" {
@@ -65,6 +70,14 @@ func handleStripeCheckout(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"success": false, "error": "unknown tenant"})
 		return
 	}
+	// Ownership check: the caller must present the email the tenant signed up
+	// with. Knowing a tenant id alone must not be enough to start billing flows.
+	registeredEmail := strings.TrimSpace(strings.ToLower(tenantEmail(tenantID)))
+	requestEmail := strings.TrimSpace(strings.ToLower(req.Email))
+	if registeredEmail == "" || requestEmail != registeredEmail {
+		c.JSON(http.StatusForbidden, gin.H{"success": false, "error": "email does not match tenant registration"})
+		return
+	}
 
 	plan, ok := PlanByID(planID)
 	if !ok || plan.ContactSales {
@@ -76,10 +89,7 @@ func handleStripeCheckout(c *gin.Context) {
 		return
 	}
 
-	email := strings.TrimSpace(strings.ToLower(req.Email))
-	if email == "" {
-		email = tenantEmail(tenantID)
-	}
+	email := registeredEmail
 	successURL := strings.TrimSpace(req.SuccessURL)
 	cancelURL := strings.TrimSpace(req.CancelURL)
 	if successURL == "" {
@@ -100,7 +110,8 @@ func handleStripeCheckout(c *gin.Context) {
 		},
 	})
 	if err != nil {
-		c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": err.Error()})
+		log.Printf("stripe checkout for tenant %s: %v", tenantID, err)
+		c.JSON(http.StatusBadGateway, gin.H{"success": false, "error": "payment provider error"})
 		return
 	}
 
@@ -151,7 +162,7 @@ func createStripeCheckoutSession(p stripeCheckoutParams) (string, error) {
 	req.Header.Set("Authorization", "Bearer "+key)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := stripeHTTPClient.Do(req)
 	if err != nil {
 		return "", err
 	}

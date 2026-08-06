@@ -52,6 +52,7 @@ func LoadQuotas() {
 		}
 	}
 	log.Printf("Tenant quotas: %d tenant(s) configured", len(quotaRegistry))
+	LoadQuotasFromStore()
 }
 
 // QuotaLimitsFor returns configured limits for tenantID.

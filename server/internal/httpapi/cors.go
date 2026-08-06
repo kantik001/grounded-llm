@@ -19,22 +19,27 @@ func ParseAllowedOrigins(raw string) []string {
 	return out
 }
 
-// CORS allows listed origins (empty list = reflect any Origin).
+// CORS allows listed origins. An empty list allows no cross-origin callers
+// (same-origin only); an explicit "*" reflects any Origin without credentials.
 func CORS(allowedOrigins []string) gin.HandlerFunc {
-	allowAll := len(allowedOrigins) == 0
+	allowAll := false
 	originSet := make(map[string]struct{}, len(allowedOrigins))
 	for _, o := range allowedOrigins {
+		if o == "*" {
+			allowAll = true
+			continue
+		}
 		originSet[o] = struct{}{}
 	}
 
 	return func(c *gin.Context) {
 		origin := c.GetHeader("Origin")
 		if origin != "" {
-			if allowAll {
-				c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
-			} else if _, ok := originSet[origin]; ok {
+			if _, ok := originSet[origin]; ok {
 				c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 				c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+			} else if allowAll {
+				c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 			}
 			c.Writer.Header().Set("Vary", "Origin")
 		}

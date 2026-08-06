@@ -1,0 +1,31 @@
+{{- if .Values.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "grounded-llm.fullname" . }}-server
+  labels:
+    {{- include "grounded-llm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: server
+spec:
+  minAvailable: {{ .Values.podDisruptionBudget.serverMinAvailable | default 1 }}
+  selector:
+    matchLabels:
+      {{- include "grounded-llm.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: server
+---
+{{- if gt (int .Values.python.replicaCount) 1 }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "grounded-llm.fullname" . }}-python
+  labels:
+    {{- include "grounded-llm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: python
+spec:
+  minAvailable: {{ .Values.podDisruptionBudget.pythonMinAvailable | default 1 }}
+  selector:
+    matchLabels:
+      {{- include "grounded-llm.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: python
+{{- end }}
+{{- end }}

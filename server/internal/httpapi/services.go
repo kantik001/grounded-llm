@@ -17,7 +17,9 @@ type Services interface {
 
 	ActorUser(c *gin.Context) (*store.TelegramUser, error)
 	ResolveTenant(c *gin.Context) (string, error)
-	SetTenantID(c *gin.Context, tenantID string)
+	// RequestTenantOverride applies a client-requested tenant (JSON body),
+	// enforcing the allowlist and any credential-bound tenant.
+	RequestTenantOverride(c *gin.Context, raw string) error
 	TenantID(c *gin.Context) string
 	NormalizeTenantID(raw string) string
 	NormalizeDomainID(raw string) (string, error)

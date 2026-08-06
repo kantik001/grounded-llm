@@ -28,6 +28,7 @@ func Run() {
 		log.Fatalf("%v", err)
 	}
 	initRedis()
+	initTracing()
 	initGuardrailsClient(config)
 	defer closeGuardrailsClient()
 	logStartup(config)
@@ -58,6 +59,10 @@ func Run() {
 	}
 	bindDeps(config, chatStore)
 	defer chatStore.Close()
+	// Re-hydrate SaaS tenants/quotas/admin users now that Postgres is available.
+	loadTenantRegistry()
+	loadTenantQuotas()
+	loadAdminUsers(config)
 	log.Printf("PostgreSQL: connected, migrations from %s", migDir)
 	log.Printf("Domains loaded: %d, default=%s", domainCatalogLen(), domainCatalogDefault())
 
@@ -71,6 +76,9 @@ func Run() {
 	router.Use(defaultJSONContentTypeMiddleware())
 
 	rl := newRateLimiter(config.RateLimitPerMinute, time.Minute)
+	if c := llmRedis(); c != nil {
+		rl.WithRedis(c)
+	}
 
 	registerPublicRoutes(router)
 	registerSaaSRoutes(router, rl)
@@ -84,6 +92,10 @@ func Run() {
 		Addr:              serverAddr,
 		Handler:           router,
 		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       60 * time.Second,
+		IdleTimeout:       120 * time.Second,
+		// WriteTimeout stays 0: SSE streaming + LLM completions can exceed
+		// any fixed cap; per-request deadlines are enforced via contexts.
 	}
 
 	go func() {
@@ -100,6 +112,7 @@ func Run() {
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer shutdownCancel()
+	stopRetentionWorker()
 	if err := srv.Shutdown(shutdownCtx); err != nil {
 		log.Printf("Graceful shutdown error: %v", err)
 	} else {
