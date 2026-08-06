@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import heapq
 import os
 import pickle
 import re
-import heapq
 
 from langchain_core.documents import Document
 from rank_bm25 import BM25Plus

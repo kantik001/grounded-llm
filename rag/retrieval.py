@@ -114,7 +114,7 @@ def retrieve_rag_context(
         empty["error"] = f"No information found in documents for domain «{name}»."
         return empty
 
-    from rag.rerank import score_pair, reranker_mode
+    from rag.rerank import reranker_mode, score_pair
 
     mode = reranker_mode()
     if mode == "none":
