@@ -206,6 +206,21 @@ Phase history, SaaS/billing, RFC, connectors, trust center, and more → [docs/R
 
 ---
 
+## Ecosystem
+
+| Repo | Role |
+|------|------|
+| **grounded-llm** | Cited RAG platform + Spec v1 + gRPC Retriever `:50051` |
+| [grounded-agent](https://github.com/kantik001/grounded-agent) | ReAct orchestration over retrieval + MCP |
+| [mcp-gateway](https://github.com/kantik001/mcp-gateway) | HTTP bridge to MCP tools |
+| [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) | Token-level verify gRPC `:50052` |
+| [grounded-bench](https://github.com/kantik001/grounded-bench) | Offline NVR / CP / HR / RR |
+| [grounded-vllm](https://github.com/kantik001/grounded-vllm) | vLLM serving-path verify proxy |
+
+Details and boundaries: [docs/en/ECOSYSTEM.md](docs/en/ECOSYSTEM.md).
+
+---
+
 ## Contributing
 
 Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
