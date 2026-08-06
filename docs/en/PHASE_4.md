@@ -1,4 +1,6 @@
-# Phase 4 — Spec, trust & conformance
+﻿# Phase 4 — Spec, trust & conformance
+
+> **Historical note:** This phase plan is **complete** (delivery archive). Some file paths may predate the Go strangler layout (server/cmd/server + server/internal/*). Canonical layout: [server/README.md](../../server/README.md) · [knowledge-base/server-overview.md](./knowledge-base/server-overview.md).
 
 **Goal:** Move from «enterprise-ready deploy» to **contract-stable platform** — API policy, reproducible conformance, adversarial quality gates, and GDPR-style tenant purge.
 

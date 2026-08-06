@@ -1,4 +1,6 @@
-# Phase 11 — Checkout & admin provisioning
+﻿# Phase 11 — Checkout & admin provisioning
+
+> **Historical note:** This phase plan is **complete** (delivery archive). Some file paths may predate the Go strangler layout (server/cmd/server + server/internal/*). Canonical layout: [server/README.md](../../server/README.md) · [knowledge-base/server-overview.md](./knowledge-base/server-overview.md).
 
 **Goal:** Stripe Checkout session API, self-serve admin user on signup, paid-plan payment flow.
 

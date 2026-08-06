@@ -2,8 +2,8 @@
 
 **Исходник:** `rag/verifier.py`  
 **Тесты:** `tests/test_verifier.py`  
-**В проде (по умолчанию):** проверка в Go — `server/rag_verify.go` (`GUARDRAILS_MODE=local`)  
-**Опционально:** gRPC → [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) `:50052` при `GUARDRAILS_MODE=remote|hybrid` — см. [../en/GUARDRAILS.md](../en/GUARDRAILS.md)
+**В проде (по умолчанию):** проверка в Go — `internal/rag/verify.go` (`GUARDRAILS_MODE=local`). Опционально: `VERIFY_FAITHFULNESS`, `VERIFY_NLI`.  
+**Опционально:** gRPC → [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) `:50052` при `GUARDRAILS_MODE=remote|hybrid` — см. [../GUARDRAILS.md](../GUARDRAILS.md)
 
 ---
 
@@ -43,14 +43,40 @@
 
 ---
 
+## Faithfulness (`VERIFY_FAITHFULNESS`)
+
+Лексическая проверка: каждое содержательное предложение ответа должно опираться на фрагменты (stem-based, RU/EN).
+
+| Env | Поведение |
+|-----|-----------|
+| `off` | выкл. |
+| `warn` (default) | лог, verify всё равно pass |
+| `enforce` | fail при неподдерживаемых предложениях |
+
+Код: `internal/rag/verify_faithfulness.go`.
+
+---
+
+## Опциональный NLI (`VERIFY_NLI`)
+
+| Env | Поведение |
+|-----|-----------|
+| `off` (default) | только числа + faithfulness |
+| `assist` | лексика сначала; NLI подтверждает fail |
+| `replace` | только NLI |
+
+`VERIFY_NLI_URL` — HTTP endpoint. Код: `internal/rag/verify_nli.go`.
+
+---
+
 ## Python vs Go vs guardrails
 
-| | Python | Go (local) | grounded-guardrails |
-|--|--------|------------|---------------------|
-| Прод | эталон для тестов | **default** после RAG-ответа | опционально `remote` / `hybrid` |
-| Логика | та же идея Spec ±0.01 | `verifyRAGAnswer` | Rust reference + Go host parity |
-
-При изменениях держите tolerance **±0.01** согласованным.
+| | Python | Go (`internal/rag/*`) | grounded-guardrails |
+|--|--------|----------------------|---------------------|
+| Прод | эталон для тестов | **default** после RAG | опц. `remote` / `hybrid` |
+| Числа | Spec ±0.01 | `VerifyRAGAnswer` | gRPC `VerifyText` |
+| Faithfulness | — | `VERIFY_FAITHFULNESS` | — |
+| NLI | — | `VERIFY_NLI` | — |
 
 ---
 
@@ -64,6 +90,6 @@
 
 | Тема | Файл |
 |------|------|
-| Промпт | [server-rag_chat.md](./server-rag_chat.md) |
+| Промпт / pipeline | [server-rag_chat.md](./server-rag_chat.md) |
 | Фрагменты | [rag-retrieval.md](./rag-retrieval.md) |
-| Remote verify | [../en/GUARDRAILS.md](../en/GUARDRAILS.md) |
+| Remote verify | [../GUARDRAILS.md](../GUARDRAILS.md) |

@@ -1,4 +1,6 @@
-# Phase 7 — Platform ecosystem
+﻿# Phase 7 — Platform ecosystem
+
+> **Historical note:** This phase plan is **complete** (delivery archive). Some file paths may predate the Go strangler layout (server/cmd/server + server/internal/*). Canonical layout: [server/README.md](../../server/README.md) · [knowledge-base/server-overview.md](./knowledge-base/server-overview.md).
 
 **Goal:** Pack registry, retrieval quality (cross-encoder), ingest connectors, GCP deploy, governance.
 

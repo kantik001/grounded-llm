@@ -2,7 +2,8 @@
 
 **Source:** `rag/verifier.py`  
 **Tests:** `tests/test_verifier.py`  
-**Production:** primary check in Go — `server/rag_verify.go` (`verifyRAGAnswer`, default **local** Spec path).  
+**Production:** primary check in Go — `internal/rag/verify.go` (`VerifyRAGAnswer`, default **local** Spec path).  
+**Extensions:** `internal/rag/verify_faithfulness.go`, `internal/rag/verify_nli.go` (env-gated).  
 **Optional:** remote gRPC to [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) `:50052` when `GUARDRAILS_MODE=remote|hybrid` — see [GUARDRAILS.md](../GUARDRAILS.md).
 
 ---
@@ -72,13 +73,42 @@ Used to verify **answer body** without trailing boilerplate.
 
 ---
 
+## Faithfulness (`VERIFY_FAITHFULNESS`)
+
+Lexical check: each substantive sentence in the answer must be supported by retrieved fragments (stem-based, RU/EN inflection tolerant).
+
+| Env | Behavior |
+|-----|----------|
+| `off` | disabled |
+| `warn` (default) | log unsupported sentences, still pass |
+| `enforce` | fail verify on unsupported sentences |
+
+Source: `internal/rag/verify_faithfulness.go`. Complements numeric Spec verify for claims **without digits**.
+
+---
+
+## Optional NLI (`VERIFY_NLI`)
+
+HTTP entailment service for harder cases (optional, off by default).
+
+| Env | Behavior |
+|-----|----------|
+| `off` (default) | numeric + faithfulness only |
+| `assist` | lexical first; NLI confirms failures |
+| `replace` | NLI-only path |
+
+Set `VERIFY_NLI_URL` to your entailment endpoint. Source: `internal/rag/verify_nli.go`.
+
+---
+
 ## Python vs Go
 
-| | `rag/verifier.py` | `server/rag_verify.go` | grounded-guardrails |
-|--|-------------------|------------------------|---------------------|
-| Production | tests / reference | **default** after each RAG reply (`local`) | optional `remote` / `hybrid` |
-| Number logic | same idea | `verifyRAGAnswer` → local extract or gRPC `VerifyText` | Rust reference + Go host parity |
-| Disclaimer | constant for strip | `appendRAGDisclaimer` | n/a (runs on answer body) |
+| | `rag/verifier.py` | Go `internal/rag/*` | grounded-guardrails |
+|--|-------------------|---------------------|---------------------|
+| Production | tests / reference | **default** after each RAG reply | optional `remote` / `hybrid` |
+| Number logic | same idea | `VerifyRAGAnswer` | gRPC `VerifyText` |
+| Faithfulness | n/a | `VERIFY_FAITHFULNESS` | n/a |
+| NLI | n/a | `VERIFY_NLI` | n/a |
 
 Keep Spec tolerance (**±0.01**) in sync across local Go and guardrails.
 

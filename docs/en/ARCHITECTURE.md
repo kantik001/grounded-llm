@@ -54,7 +54,7 @@ Canonical ops for local LLMs and caches: [LLM_PROVIDERS.md](./LLM_PROVIDERS.md).
 4. Python: embeddings (Redis-backed when `REDIS_URL` set) → vector store (Chroma / Qdrant / pgvector) → optional hybrid BM25+RRF / rerank → fragments
 5. Go → OpenAI-compatible LLM (`LLM_PROVIDER` → OpenRouter / Ollama / vLLM)
 6. **Verify** (after LLM):
-   - `GUARDRAILS_MODE=local` (default): in-process Spec numeric check in `server/rag_verify.go`
+   - `GUARDRAILS_MODE=local` (default): in-process Spec numeric check in `internal/rag/verify.go`
    - `remote` / `hybrid`: gRPC `VerifyText` → grounded-guardrails `:50052` (hybrid falls back to local on transport errors)
 7. Disclaimer → Postgres (`citations[]`); verified answers may hit the response cache
 

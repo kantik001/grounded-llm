@@ -1,4 +1,6 @@
-# Phase 6 — Ecosystem scale
+﻿# Phase 6 — Ecosystem scale
+
+> **Historical note:** This phase plan is **complete** (delivery archive). Some file paths may predate the Go strangler layout (server/cmd/server + server/internal/*). Canonical layout: [server/README.md](../../server/README.md) · [knowledge-base/server-overview.md](./knowledge-base/server-overview.md).
 
 **Goal:** Extend the reference platform with **template growth**, **retrieval options**, and **cloud deploy** primitives.
 

@@ -10,7 +10,7 @@
 
 **Open platform to deploy cited, verified document assistants in days — templates, API, on-prem.**
 
-![Demo: chat with cited answer from knowledge base](docs/assets/demo.gif)
+![Demo: cited answer with source link from HR knowledge base](docs/assets/demo.gif)
 
 Grounded LLM is the **reference implementation** of an open spec for **document-grounded** assistants: answers come **only from your knowledge base**, with **source citations**, **numeric verification**, and **measurable retrieval quality**. Not a generic chatbot builder.
 
@@ -38,7 +38,7 @@ Grounded LLM separates **orchestration** (Go: auth, sessions, LLM, verify) from 
 
 ![Grounded LLM architecture](docs/assets/architecture.png)
 
-_Diagram includes optional [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) on **`:50052`** (dashed path). Default verify stays in-process (`GUARDRAILS_MODE=local`)._
+_Diagram includes optional [grounded-guardrails](https://github.com/kantik001/grounded-guardrails) on **`:50052`** (dashed path). Default verify stays in-process (`GUARDRAILS_MODE=local`). Agents call the gRPC Retriever on Python **`:50051`** (not via Go)._
 
 **Message flow (default):** client → Go auth/session → Python hybrid retrieval (`:5000` / gRPC `:50051`) → Go LLM → **numeric verify (in-process)** → citations → Postgres.
 

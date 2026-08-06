@@ -21,7 +21,7 @@ Copy from `config/locales/en/` and translate all string values.
 
 ## 2. Register locale in Go
 
-Edit `server/locale.go`:
+Edit `internal/locale/locale.go` and bundles under `config/locales/{en,ru}/`:
 
 ```go
 var supportedLocales = []string{"ru", "en", "de"}  // add code

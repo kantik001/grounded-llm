@@ -1,15 +1,16 @@
 # `rag/vector_store.py` — векторное хранилище
 
-**Исходник:** `rag/vector_store.py`  
+**Исходники:** `rag/vector_store.py`, `rag/vector_backend/` (Chroma / Qdrant / pgvector), `rag/indexing.py`, `rag/sparse_index.py`  
 **Данные:** `data/{tenant_id}/{domain_id}/*.{txt,pdf,docx}`  
-**Хранилище:** `chroma_db/` (Docker volume `chroma_data`)  
-**Вызывают:** `rag/retrieval.py`, admin reindex
+**Ops-гайд (env):** [../VECTOR_STORE.md](../VECTOR_STORE.md) · [EN](../../en/VECTOR_STORE.md)  
+**Вызывают:** `rag/retrieval.py`, admin reindex, `scripts/reindex_rag.py`
 
 ---
 
 ## Назначение
 
-Ядро **векторного RAG**: документы → embeddings → **Chroma**. LLM здесь нет.
+Ядро **векторного RAG**: документы → embeddings → выбранный backend. LLM здесь нет.  
+Backend выбирается через `VECTOR_STORE=chroma|qdrant|pgvector` (по умолчанию Chroma).
 
 ---
 
@@ -22,7 +23,7 @@ flowchart LR
     C --> D[RecursiveCharacterTextSplitter]
     D --> E[chunk 500 overlap 50]
     E --> F[HuggingFaceEmbeddings e5-small]
-    F --> G[Chroma persist chroma_db]
+    F --> G[Backend: Chroma / Qdrant / pgvector]
 ```
 
 ### `rag/document_loaders.py`
@@ -37,10 +38,41 @@ Metadata: `filename`, `domain_id`, `tenant_id`, `source_file`, `file_type`.
 
 ---
 
-## `load_all_documents()`
+## Бэкенды (`rag/vector_backend/`)
 
-- Обходит каталоги KB (`data/{tenant}/{domain}/`, legacy `data/{domain}/`)
-- Glob по поддерживаемым расширениям
+| Backend | Persist | Когда выбирать |
+|---------|---------|----------------|
+| **Chroma** | `chroma_db/` (volume `chroma_data`) | Compose / CI / локальная разработка |
+| **Qdrant** | managed Qdrant (`QDRANT_URL`) | отдельный vector DB |
+| **pgvector** | Postgres (`009_pgvector.sql`) | один Postgres для сессий + векторов |
+
+Смена backend или модели эмбеддингов → **полный reindex** + прогон eval.
+
+```bash
+# Chroma (default)
+VECTOR_STORE=chroma python scripts/reindex_rag.py
+
+# Qdrant
+pip install -r api/requirements-qdrant.txt
+VECTOR_STORE=qdrant QDRANT_URL=http://127.0.0.1:6333 FORCE_RAG_REINDEX=true python scripts/reindex_rag.py
+
+# pgvector
+pip install -r api/requirements-pgvector.txt
+VECTOR_STORE=pgvector FORCE_RAG_REINDEX=true python scripts/reindex_rag.py
+```
+
+---
+
+## Hybrid retrieval (BM25 + dense + RRF)
+
+При `RAG_RETRIEVAL_MODE=hybrid`:
+
+1. dense hits из vector backend  
+2. BM25 hits из `sparse_index/` (`SPARSE_INDEX_DIR`)  
+3. слияние RRF (`RAG_RRF_K`, default 60)  
+4. опциональный rerank: `RAG_RERANKER=keyword|cross_encoder`
+
+Подробнее: [../VECTOR_STORE.md](../VECTOR_STORE.md).
 
 ---
 
@@ -49,35 +81,33 @@ Metadata: `filename`, `domain_id`, `tenant_id`, `source_file`, `file_type`.
 | Ситуация | Поведение |
 |----------|-----------|
 | RAM-кэш | вернуть кэш |
-| `FORCE_RAG_REINDEX=true` | удалить `chroma_db`, пересоздать |
-| `chroma_db` есть | открыть Chroma |
-| иначе | `create_vector_store()` |
+| `FORCE_RAG_REINDEX=true` | пересоздать индекс backend |
+| иначе | открыть существующий / создать |
 
 ---
 
 ## `search(query, domain_id, tenant_id, k=8)`
 
-```python
-store.similarity_search(
-    query, k=k, filter={"domain_id": domain_id, "tenant_id": tenant_id}
-)
-```
+Фильтр metadata **всегда** `domain_id` + `tenant_id` — изоляция workspace.
 
 ---
 
 ## Docker
 
 - `./data:/app/data:ro` (python)
-- `chroma_data:/app/chroma_db`
+- `chroma_data:/app/chroma_db` (если Chroma)
 - `./data:/app/data` rw (server) — admin upload
-
-После upload — **обязателен reindex**.
+- после upload — **обязателен reindex**
 
 ---
 
 ## Зависимости
 
-`api/requirements.txt`: `langchain-chroma`, `sentence-transformers`, `pypdf`, `docx2txt`.
+| Backend | Файл |
+|---------|------|
+| Chroma (default) | `api/requirements.txt` |
+| Qdrant | `api/requirements-qdrant.txt` |
+| pgvector | `api/requirements-pgvector.txt` |
 
 ---
 
@@ -85,6 +115,7 @@ store.similarity_search(
 
 | Тема | Файл |
 |------|------|
+| Env / hybrid / rerank | [../VECTOR_STORE.md](../VECTOR_STORE.md) |
 | Домены | [rag-domains_config.md](./rag-domains_config.md) |
-| Retrieval | [rag-retrieval.md](./rag-retrieval.md) |
-| HTTP reindex | [python-api.md](./python-api.md) |
+| Retrieval HTTP | [rag-retrieval.md](./rag-retrieval.md) |
+| Python API | [python-api.md](./python-api.md) |

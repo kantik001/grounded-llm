@@ -21,7 +21,7 @@ config/locales/{код}/
 
 ## 2. Регистрация в Go
 
-Файл `server/locale.go`:
+Файл `internal/locale/locale.go` и бандлы в `config/locales/{en,ru}/`:
 
 ```go
 var supportedLocales = []string{"ru", "en", "de"}

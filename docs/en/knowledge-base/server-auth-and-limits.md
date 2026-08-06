@@ -1,6 +1,6 @@
 # Authentication and limits (`server/`)
 
-**Files:** `auth_telegram.go`, `api_keys.go`, `auth_combined.go`, `rbac.go`, `admin_users.go`, `middleware.go`, `ratelimit.go`  
+**Files:** `internal/auth/{auth_telegram,api_keys,middleware,roles}.go`, `internal/httpapi/ratelimit.go`, `internal/admin/{rbac,users}.go`, `internal/oidc/*`  
 **See also:** [webapp-overview.md](./webapp-overview.md) (initData header), [server-overview.md](./server-overview.md) (routes)
 
 ---
@@ -48,7 +48,7 @@ Tests: `auth_telegram_test.go`.
 
 ---
 
-## RBAC (`rbac.go`, `admin_users.go`)
+## RBAC (`internal/admin/rbac.go`, `internal/admin/users.go`)
 
 **Roles:** `chat_only`, `kb_editor`, `admin`, `api_manager`.
 
@@ -58,13 +58,13 @@ Tests: `auth_telegram_test.go`.
 | API key | `API_KEYS_FILE` | per-key `roles` (default `chat_only`) |
 | Admin user | `ADMIN_PASSWORD` or `ADMIN_USERS_FILE` | per-user `roles` |
 
-`admin` is superuser on admin routes. Route guards in `admin.go`; chat API checks API key roles.
+`admin` is superuser on admin routes. Route guards in `internal/admin`; chat API checks API key roles.
 
 Full guide: [config/RBAC.md](../../../config/RBAC.md).
 
 ---
 
-## OIDC SSO (`oidc_*.go`, `admin_session.go`)
+## OIDC SSO (`internal/oidc/*`)
 
 Optional **OpenID Connect** for admin panel (`OIDC_ENABLED=true`). Chat API still uses Telegram / API keys.
 
@@ -75,9 +75,7 @@ Optional **OpenID Connect** for admin panel (`OIDC_ENABLED=true`). Chat API stil
 
 ---
 
-## `middleware.go` — CORS
-
-### `corsMiddleware(allowedOrigins)`
+## `corsMiddleware` (`internal/httpapi/cors.go`)
 
 - Reads `CORS_ALLOWED_ORIGINS` (comma-separated).
 - Reflects allowed Origin in `Access-Control-Allow-Origin`.

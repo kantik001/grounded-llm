@@ -1,4 +1,6 @@
-# Phase 5 — Standard publication
+﻿# Phase 5 — Standard publication
+
+> **Historical note:** This phase plan is **complete** (delivery archive). Some file paths may predate the Go strangler layout (server/cmd/server + server/internal/*). Canonical layout: [server/README.md](../../server/README.md) · [knowledge-base/server-overview.md](./knowledge-base/server-overview.md).
 
 **Goal:** Publish **Grounded as a checkable standard** — spec v1, conformance CLI, public benchmark, RFC governance.
 

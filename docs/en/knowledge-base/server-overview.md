@@ -59,7 +59,7 @@ flowchart TB
     GR[grounded-guardrails :50052\noptional]
 
     Web --> Go
-    Agents --> Go
+    Agents -->|gRPC :50051| Py
     Go --> PG
     Go --> Redis
     Go --> Py
