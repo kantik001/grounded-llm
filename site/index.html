@@ -4,17 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Grounded LLM &mdash; Open standard for verified document assistants</title>
-  <meta name="description" content="Grounded LLM v0.3.0 &mdash; cited RAG with local LLM (Ollama/vLLM), Redis caches, gRPC Retriever, hybrid BM25+RRF, 99 eval cases, on-prem deploy.">
+  <meta name="description" content="Grounded LLM v0.4.0 &mdash; enterprise-hardened cited RAG: tenant isolation, verify 2.0, Postgres SaaS, hybrid retrieval, JS+Python SDKs, on-prem deploy.">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
-    <p class="eyebrow">Open platform &middot; Spec v1 &middot; <span class="release-tag">v0.3.0</span></p>
+    <p class="eyebrow">Open platform &middot; Spec v1 &middot; <span class="release-tag">v0.4.0</span></p>
     <h1>Grounded LLM</h1>
-    <p class="lead">Reference implementation of an <strong>open spec</strong> for document-grounded assistants: <strong>citations</strong>, <strong>numeric verify</strong>, and <strong>measurable retrieval quality</strong> &mdash; on your infrastructure.</p>
+    <p class="lead">Reference implementation of an <strong>open spec</strong> for document-grounded assistants: <strong>citations</strong>, <strong>verify</strong>, and <strong>measurable retrieval quality</strong> &mdash; on your infrastructure.</p>
     <div class="actions">
       <a class="btn primary" href="https://github.com/kantik001/grounded-llm">GitHub</a>
-      <a class="btn release" href="https://github.com/kantik001/grounded-llm/releases/tag/v0.3.0">Release v0.3.0</a>
+      <a class="btn release" href="https://github.com/kantik001/grounded-llm/releases/tag/v0.4.0">Release v0.4.0</a>
       <a class="btn" href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/spec/GROUNDED_SPEC_v1.md">Read Spec v1</a>
       <a class="btn sponsor" href="https://github.com/sponsors/kantik001">&#9829; Sponsor</a>
     </div>
@@ -22,18 +22,18 @@
 
   <main>
     <section>
-      <h2>What&apos;s in v0.3.0</h2>
+      <h2>What&apos;s in v0.4.0</h2>
       <ul class="highlights">
-        <li><strong>Local inference</strong> &mdash; <code>LLM_PROVIDER=openai|ollama|vllm</code> + Compose profiles (<code>--profile ollama</code> / <code>vllm</code>)</li>
-        <li><strong>Redis caches</strong> &mdash; embedding vectors + semantic LLM responses; HTTP <code>X-Cache: HIT|MISS</code></li>
-        <li><strong>gRPC Retriever</strong> &mdash; Python <code>:50051</code> for agents (<code>grounded.rag.v1.Retriever</code>)</li>
-        <li><strong>LLM metrics</strong> &mdash; Prometheus <code>llm_tokens_*</code>, TTFT, latency on Go <code>/metrics</code></li>
-        <li><strong>Production hardening</strong> &mdash; fail-fast prod checks, Gunicorn RAG, Trivy, load smoke, tenant isolation</li>
-        <li><strong>Hybrid retrieval</strong> &mdash; BM25 + dense + RRF; Chroma / Qdrant / pgvector</li>
+        <li><strong>Tenant isolation</strong> &mdash; API-key binding, membership enforce, hashed keys, closed <code>/metrics</code></li>
+        <li><strong>Verify 2.0</strong> &mdash; lexical faithfulness (warn/enforce) + optional NLI hook</li>
+        <li><strong>RAG quality</strong> &mdash; e5 prefixes, incremental reindex, Recall@k / nDCG / citation precision</li>
+        <li><strong>Multi-replica SaaS</strong> &mdash; tenants, quotas, admin users in Postgres; Redis rate limit</li>
+        <li><strong>Release gate</strong> &mdash; CI → Trivy → cosign + SBOM; Helm NetworkPolicy / PDB</li>
+        <li><strong>SDKs</strong> &mdash; Python + TypeScript/JavaScript clients</li>
+        <li><strong>Local inference</strong> &mdash; Ollama / vLLM profiles; Redis response cache; gRPC Retriever</li>
         <li><strong>Quality gate</strong> &mdash; <strong>99</strong> retrieval eval cases in CI</li>
-        <li><strong>Template packs</strong> &mdash; HR, IT Support, Legal FAQ</li>
       </ul>
-      <p class="muted-note">Guide: <a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/LLM_PROVIDERS.md">LLM providers &amp; caching</a></p>
+      <p class="muted-note">Guide: <a href="https://github.com/kantik001/grounded-llm/blob/main/CHANGELOG.md">Changelog</a> &middot; <a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/LLM_PROVIDERS.md">LLM providers</a></p>
     </section>
 
     <section>
@@ -57,7 +57,7 @@ docker compose up -d --build
 pip install -r conformance/requirements.txt
 python -m conformance spec</code></pre>
       <p>Full guide: <a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/DEPLOY.md">Deploy</a> &middot; <a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/LLM_PROVIDERS.md">LLM providers</a> &middot; <a href="https://github.com/kantik001/grounded-llm/blob/main/docs/en/QUICKSTART_SDK.md">SDK</a></p>
-      <p class="muted-note">Tagged images on GHCR: <code>ghcr.io/kantik001/grounded-llm-server:0.3.0</code> &middot; <code>-python</code> &middot; <code>-webapp</code></p>
+      <p class="muted-note">Tagged images on GHCR: <code>ghcr.io/kantik001/grounded-llm-server:0.4.0</code> &middot; <code>-python</code> &middot; <code>-webapp</code></p>
     </section>
 
     <section>
@@ -94,7 +94,7 @@ python -m conformance spec --json</code></pre>
   </main>
 
   <footer>
-    <p>MIT License &middot; <a href="https://github.com/kantik001/grounded-llm">kantik001/grounded-llm</a> &middot; <a href="https://github.com/kantik001/grounded-llm/releases/tag/v0.3.0">v0.3.0</a> (2026-07-27)</p>
+    <p>MIT License &middot; <a href="https://github.com/kantik001/grounded-llm">kantik001/grounded-llm</a> &middot; <a href="https://github.com/kantik001/grounded-llm/releases/tag/v0.4.0">v0.4.0</a> (2026-08-06)</p>
   </footer>
   <script>
     fetch('packs.json').then(r => r.json()).then(data => {

@@ -2,7 +2,7 @@
 
 Supported stack for **Grounded LLM** reference implementation. Other versions may work but are not tested in CI.
 
-Last updated: **v0.3.0** / main (2026-07-27)
+Last updated: **v0.4.0** / main (2026-08-06)
 
 ---
 

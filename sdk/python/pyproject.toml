@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "grounded-llm"
-version = "0.3.0"
+version = "0.4.0"
 description = "Python client and CLI for the Grounded LLM document-grounded assistant API"
 readme = "README.md"
 license = { text = "MIT" }

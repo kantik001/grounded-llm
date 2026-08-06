@@ -7,18 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-06
+
+Enterprise hardening: tenant isolation, deeper verify/eval, multi-replica SaaS state, release/CI/Helm safety, and integrator SDKs.
+
 ### Added
 
-- Request path trace MVP: `req=` / `step=` logs across message → retrieve → LLM → verify → done; `request_id` in JSON/SSE; `X-Request-ID` forwarded to Python `/rag/context`
+- **Tenant isolation:** API-key ↔ tenant binding, session/feedback `tenant_id` filters, Telegram membership (`TENANT_MEMBERSHIP_ENFORCE` / auto-default), Stripe checkout email check
+- **Production safety:** hashed API keys (SHA-256), plaintext admin passwords blocked in prod, `/metrics` + `METRICS_TOKEN`, HTTP timeouts, CORS empty = same-origin, prod requires membership + `VERIFY_FAITHFULNESS=enforce` + `METRICS_TOKEN`
+- **Verify 2.0:** lexical faithfulness (warn/enforce) on Go + Python; optional NLI HTTP hook (`VERIFY_NLI` / `VERIFY_NLI_URL`)
+- **RAG quality:** e5 `query:`/`passage:` prefixes with index signature rebuild; hybrid+keyword defaults; incremental Chroma reindex (SHA-1 manifest); `DATA_DIR` env parity with Go
+- **Eval 2.0:** Recall@k / nDCG@k / citation precision@k with `EVAL_MIN_*` gates
+- **SaaS in Postgres:** tenants/quotas (`010_saas_tenants.sql`), admin users + membership (`011_admin_users_membership.sql`), dual-write JSON seed
+- **Ops:** Redis distributed rate limiter; atomic migrations + mark; stoppable retention worker; Helm NetworkPolicy + PDB; Ingress TLS; non-root images + securityContext
+- **Release pipeline:** CI gate → Trivy → push → cosign + SBOM; `:latest` only for stable SemVer; PyPI Trusted Publisher job; real RAG+LLM nightly smoke
+- **Observability:** OTel PathTrace when `OTEL_EXPORTER_OTLP_ENDPOINT` is set
+- **JS/TS SDK:** `sdk/js` (`@grounded-llm/sdk`) alongside Python SDK
+- Coverage gate (`--cov-fail-under=70` with `.coveragerc`); CodeQL upload enabled
 
 ### Changed
 
-- Docs: ecosystem sync across sibling READMEs; CAREER plan §7 + STANDARD_STRATEGY note grounded-bench/vllm shipped
-- Prod Compose: do not publish Redis `:6379` on the host (`docker-compose.prod.yml`)
+- Prod Compose: no source bind-mounts; named volumes for KB/config; membership/faithfulness/METRICS_TOKEN required
+- Sparse BM25: `heapq.nlargest` for top-k; RRF attaches scores to fragment metadata
+- Retrieval logging via `logging` instead of `print`; fragment scores blend lexical + rank prior
+- Request path trace: `req=` / `step=` logs; `request_id` in JSON/SSE; `X-Request-ID` to Python `/rag/context`
 
-### Changed
+### Fixed
 
-- Prod Compose: do not publish Redis `:6379` on the host (`docker-compose.prod.yml`)
+- Redis rate-limiter typed-nil interface panic (empty HTTP 500 on `POST /session` in CI smoke)
+- Public API errors sanitized on SSE prepare path
 
 ## [0.3.0] - 2026-07-27
 
@@ -108,7 +125,8 @@ First tagged open-source release — reference implementation of the **Grounded*
 - English-first docs (`docs/en/`) + Russian hub (`docs/ru/`)
 - GitHub Pages landing (`site/`)
 
-[Unreleased]: https://github.com/kantik001/grounded-llm/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/kantik001/grounded-llm/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/kantik001/grounded-llm/releases/tag/v0.4.0
 [0.3.0]: https://github.com/kantik001/grounded-llm/releases/tag/v0.3.0
 [0.2.0]: https://github.com/kantik001/grounded-llm/releases/tag/v0.2.0
 [0.1.0]: https://github.com/kantik001/grounded-llm/releases/tag/v0.1.0

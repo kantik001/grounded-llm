@@ -22,7 +22,7 @@ postgres:
 server:
   image:
     repository: ghcr.io/YOUR_ORG/grounded-llm-server
-    tag: "0.3.0"   # pin release tags; avoid latest
+    tag: "0.4.0"   # pin release tags; avoid latest
   replicaCount: 2
   resources:
     requests:
@@ -46,7 +46,7 @@ server:
 python:
   image:
     repository: ghcr.io/YOUR_ORG/grounded-llm-python
-    tag: "0.3.0"
+    tag: "0.4.0"
   # Keep 1 while Chroma lives on a single ReadWriteOnce PVC: a second replica
   # cannot mount the volume on most storage classes. Scale out only after
   # moving retrieval state to a shared backend (RAG_BACKEND=pgvector/qdrant).
@@ -68,7 +68,7 @@ python:
 webapp:
   image:
     repository: ghcr.io/YOUR_ORG/grounded-llm-webapp
-    tag: "0.3.0"
+    tag: "0.4.0"
   replicaCount: 2
 
 ingress:

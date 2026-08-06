@@ -1,7 +1,7 @@
 # Grounded LLM
 
 [![CI](https://github.com/kantik001/grounded-llm/actions/workflows/ci.yml/badge.svg)](https://github.com/kantik001/grounded-llm/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/kantik001/grounded-llm)](https://github.com/kantik001/grounded-llm/releases/tag/v0.3.0)
+[![Release](https://img.shields.io/github/v/release/kantik001/grounded-llm)](https://github.com/kantik001/grounded-llm/releases/tag/v0.4.0)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Go](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go)](server/go.mod)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](api/requirements.txt)

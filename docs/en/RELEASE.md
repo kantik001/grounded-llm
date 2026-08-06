@@ -6,7 +6,7 @@
 - **API path version:** `/api/v1` — see [API_DEPRECATION_POLICY.md](./API_DEPRECATION_POLICY.md)
 - **OpenAPI `info.version`:** `1.0.0` for API v1 (independent from product tag)
 
-Phases **1–11 are merged to `main`**. Latest published tag: **v0.3.0** (local inference, Redis caches, gRPC Retriever, LLM metrics).
+Phases **1–11 are merged to `main`**. Latest published tag: **v0.4.0** (enterprise hardening: isolation, verify 2.0, Postgres SaaS, release gate, JS SDK).
 
 ---
 
@@ -20,7 +20,7 @@ Phases **1–11 are merged to `main`**. Latest published tag: **v0.3.0** (local 
    ```
 4. Optional benchmark summary:
    ```bash
-   python scripts/bench_report.py --version 0.3.0
+   python scripts/bench_report.py --version 0.4.0
    ```
 5. Build site data before Pages deploy:
    ```bash
@@ -36,8 +36,8 @@ See [LAUNCH.md](./LAUNCH.md) for public launch checklist.
 ## Tag and release
 
 ```bash
-git tag -a v0.3.0 -m "v0.3.0 — local LLM providers, Redis caches, gRPC Retriever, token/TTFT metrics"
-git push origin v0.3.0
+git tag -a v0.4.0 -m "v0.4.0 — enterprise hardening: tenant isolation, verify 2.0, Postgres SaaS, release gate, JS SDK"
+git push origin v0.4.0
 ```
 
 The [Release workflow](../../.github/workflows/release.yml) will:
@@ -53,8 +53,8 @@ The [Release workflow](../../.github/workflows/release.yml) will:
 
 ## Post-release checklist
 
-- [ ] Verify Pages site (`Deploy site` workflow) — landing shows **v0.3.0**
-- [ ] Verify GHCR tags `:0.3.0` (and `:latest` only for stable tags)
+- [ ] Verify Pages site (`Deploy site` workflow) — landing shows **v0.4.0**
+- [ ] Verify GHCR tags `:0.4.0` (and `:latest` only for stable tags)
 - [ ] Verify cosign signatures: `cosign verify ghcr.io/<owner>/grounded-llm-server:<tag>`
 - [ ] Verify SBOM artifacts on the GitHub Release
 - [ ] Run `python -m conformance all --url <prod> --rag-url <rag>` on staging

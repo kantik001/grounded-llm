@@ -1,6 +1,6 @@
 {
   "name": "@grounded-llm/sdk",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "TypeScript/JavaScript client for the Grounded LLM REST API",
   "type": "module",
   "main": "./dist/index.js",
