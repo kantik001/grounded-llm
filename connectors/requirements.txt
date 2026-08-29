@@ -5,5 +5,5 @@
 #
 # Alias kept for older docs/scripts: api/requirements-connectors.txt
 
-google-api-python-client>=2.198.0
-google-auth>=2.56.2
+google-api-python-client>=2.199.0
+google-auth>=2.57.0
