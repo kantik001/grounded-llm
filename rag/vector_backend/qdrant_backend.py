@@ -10,14 +10,13 @@ from rag.embedding_cache import CachedHuggingFaceEmbeddings
 from rag.indexing import split_file_documents, split_kb_documents
 from rag.kb.index_collections import collection_name
 from rag.vector_backend.base import VectorBackend
-from rag.vector_backend.chroma_backend import EMBEDDING_MODEL
+from rag.vector_backend.chroma_backend import EMBEDDING_MODEL, scan_kb_files
 
 
 class QdrantBackend(VectorBackend):
     """LangChain Qdrant store. Requires: pip install -r api/requirements-qdrant.txt"""
 
     def __init__(self) -> None:
-        self._store = None
         self._scope_stores: dict[str, Any] = {}
         self._scope_collections: dict[str, str] = {}
         self._embeddings = CachedHuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
@@ -27,19 +26,13 @@ class QdrantBackend(VectorBackend):
         self._url = os.environ.get("QDRANT_URL", "http://127.0.0.1:6333").strip()
 
     def reset(self) -> None:
-        self._store = None
         self._scope_stores = {}
         self._scope_collections = {}
 
-    def _scope_cache_key(self, tenant_id: str, domain_id: str, run_id: str | None) -> str:
-        return f"{tenant_id}/{domain_id}/{run_id or 'legacy'}"
+    def _scope_cache_key(self, tenant_id: str, domain_id: str, run_id: str) -> str:
+        return f"{tenant_id}/{domain_id}/{run_id}"
 
-    def _resolved_collection(self, tenant_id: str, domain_id: str, run_id: str | None) -> str:
-        if run_id:
-            return collection_name(self._collection_base, tenant_id, domain_id, run_id)
-        return self._collection_base
-
-    def _client_and_store(self, collection: str | None = None):
+    def _client_and_store(self, collection: str):
         try:
             from langchain_qdrant import QdrantVectorStore
             from qdrant_client import QdrantClient
@@ -47,11 +40,10 @@ class QdrantBackend(VectorBackend):
             raise RuntimeError(
                 "Qdrant backend requires optional deps: pip install -r api/requirements-qdrant.txt"
             ) from exc
-        name = collection or self._collection_base
         client = QdrantClient(url=self._url)
         return client, QdrantVectorStore(
             client=client,
-            collection_name=name,
+            collection_name=collection,
             embeddings=self._embeddings,
         )
 
@@ -68,7 +60,7 @@ class QdrantBackend(VectorBackend):
         if cache_key in self._scope_stores:
             return self._scope_stores[cache_key]
 
-        collection = self._resolved_collection(tenant_id, domain_id, resolved)
+        collection = collection_name(self._collection_base, tenant_id, domain_id, resolved)
         client, store = self._client_and_store(collection)
         try:
             client.get_collection(collection)
@@ -76,45 +68,41 @@ class QdrantBackend(VectorBackend):
             pass
         self._scope_stores[cache_key] = store
         self._scope_collections[cache_key] = collection
-        if resolved is None:
-            self._store = store
         return store
 
     def load(self, *, force_reindex: bool = False) -> None:
-        if self._store is not None and not force_reindex:
+        if force_reindex or os.environ.get("FORCE_RAG_REINDEX", "").lower() in ("1", "true", "yes"):
+            self.reset()
+            self._index_all_scopes()
             return
 
-        force = force_reindex or os.environ.get("FORCE_RAG_REINDEX", "").lower() in (
-            "1",
-            "true",
-            "yes",
-        )
-        client, store = self._client_and_store()
-
-        if force:
-            try:
-                client.delete_collection(self._collection_base)
-            except Exception:
-                pass
-
-        try:
-            client.get_collection(self._collection_base)
-            self._store = store
-            return
-        except Exception:
-            pass
-
+    def _index_all_scopes(self) -> None:
         documents = split_kb_documents()
         if not documents:
             print("No documents to index (Qdrant).")
-            self._store = store
             return
+        by_scope: dict[tuple[str, str], list] = {}
+        for doc in documents:
+            meta = doc.metadata or {}
+            key = (str(meta.get("tenant_id") or "default"), str(meta.get("domain_id") or "default"))
+            by_scope.setdefault(key, []).append(doc)
+        for (tenant, domain), scope_docs in by_scope.items():
+            store = self.open_scope(tenant, domain, for_write=True)
+            collection = self._scope_collections[self._scope_cache_key(tenant, domain, self.resolve_run_id(tenant, domain))]
+            try:
+                store.client.delete_collection(collection)
+            except Exception:
+                pass
+            ids = [doc.metadata.get("chunk_id") or str(uuid.uuid4()) for doc in scope_docs]
+            store.add_documents(scope_docs, ids=ids)
+            print(f"Qdrant indexed {len(scope_docs)} chunks → {collection}")
 
-        print(f"Qdrant indexing chunks: {len(documents)}")
-        ids = [doc.metadata.get("chunk_id") or str(uuid.uuid4()) for doc in documents]
-        store.add_documents(documents, ids=ids)
-        self._store = store
-        print(f"Qdrant collection ready: {self._collection_base} @ {self._url}")
+    def refresh(self) -> dict:
+        current = scan_kb_files()
+        if not current:
+            return {"mode": "full", "files": 0, "empty": True}
+        self.load(force_reindex=True)
+        return {"mode": "full", "files": len(current), "empty": False}
 
     def upsert_kb_file(
         self,
@@ -126,18 +114,11 @@ class QdrantBackend(VectorBackend):
         run_id: str | None = None,
     ) -> int:
         store = self.open_scope(tenant_id, domain_id, run_id=run_id, for_write=True)
-        if store is None:
-            return 0
         name = filename or os.path.basename(path)
-        cache_key = self._scope_cache_key(
-            tenant_id,
-            domain_id,
-            self.resolve_run_id(tenant_id, domain_id, run_id=run_id, for_write=True),
-        )
-        collection = self._scope_collections.get(cache_key, self._collection_base)
-        client = store.client
+        resolved = self.resolve_run_id(tenant_id, domain_id, run_id=run_id, for_write=True)
+        collection = self._scope_collections[self._scope_cache_key(tenant_id, domain_id, resolved)]
         try:
-            client.delete(
+            store.client.delete(
                 collection_name=collection,
                 points_selector={
                     "filter": {
@@ -166,13 +147,7 @@ class QdrantBackend(VectorBackend):
         tenant_id: str,
     ) -> list[Any]:
         run_id = self.resolve_run_id(tenant_id, domain_id)
-        if run_id:
-            store = self.open_scope(tenant_id, domain_id, run_id=run_id)
-        else:
-            self.load()
-            store = self._store
-        if store is None:
-            return []
+        store = self.open_scope(tenant_id, domain_id, run_id=run_id)
         flt = {
             "must": [
                 {"key": "domain_id", "match": {"value": domain_id}},
@@ -190,15 +165,8 @@ class QdrantBackend(VectorBackend):
 
     def index_stats_for_domain(self, domain_id: str, tenant_id: str) -> list[dict]:
         run_id = self.resolve_run_id(tenant_id, domain_id)
-        if run_id:
-            store = self.open_scope(tenant_id, domain_id, run_id=run_id)
-        else:
-            self.load()
-            store = self._store
-        if store is None:
-            return []
-        cache_key = self._scope_cache_key(tenant_id, domain_id, run_id)
-        collection = self._scope_collections.get(cache_key, self._collection_base)
+        store = self.open_scope(tenant_id, domain_id, run_id=run_id)
+        collection = self._scope_collections[self._scope_cache_key(tenant_id, domain_id, run_id)]
         try:
             client = store.client
             scroll_filter = {

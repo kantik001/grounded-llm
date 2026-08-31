@@ -12,7 +12,7 @@ from rank_bm25 import BM25Plus
 
 from rag.indexing import split_kb_documents
 from rag.kb.index_collections import sparse_run_dir
-from rag.kb.index_runs import resolve_read_run_id
+from rag.kb.index_runs import resolve_run_id
 
 _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 _DEFAULT_DIR = os.path.join(_PROJECT_ROOT, "sparse_index")
@@ -30,16 +30,13 @@ def _base_sparse_dir() -> str:
     return (os.environ.get("SPARSE_INDEX_DIR") or _DEFAULT_DIR).strip() or _DEFAULT_DIR
 
 
-def _scope_key(tenant_id: str, domain_id: str, run_id: str | None) -> str:
-    return f"{tenant_id}/{domain_id}/{run_id or 'legacy'}"
+def _scope_key(tenant_id: str, domain_id: str, run_id: str) -> str:
+    return f"{tenant_id}/{domain_id}/{run_id}"
 
 
-def _persist_path(tenant_id: str | None = None, domain_id: str | None = None, run_id: str | None = None) -> str:
-    base = _base_sparse_dir()
-    if tenant_id and domain_id and run_id:
-        run_dir = sparse_run_dir(base, tenant_id, domain_id, run_id)
-        return os.path.join(run_dir, _PERSIST_FILE)
-    return os.path.join(base, _PERSIST_FILE)
+def _persist_path(tenant_id: str, domain_id: str, run_id: str) -> str:
+    run_dir = sparse_run_dir(_base_sparse_dir(), tenant_id, domain_id, run_id)
+    return os.path.join(run_dir, _PERSIST_FILE)
 
 
 def _filter_chunks_for_scope(
@@ -62,7 +59,7 @@ def _filter_chunks_for_scope(
 class BM25SparseIndex:
     """In-memory BM25 index for one tenant/domain index run."""
 
-    def __init__(self, *, tenant_id: str = "default", domain_id: str = "default", run_id: str | None = None) -> None:
+    def __init__(self, *, tenant_id: str, domain_id: str, run_id: str) -> None:
         self.tenant_id = tenant_id
         self.domain_id = domain_id
         self.run_id = run_id
@@ -123,7 +120,7 @@ class BM25SparseIndex:
                 payload = pickle.load(fh)
         except (OSError, pickle.UnpicklingError):
             return False
-        if payload.get("version") not in (_INDEX_VERSION, 1):
+        if payload.get("version") != _INDEX_VERSION:
             return False
 
         self._chunks = [
@@ -166,7 +163,7 @@ class BM25SparseIndex:
         return out
 
 
-def get_sparse_index(tenant_id: str = "default", domain_id: str = "default", run_id: str | None = None) -> BM25SparseIndex:
+def get_sparse_index(tenant_id: str, domain_id: str, run_id: str) -> BM25SparseIndex:
     key = _scope_key(tenant_id, domain_id, run_id)
     if key not in _sparse_indexes:
         _sparse_indexes[key] = BM25SparseIndex(tenant_id=tenant_id, domain_id=domain_id, run_id=run_id)
@@ -187,10 +184,10 @@ def ensure_sparse_index(
     domain_id: str | None = None,
     run_id: str | None = None,
 ) -> BM25SparseIndex:
-    """Load or rebuild BM25 for tenant/domain (+ active index run when scoped)."""
+    """Load or rebuild BM25 for tenant/domain active index run."""
     tenant = (tenant_id or "default").strip().lower() or "default"
     domain = (domain_id or "default").strip().lower() or "default"
-    resolved_run = run_id or resolve_read_run_id(tenant, domain)
+    resolved_run = run_id or resolve_run_id(tenant, domain)
 
     idx = get_sparse_index(tenant, domain, resolved_run)
     force = force_reindex or os.environ.get("FORCE_RAG_REINDEX", "").lower() in (

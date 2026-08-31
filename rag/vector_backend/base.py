@@ -32,6 +32,18 @@ class VectorBackend(ABC):
     def reset(self) -> None:
         """Drop cached client handles (tests / hot reload)."""
 
+    def upsert_kb_file(
+        self,
+        tenant_id: str,
+        domain_id: str,
+        path: str,
+        *,
+        filename: str | None = None,
+        run_id: str | None = None,
+    ) -> int:
+        """Re-embed one KB file into the scoped index run."""
+        raise NotImplementedError
+
     def refresh(self) -> dict:
         """Sync the index with files on disk.
 
@@ -48,12 +60,11 @@ class VectorBackend(ABC):
         *,
         run_id: str | None = None,
         for_write: bool = False,
-    ) -> str | None:
-        """Resolve index run for scope; None = legacy single-collection layout."""
-        from rag.kb.index_runs import ensure_active_index_run, resolve_read_run_id, resolve_write_run_id
+    ) -> str:
+        from rag.kb.index_runs import resolve_run_id as kb_resolve_run_id
 
         if run_id:
             return run_id
         if for_write:
-            return resolve_write_run_id(tenant_id, domain_id)
-        return resolve_read_run_id(tenant_id, domain_id)
+            return kb_resolve_run_id(tenant_id, domain_id)
+        return kb_resolve_run_id(tenant_id, domain_id)

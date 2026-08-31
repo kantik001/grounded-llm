@@ -28,14 +28,21 @@ def load_all_documents():
 def create_vector_store():
     backend = get_vector_backend()
     backend.load(force_reindex=True)
-    ensure_sparse_index(force_reindex=True)
+    from rag.kb.documents import list_all_active_documents
+
+    for target in list_all_active_documents():
+        ensure_sparse_index(
+            force_reindex=True,
+            tenant_id=target.tenant_id,
+            domain_id=target.domain_id,
+        )
     return backend
 
 
 def load_vector_store(force_reindex: bool = False):
     backend = get_vector_backend()
-    backend.load(force_reindex=force_reindex)
-    ensure_sparse_index(force_reindex=force_reindex)
+    if force_reindex:
+        backend.load(force_reindex=True)
     return backend
 
 
@@ -53,7 +60,7 @@ def refresh_vector_store() -> tuple[object, dict]:
     for target in list_all_active_documents():
         scopes.add((target.tenant_id, target.domain_id))
     if not scopes:
-        ensure_sparse_index(force_reindex=True)
+        ensure_sparse_index(force_reindex=True, tenant_id="default", domain_id="default")
     else:
         for tenant_id, domain_id in scopes:
             ensure_sparse_index(force_reindex=True, tenant_id=tenant_id, domain_id=domain_id)
@@ -72,9 +79,10 @@ def readiness_index_check() -> tuple[str, bool]:
     name = (os.environ.get("VECTOR_STORE") or "chroma").strip().lower()
     if name in ("chroma", ""):
         persist = os.environ.get("CHROMA_PERSIST_DIR", PERSIST_DIR).strip() or PERSIST_DIR
-        if not os.path.isdir(persist):
+        runs = os.path.join(persist, "runs")
+        if not os.path.isdir(runs):
             return "pending", True
-        if not os.listdir(persist):
+        if not os.listdir(runs):
             return "empty", True
         return "ok", True
 

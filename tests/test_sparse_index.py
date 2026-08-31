@@ -6,6 +6,8 @@ import tempfile
 from langchain_core.documents import Document
 from rag.sparse_index import BM25SparseIndex, reset_sparse_index
 
+_RUN_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+
 
 def _chunk(tenant: str, domain: str, filename: str, seq: int, text: str) -> Document:
     return Document(
@@ -21,7 +23,7 @@ def _chunk(tenant: str, domain: str, filename: str, seq: int, text: str) -> Docu
 
 def test_bm25_search_finds_keyword_match():
     reset_sparse_index()
-    idx = BM25SparseIndex()
+    idx = BM25SparseIndex(tenant_id="default", domain_id="default", run_id=_RUN_ID)
     idx.build(
         [
             _chunk("default", "default", "a.txt", 0, "IT portal hours are 08:00 to 18:00."),
@@ -41,7 +43,7 @@ def test_bm25_search_finds_keyword_match():
 
 def test_bm25_scoped_by_domain():
     reset_sparse_index()
-    idx_it = BM25SparseIndex(tenant_id="default", domain_id="it")
+    idx_it = BM25SparseIndex(tenant_id="default", domain_id="it", run_id=_RUN_ID)
     idx_it.build(
         [_chunk("default", "it", "b.txt", 0, "VPN access request via portal.")],
         persist=False,
@@ -50,7 +52,7 @@ def test_bm25_scoped_by_domain():
     assert len(hits) == 1
     assert "VPN" in hits[0].page_content
 
-    idx_hr = BM25SparseIndex(tenant_id="default", domain_id="hr")
+    idx_hr = BM25SparseIndex(tenant_id="default", domain_id="hr", run_id=_RUN_ID)
     idx_hr.build(
         [_chunk("default", "hr", "a.txt", 0, "Vacation policy allows 28 days.")],
         persist=False,
@@ -63,12 +65,12 @@ def test_bm25_persist_and_load():
     with tempfile.TemporaryDirectory() as tmp:
         os.environ["SPARSE_INDEX_DIR"] = tmp
         try:
-            idx = BM25SparseIndex()
+            idx = BM25SparseIndex(tenant_id="default", domain_id="default", run_id=_RUN_ID)
             idx.build(
                 [_chunk("default", "default", "a.txt", 0, "Annual leave is 28 days.")],
                 persist=True,
             )
-            loaded = BM25SparseIndex()
+            loaded = BM25SparseIndex(tenant_id="default", domain_id="default", run_id=_RUN_ID)
             assert loaded.load() is True
             hits = loaded.search("annual leave", domain_id="default", tenant_id="default", k=1)
             assert len(hits) == 1

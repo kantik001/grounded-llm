@@ -143,31 +143,13 @@ def _read_staging(file_key: str) -> list[Document]:
 
 def _upsert_vector_file(target: FileTarget, *, run_id: str | None = None) -> int:
     backend = get_vector_backend()
-    upsert = getattr(backend, "upsert_kb_file", None)
-    if callable(upsert):
-        return upsert(
-            target.tenant_id,
-            target.domain_id,
-            target.path,
-            filename=target.filename,
-            run_id=run_id,
-        )
-    chunks = split_file_documents(target.domain_id, target.path, tenant_id=target.tenant_id)
-    if hasattr(backend, "open_scope"):
-        store = backend.open_scope(target.tenant_id, target.domain_id, run_id=run_id, for_write=True)
-    else:
-        backend.load()
-        store = getattr(backend, "_store", None)
-    if store is not None and chunks:
-        if hasattr(backend, "delete_kb_file"):
-            backend.delete_kb_file(
-                target.tenant_id,
-                target.domain_id,
-                target.filename,
-                run_id=run_id,
-            )
-        store.add_documents(chunks)
-    return len(chunks)
+    return backend.upsert_kb_file(
+        target.tenant_id,
+        target.domain_id,
+        target.path,
+        filename=target.filename,
+        run_id=run_id,
+    )
 
 
 def run_parse(task: ingest_store.IngestTask) -> dict[str, Any]:
@@ -227,24 +209,19 @@ def run_embed(task: ingest_store.IngestTask) -> dict[str, Any]:
         if os.path.isfile(staging_file):
             docs = _read_staging(task.file_key)
             backend = get_vector_backend()
-            if hasattr(backend, "open_scope"):
-                store = backend.open_scope(
+            store = backend.open_scope(
+                target.tenant_id,
+                target.domain_id,
+                run_id=write_run_id,
+                for_write=True,
+            )
+            if docs:
+                backend.delete_kb_file(
                     target.tenant_id,
                     target.domain_id,
+                    target.filename,
                     run_id=write_run_id,
-                    for_write=True,
                 )
-            else:
-                backend.load()
-                store = getattr(backend, "_store", None)
-            if store is not None and docs:
-                if hasattr(backend, "delete_kb_file"):
-                    backend.delete_kb_file(
-                        target.tenant_id,
-                        target.domain_id,
-                        target.filename,
-                        run_id=write_run_id,
-                    )
                 store.add_documents(docs)
                 if isinstance(backend, ChromaBackend):
                     backend.touch_manifest_entry(
@@ -392,9 +369,8 @@ def start_job(job_id: int, *, sync: bool = False) -> dict[str, Any]:
     if job.status not in (IngestJobStatus.QUEUED,):
         return ingest_store.job_status_payload(job_id) or {}
 
-    if job.mode == "full":
-        backend = get_vector_backend()
-        backend.load(force_reindex=not bool(_job_index_run_id(job)))
+    if job.mode == "full" and not _job_index_run_id(job):
+        get_vector_backend().load(force_reindex=True)
 
     targets = discover_targets(job)
     if not targets:

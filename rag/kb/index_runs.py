@@ -150,16 +150,22 @@ def collection_suffix(tenant_id: str, domain_id: str) -> str:
     return run_suffix(run_id)
 
 
-def resolve_write_run_id(tenant_id: str, domain_id: str, explicit_run_id: str | None = None) -> str:
-    """Run id for ingest writes: explicit building run or active (creating one if needed)."""
+def resolve_run_id(tenant_id: str, domain_id: str, explicit_run_id: str | None = None) -> str:
+    """Active index run for scope; creates and activates one when missing."""
     if explicit_run_id:
         return explicit_run_id
+    run_id = active_index_run_id(tenant_id, domain_id)
+    if run_id:
+        return run_id
     return ensure_active_index_run(tenant_id, domain_id)
 
 
-def resolve_read_run_id(tenant_id: str, domain_id: str) -> str | None:
-    """Active index run for retrieval; None → legacy flat index."""
-    return active_index_run_id(tenant_id, domain_id)
+def resolve_write_run_id(tenant_id: str, domain_id: str, explicit_run_id: str | None = None) -> str:
+    return resolve_run_id(tenant_id, domain_id, explicit_run_id)
+
+
+def resolve_read_run_id(tenant_id: str, domain_id: str) -> str:
+    return resolve_run_id(tenant_id, domain_id)
 
 
 def list_retired_run_ids(tenant_id: str, domain_id: str, *, keep_last: int = 1) -> list[str]:

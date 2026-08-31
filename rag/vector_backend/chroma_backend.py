@@ -21,6 +21,7 @@ EMBEDDING_MODEL = "intfloat/multilingual-e5-small"
 
 _INDEX_META_FILE = "index_meta.json"
 _MANIFEST_FILE = "index_manifest.json"
+_COLLECTION_NAME = "chunks"
 
 
 def _persist_dir() -> str:
@@ -28,9 +29,7 @@ def _persist_dir() -> str:
 
 
 def embedding_signature() -> dict:
-    """Identity of the vectors in the index. A mismatch (model swap, prefix
-    flip) makes existing vectors incompatible with new queries, so load()
-    rebuilds instead of silently mixing embedding spaces."""
+    """Identity of the vectors in the index."""
     return {
         "model": EMBEDDING_MODEL,
         "e5_prefixes": e5_prefixes_enabled(EMBEDDING_MODEL),
@@ -47,14 +46,12 @@ def _file_sha1(path: str) -> str:
 
 
 def scan_kb_files() -> dict[str, dict]:
-    """Current KB state from Postgres registry (compat alias for scan_registry_documents)."""
     from rag.kb.documents import scan_registry_documents
 
     return scan_registry_documents()
 
 
 def _resolve_scan_path(entry: dict) -> tuple[str, bool]:
-    """Return local path for a registry scan entry; materialize blob when needed."""
     path = entry.get("path") or ""
     if path and os.path.isfile(path):
         return path, False
@@ -76,39 +73,24 @@ def _resolve_scan_path(entry: dict) -> tuple[str, bool]:
 
 
 class ChromaBackend(VectorBackend):
-    _COLLECTION_NAME = "chunks"
-
     def __init__(self) -> None:
-        self._store: Chroma | None = None
         self._scope_stores: dict[str, Chroma] = {}
         self._embeddings = CachedHuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
 
     def reset(self) -> None:
-        self._store = None
         self._scope_stores = {}
 
-    def _scope_cache_key(self, tenant_id: str, domain_id: str, run_id: str | None) -> str:
-        rid = run_id or "legacy"
-        return f"{tenant_id}/{domain_id}/{rid}"
+    def _scope_cache_key(self, tenant_id: str, domain_id: str, run_id: str) -> str:
+        return f"{tenant_id}/{domain_id}/{run_id}"
 
-    def _scope_persist_dir(self, tenant_id: str, domain_id: str, run_id: str | None) -> str:
-        if run_id:
-            return chroma_run_dir(_persist_dir(), tenant_id, domain_id, run_id)
-        return _persist_dir()
+    def _scope_persist_dir(self, tenant_id: str, domain_id: str, run_id: str) -> str:
+        return chroma_run_dir(_persist_dir(), tenant_id, domain_id, run_id)
 
-    def _meta_path_for_scope(self, tenant_id: str, domain_id: str, run_id: str | None) -> str:
+    def _meta_path(self, tenant_id: str, domain_id: str, run_id: str) -> str:
         return os.path.join(self._scope_persist_dir(tenant_id, domain_id, run_id), _INDEX_META_FILE)
 
-    def _manifest_path_for_scope(self, tenant_id: str, domain_id: str, run_id: str | None) -> str:
+    def _manifest_path(self, tenant_id: str, domain_id: str, run_id: str) -> str:
         return os.path.join(self._scope_persist_dir(tenant_id, domain_id, run_id), _MANIFEST_FILE)
-
-    # --- index metadata -------------------------------------------------
-
-    def _meta_path(self) -> str:
-        return os.path.join(_persist_dir(), _INDEX_META_FILE)
-
-    def _manifest_path(self) -> str:
-        return os.path.join(_persist_dir(), _MANIFEST_FILE)
 
     def _read_json(self, path: str) -> dict | None:
         try:
@@ -125,28 +107,20 @@ class ChromaBackend(VectorBackend):
             json.dump(payload, fh, ensure_ascii=False, indent=1)
         os.replace(tmp, path)
 
-    def _meta_path(self) -> str:
-        return os.path.join(_persist_dir(), _INDEX_META_FILE)
-
-    def _manifest_path(self) -> str:
-        return os.path.join(_persist_dir(), _MANIFEST_FILE)
-
-    def _signature_matches_scope(self, tenant_id: str, domain_id: str, run_id: str | None) -> bool:
-        meta = self._read_json(self._meta_path_for_scope(tenant_id, domain_id, run_id))
+    def _signature_matches(self, tenant_id: str, domain_id: str, run_id: str) -> bool:
+        meta = self._read_json(self._meta_path(tenant_id, domain_id, run_id))
         return bool(meta) and meta.get("embedding") == embedding_signature()
 
-    def _save_index_state_scope(
+    def _save_index_state(
         self,
         tenant_id: str,
         domain_id: str,
-        run_id: str | None,
+        run_id: str,
         manifest: dict[str, dict],
     ) -> None:
-        meta_path = self._meta_path_for_scope(tenant_id, domain_id, run_id)
-        manifest_path = self._manifest_path_for_scope(tenant_id, domain_id, run_id)
-        self._write_json(meta_path, {"embedding": embedding_signature()})
+        self._write_json(self._meta_path(tenant_id, domain_id, run_id), {"embedding": embedding_signature()})
         self._write_json(
-            manifest_path,
+            self._manifest_path(tenant_id, domain_id, run_id),
             {key: {"sha1": st["sha1"]} for key, st in manifest.items()},
         )
 
@@ -157,8 +131,7 @@ class ChromaBackend(VectorBackend):
         *,
         run_id: str | None = None,
         for_write: bool = False,
-    ) -> Chroma | None:
-        """Open (or create) the Chroma store for tenant/domain + index run."""
+    ) -> Chroma:
         resolved = self.resolve_run_id(tenant_id, domain_id, run_id=run_id, for_write=for_write)
         cache_key = self._scope_cache_key(tenant_id, domain_id, resolved)
         if cache_key in self._scope_stores:
@@ -166,96 +139,27 @@ class ChromaBackend(VectorBackend):
 
         persist_dir = self._scope_persist_dir(tenant_id, domain_id, resolved)
         os.makedirs(persist_dir, exist_ok=True)
-        has_data = os.path.isdir(persist_dir) and bool(os.listdir(persist_dir))
-        if has_data:
-            store = Chroma(
-                persist_directory=persist_dir,
-                embedding_function=self._embeddings,
-                collection_name=self._COLLECTION_NAME,
-            )
-        else:
-            store = Chroma(
-                persist_directory=persist_dir,
-                embedding_function=self._embeddings,
-                collection_name=self._COLLECTION_NAME,
-            )
-        self._scope_stores[cache_key] = store
-        if resolved is None:
-            self._store = store
-        return store
-
-    def _signature_matches(self) -> bool:
-        meta = self._read_json(self._meta_path())
-        return bool(meta) and meta.get("embedding") == embedding_signature()
-
-    def _save_index_state(self, manifest: dict[str, dict]) -> None:
-        self._write_json(self._meta_path(), {"embedding": embedding_signature()})
-        self._write_json(
-            self._manifest_path(),
-            {key: {"sha1": st["sha1"]} for key, st in manifest.items()},
-        )
-
-    # --- build / load ----------------------------------------------------
-
-    def _create_store_legacy(self) -> Chroma | None:
-        print("Creating vector store (Chroma)...")
-        docs = split_kb_documents()
-        if not docs:
-            print("No documents to index.")
-            return None
-        print(f"Chunks: {len(docs)}")
-        persist_dir = _persist_dir()
-        store = Chroma.from_documents(
-            docs,
-            self._embeddings,
+        store = Chroma(
             persist_directory=persist_dir,
-            collection_name=self._COLLECTION_NAME,
+            embedding_function=self._embeddings,
+            collection_name=_COLLECTION_NAME,
         )
-        self._save_index_state(scan_kb_files())
-        print(f"Vector store saved to {persist_dir}")
+        self._scope_stores[cache_key] = store
         return store
 
     def load(self, *, force_reindex: bool = False) -> None:
-        if self._store is not None and not force_reindex:
-            return
-
-        force = force_reindex or os.environ.get("FORCE_RAG_REINDEX", "").lower() in (
-            "1",
-            "true",
-            "yes",
-        )
-        persist_dir = _persist_dir()
-
-        has_data = os.path.isdir(persist_dir) and bool(os.listdir(persist_dir))
-        if has_data and not force and not self._signature_matches():
-            print(
-                "Embedding signature changed (model or e5 prefixes) — "
-                "rebuilding vector store to avoid mixing embedding spaces."
-            )
-            force = True
-
-        if force and os.path.isdir(persist_dir):
-            print("Reindex: removing old chroma_db")
-            shutil.rmtree(persist_dir, ignore_errors=True)
-            has_data = False
-
-        if has_data:
-            self._store = Chroma(
-                persist_directory=persist_dir,
-                embedding_function=self._embeddings,
-                collection_name=self._COLLECTION_NAME,
-            )
-        else:
-            self._store = self._create_store_legacy()
-
-    # --- incremental update ----------------------------------------------
+        if force_reindex or os.environ.get("FORCE_RAG_REINDEX", "").lower() in ("1", "true", "yes"):
+            runs_root = os.path.join(_persist_dir(), "runs")
+            if os.path.isdir(runs_root):
+                shutil.rmtree(runs_root, ignore_errors=True)
+            self.reset()
+        self.refresh()
 
     def refresh(self) -> dict:
         """Incrementally sync scoped indexes with the Postgres registry."""
         current = scan_kb_files()
         if not current:
-            self.load(force_reindex=True)
-            return {"mode": "full", "files": 0, "empty": self._store is None}
+            return {"mode": "full", "files": 0, "empty": True}
 
         by_scope: dict[tuple[str, str], dict[str, dict]] = {}
         for key, entry in current.items():
@@ -263,17 +167,22 @@ class ChromaBackend(VectorBackend):
             domain = str(entry.get("domain") or "default")
             by_scope.setdefault((tenant, domain), {})[key] = entry
 
-        total_summary = {"mode": "incremental", "scopes": 0, "added": 0, "changed": 0, "removed": 0, "chunks_added": 0}
+        total_summary = {
+            "mode": "incremental",
+            "scopes": 0,
+            "added": 0,
+            "changed": 0,
+            "removed": 0,
+            "chunks_added": 0,
+        }
         for (tenant, domain), scope_files in by_scope.items():
-            run_id = self.resolve_run_id(tenant, domain)
-            manifest = self._read_json(self._manifest_path_for_scope(tenant, domain, run_id))
+            run_id = self.resolve_run_id(tenant, domain, for_write=True)
+            manifest = self._read_json(self._manifest_path(tenant, domain, run_id))
             persist_dir = self._scope_persist_dir(tenant, domain, run_id)
             has_data = os.path.isdir(persist_dir) and bool(os.listdir(persist_dir))
 
-            if not has_data or manifest is None or not self._signature_matches_scope(tenant, domain, run_id):
+            if not has_data or manifest is None or not self._signature_matches(tenant, domain, run_id):
                 store = self.open_scope(tenant, domain, run_id=run_id, for_write=True)
-                if store is None:
-                    continue
                 for key, st in scope_files.items():
                     path, is_temp = _resolve_scan_path(st)
                     try:
@@ -284,22 +193,17 @@ class ChromaBackend(VectorBackend):
                     finally:
                         if is_temp:
                             os.remove(path)
-                self._save_index_state_scope(tenant, domain, run_id, scope_files)
+                self._save_index_state(tenant, domain, run_id, scope_files)
                 total_summary["scopes"] += 1
                 continue
 
             store = self.open_scope(tenant, domain, run_id=run_id)
-            if store is None:
-                continue
-
             scope_keys = set(scope_files)
             manifest_keys = {k for k in manifest if k.startswith(f"{tenant}/{domain}/")}
             added = [k for k in scope_files if k not in manifest]
             removed = [k for k in manifest_keys if k not in scope_keys]
             changed = [
-                k
-                for k in scope_files
-                if k in manifest and manifest[k].get("sha1") != scope_files[k]["sha1"]
+                k for k in scope_files if k in manifest and manifest[k].get("sha1") != scope_files[k]["sha1"]
             ]
 
             for key in removed + changed:
@@ -327,7 +231,7 @@ class ChromaBackend(VectorBackend):
                     if is_temp:
                         os.remove(path)
 
-            self._save_index_state_scope(tenant, domain, run_id, scope_files)
+            self._save_index_state(tenant, domain, run_id, scope_files)
             total_summary["scopes"] += 1
             total_summary["added"] += len(added)
             total_summary["changed"] += len(changed)
@@ -346,8 +250,6 @@ class ChromaBackend(VectorBackend):
         run_id: str | None = None,
     ) -> None:
         store = self.open_scope(tenant_id, domain_id, run_id=run_id, for_write=True)
-        if store is None:
-            return
         store._collection.delete(  # noqa: SLF001
             where={
                 "$and": [
@@ -367,12 +269,7 @@ class ChromaBackend(VectorBackend):
         filename: str | None = None,
         run_id: str | None = None,
     ) -> int:
-        """Re-embed one file and update manifest entry for the target index run."""
         store = self.open_scope(tenant_id, domain_id, run_id=run_id, for_write=True)
-        if store is None:
-            store = self._create_store_legacy()
-        if store is None:
-            return 0
         name = filename or os.path.basename(path)
         self.delete_kb_file(tenant_id, domain_id, name, run_id=run_id)
         chunks = split_file_documents(domain_id, path, tenant_id=tenant_id)
@@ -393,17 +290,14 @@ class ChromaBackend(VectorBackend):
         resolved = self.resolve_run_id(tenant_id, domain_id, run_id=run_id, for_write=True)
         name = filename or os.path.basename(path)
         key = f"{tenant_id}/{domain_id}/{name}"
-        manifest_path = self._manifest_path_for_scope(tenant_id, domain_id, resolved)
+        manifest_path = self._manifest_path(tenant_id, domain_id, resolved)
         manifest = self._read_json(manifest_path) or {}
-        sha = ""
-        if os.path.isfile(path):
-            sha = _file_sha1(path)
+        sha = _file_sha1(path) if os.path.isfile(path) else ""
         manifest[key] = {"sha1": sha}
         self._write_json(manifest_path, manifest)
-        meta_path = self._meta_path_for_scope(tenant_id, domain_id, resolved)
+        meta_path = self._meta_path(tenant_id, domain_id, resolved)
         meta = self._read_json(meta_path) or {}
-        if "embedding" not in meta:
-            meta["embedding"] = embedding_signature()
+        meta["embedding"] = embedding_signature()
         self._write_json(meta_path, meta)
 
     def sync_manifest(self, manifest: dict[str, dict]) -> None:
@@ -416,9 +310,7 @@ class ChromaBackend(VectorBackend):
             by_scope.setdefault((tenant, domain), {})[key] = entry
         for (tenant, domain), scope_manifest in by_scope.items():
             run_id = self.resolve_run_id(tenant, domain)
-            self._save_index_state_scope(tenant, domain, run_id, scope_manifest)
-
-    # --- search -----------------------------------------------------------
+            self._save_index_state(tenant, domain, run_id, scope_manifest)
 
     def _filter(self, domain_id: str, tenant_id: str) -> dict:
         return {"$and": [{"domain_id": domain_id}, {"tenant_id": tenant_id}]}
@@ -432,24 +324,12 @@ class ChromaBackend(VectorBackend):
         tenant_id: str,
     ) -> list[Any]:
         run_id = self.resolve_run_id(tenant_id, domain_id)
-        if run_id:
-            store = self.open_scope(tenant_id, domain_id, run_id=run_id)
-        else:
-            self.load()
-            store = self._store
-        if store is None:
-            return []
+        store = self.open_scope(tenant_id, domain_id, run_id=run_id)
         return store.similarity_search(query, k=k, filter=self._filter(domain_id, tenant_id))
 
     def index_stats_for_domain(self, domain_id: str, tenant_id: str) -> list[dict]:
         run_id = self.resolve_run_id(tenant_id, domain_id)
-        if run_id:
-            store = self.open_scope(tenant_id, domain_id, run_id=run_id)
-        else:
-            self.load()
-            store = self._store
-        if store is None:
-            return []
+        store = self.open_scope(tenant_id, domain_id, run_id=run_id)
         try:
             data = store._collection.get(  # noqa: SLF001
                 where=self._filter(domain_id, tenant_id),

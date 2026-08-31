@@ -48,7 +48,7 @@ When `index_run_active` has a run for tenant+domain, retrieval opens a **scoped 
 | pgvector | `{PGVECTOR_COLLECTION}_{tenant}_{domain}_{run_suffix}` |
 | BM25 | `{SPARSE_INDEX_DIR}/runs/{tenant}_{domain}_{run_suffix}/bm25_index.pkl` |
 
-Legacy installs without index runs keep the flat `chroma_db/` layout. GC retired runs: `python scripts/gc_index_runs.py`.
+Every tenant+domain scope requires an active index run (`index_run_active`); missing runs are created on first read/write. GC retired runs: `python scripts/gc_index_runs.py`.
 
 ---
 
