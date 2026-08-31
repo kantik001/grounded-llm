@@ -58,7 +58,9 @@ See [`packs/README.md`](../packs/README.md).
 
 | Script | Purpose |
 |--------|---------|
-| `sync_connector.py` | Pull docs into `data/` via a connector |
+| `sync_connector.py` | Connector sync → KB registry; auto-ingest when `KB_AUTO_INGEST=1` |
+| `flush_kb_ingest_outbox.py` | Flush pending outbox rows → `POST /admin/ingest` |
+| `backfill_kb_registry.py` | One-time migration from `data/` tree to registry |
 | `create_github_repo.ps1` | One-shot: create private GH repo + push |
 
 ## Makefile shortcuts
