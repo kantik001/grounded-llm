@@ -23,6 +23,8 @@ func registerRouteGroup(g *gin.RouterGroup, auth gin.HandlerFunc) {
 	kb := g.Group("")
 	kb.Use(RequireRoles(RoleKBEditor))
 	kb.GET("/articles", handleListArticles)
+	kb.GET("/kb/documents", handleListKBDocuments)
+	kb.POST("/kb/index-runs", handleRebuildIndexRun)
 	kb.DELETE("/articles", handleDeleteArticle)
 	kb.POST("/upload", handleUpload)
 	kb.POST("/reindex", handleReindex)

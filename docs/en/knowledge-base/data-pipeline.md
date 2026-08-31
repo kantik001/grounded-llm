@@ -2,7 +2,7 @@
 
 **Goal:** how documents reach RAG and become chat answers.
 
-Deep dive (async ingest): [INGESTION.md](../INGESTION.md) · legacy full sync: [config/REINDEX.md](../../config/REINDEX.md)
+Deep dive (async ingest): [INGESTION.md](../INGESTION.md) · document registry: [KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md) · legacy full sync: [config/REINDEX.md](../../config/REINDEX.md)
 
 ---
 
@@ -26,10 +26,13 @@ flowchart TB
         C[Connectors sync]
         G[Git / packs → data/]
     end
-    U --> D[data/tenant/domain/]
+    U --> REG[kb_documents + blobs]
+    C --> REG
+    G --> D[data/tenant/domain/]
+    U --> D
     C --> D
-    G --> D
-    D --> I{Index}
+    REG --> I{Index}
+    D --> I
     I -->|ingest job| P[parse → staging → embed → Chroma + BM25]
     I -->|reindex| R[refresh_vector_store sync]
     P --> S[search / hybrid RRF]
@@ -40,8 +43,9 @@ flowchart TB
 
 | Stage | Where |
 |-------|-------|
-| File lands on disk | `POST /admin/upload`, connectors, or git → `data/{tenant_id}/{domain_id}/` |
-| **Ingest (async)** | `POST /admin/ingest` → Postgres `ingest_jobs` → Redis → `workers/ingest_worker` |
+| **Source of truth** | Postgres `kb_documents` + blobs (`KB_BLOB_DIR` or S3) — see [KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md) |
+| Legacy file tree | `POST /admin/upload`, connectors, git → `data/{tenant_id}/{domain_id}/` (dual-write) |
+| **Ingest (async)** | `POST /admin/ingest` → `ingest_jobs` → discover registry → Redis → `ingest-worker` |
 | **Reindex (sync fallback)** | `python scripts/reindex_rag.py` or `POST /admin/reindex` |
 | Load + parse | `rag/document_loaders.py` |
 | Chunk | `rag/indexing.py` (500 tokens / overlap 50, stable `chunk_id`) |
@@ -86,9 +90,12 @@ Admin upload filename: **Latin** letters, digits, `_`, `-`, up to **10 MB**.
 
 ## Step 1 — prepare documents
 
+**Production:** upload via admin UI/API (registry + blob + `data/`) or connector sync + optional `python scripts/backfill_kb_registry.py` for existing trees.
+
+**Dev / packs:** copy files into `data/` then backfill or ingest:
+
 ```
 data/default/default/vacation_policy_en.txt
-data/default/default/handbook.pdf
 data/acme/legal/contract_template.docx
 ```
 
@@ -136,6 +143,7 @@ Photo recognition **is not** in platform core. Vision requires a separate domain
 
 | Topic | File |
 |-------|------|
+| Source of truth | [KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md) |
 | Ingestion jobs | [INGESTION.md](../INGESTION.md) |
 | Admin upload + APIs | [server-admin-and-ux-api.md](./server-admin-and-ux-api.md) |
 | Vector store | [rag-vector_store.md](./rag-vector_store.md) |

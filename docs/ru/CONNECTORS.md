@@ -2,7 +2,11 @@
 
 Краткая русская версия. **Канон:** [CONNECTORS.md (EN)](../en/CONNECTORS.md).
 
-Синхронизация в `data/{tenant}/{domain}/`, затем индексация через **ingest** или **reindex**. См. [INGESTION.md](./INGESTION.md).
+Синхронизация в `data/{tenant}/{domain}/`, registry (Postgres + blobs), затем **ingest** или **reindex**.
+
+См. [KB_SOURCE_OF_TRUTH.md](./KB_SOURCE_OF_TRUTH.md) · [INGESTION.md](./INGESTION.md).
+
+`KB_REGISTRY_SYNC=1` — Google Drive автоматически регистрирует файлы в registry. Иначе: `python scripts/backfill_kb_registry.py`.
 
 ---
 

@@ -2,23 +2,29 @@
 
 Async KB ingestion: **parse → embed → index**, with job state in Postgres and work items in Redis.
 
-See also: [CONNECTORS.md](./CONNECTORS.md) · admin reindex (`POST /admin/reindex`) as full-sync fallback.
+See also: [KB_SOURCE_OF_TRUTH.md](./KB_SOURCE_OF_TRUTH.md) · [CONNECTORS.md](./CONNECTORS.md) · admin reindex (`POST /admin/reindex`) as full-sync fallback.
 
 ## Architecture
 
+**Document source (production):** Postgres registry (`kb_documents`) + blob store (`KB_BLOB_DIR` or S3). Legacy `data/{tenant}/{domain}/` is still dual-written on upload and used as fallback when the registry is empty.
+
 ```
-Upload / connector sync → data/{tenant}/{domain}/
+Upload / connector
+    → kb_documents + kb_document_versions (Postgres)
+    → blobs (local or S3/MinIO)
+    → data/{tenant}/{domain}/          (legacy dual-write)
         ↓
 POST /admin/ingest (Go) → ingest_jobs (Postgres)
         ↓
 POST /admin/ingest/run (Python) → Redis queues
         ↓
-parse worker  → staging/*.chunks.jsonl
-embed worker  → Chroma (+ manifest)
-finalize      → BM25 rebuild
+discover_targets()  →  Postgres registry (fallback: scan data/)
+parse worker        →  blob or local path → staging/*.chunks.jsonl
+embed worker        →  Chroma (+ index_document_state)
+finalize            →  BM25 rebuild + index run pointer
 ```
 
-Retrieve path (`/rag/context`) is unchanged and does not block on ingestion.
+Retrieve path (`/rag/context`) is unchanged and does not block on ingestion. Set `KB_ACL_ENFORCE=1` to filter hits by `kb_document_acl`.
 
 ## Rollout (weeks)
 
@@ -28,7 +34,7 @@ Retrieve path (`/rag/context`) is unchanged and does not block on ingestion.
 | 2 | Redis queues, parse stage, chunk staging on disk |
 | 3 | Embed worker, per-file Chroma upsert (`upsert_kb_file`) |
 | 4 | Status API, retries, DLQ, Prometheus-style metrics |
-| 5+ | Scale workers, connector cron → auto enqueue |
+| 5+ | KB registry + blobs, index runs, connector registry sync |
 
 ## API
 
@@ -37,7 +43,6 @@ Retrieve path (`/rag/context`) is unchanged and does not block on ingestion.
 ```http
 POST /admin/ingest?domain_id=hr
 Content-Type: application/json
-X-Admin-Secret: ...
 
 {"files": ["policy.pdf"], "mode": "incremental", "sync": false}
 ```
@@ -45,7 +50,12 @@ X-Admin-Secret: ...
 ```http
 GET /admin/ingest/status?job_id=42
 GET /admin/ingest/status?domain_id=hr
+GET /admin/kb/documents?domain_id=hr
+POST /admin/kb/index-runs?domain_id=hr
+{"activate": true, "backend": "chroma", "embedding_model": "intfloat/multilingual-e5-small"}
 ```
+
+Empty `files` in ingest = all active documents in the domain (from registry, or legacy `data/` scan).
 
 ### Python (internal)
 
@@ -63,18 +73,28 @@ GET  /admin/ingest/metrics
 | `INGEST_USE_REDIS` | `1` | Worker transport |
 | `INGEST_STAGING_DIR` | `ingest_staging` | Parsed chunk JSONL |
 | `INGEST_WORKER_STAGE` | `all` | `parse`, `embed`, `finalize`, or `all` |
-| `DATABASE_URL` | — | Job/task state (required) |
+| `DATABASE_URL` | — | Job/task state + KB registry (required) |
 | `REDIS_URL` | — | Queues (required for async) |
+| `KB_BLOB_BACKEND` | `local` | Blob store: `local` or `s3` |
+| `KB_BLOB_DIR` | `{DATA_DIR}/blobs` | Local blob root |
+| `KB_S3_*` | — | S3/MinIO when `KB_BLOB_BACKEND=s3` |
+| `KB_ACL_ENFORCE` | `0` | Filter retrieval by document ACL |
+| `KB_REGISTRY_SYNC` | `1` | Auto-register blobs after connector sync |
+
+See [KB_SOURCE_OF_TRUTH.md](./KB_SOURCE_OF_TRUTH.md) for full SoT env list.
 
 ## Local dev
 
 ```bash
-# Week 1 — sync (no worker container)
+# Backfill legacy data/ into registry (once)
+python scripts/backfill_kb_registry.py
+
+# Sync (no worker container)
 curl -X POST "http://localhost:8080/admin/ingest?domain_id=default" \
   -H "X-Admin-Secret: $ADMIN_SECRET" \
   -d '{"sync": true}'
 
-# Week 2+ — async with worker
+# Async with worker
 docker compose up -d ingest-worker
 curl -X POST "http://localhost:8080/admin/ingest?domain_id=default" \
   -H "X-Admin-Secret: $ADMIN_SECRET" \

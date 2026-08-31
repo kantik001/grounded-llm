@@ -105,7 +105,7 @@ cd client-assistant
 
 | Действие | Путь |
 |----------|------|
-| Документы KB | `data/{tenant_id}/{domain_id}/` (`.txt`, `.pdf`, `.docx`) |
+| Документы KB | Postgres `kb_documents` + blobs; legacy `data/{tenant_id}/{domain_id}/` | [KB_SOURCE_OF_TRUTH.md](./KB_SOURCE_OF_TRUTH.md) |
 | Каталог доменов | `config/domains.json` |
 | Промпты и UI | `config/locales/ru/` и `config/locales/en/` |
 | Eval-вопросы | `eval/rag_{domain}_baseline.jsonl` |

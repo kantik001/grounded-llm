@@ -29,7 +29,7 @@ User (Web / Telegram / API)
         │
         ├──► Python RAG service ──► Chroma (embeddings index)
         │         ▲
-        │         └── reads documents from data/{tenant}/{domain}/
+        │         └── reads documents from registry (Postgres + blobs) or legacy data/{tenant}/{domain}/
         │
         └──► LLM API (optional, HTTPS) — question + retrieved context only
 ```
@@ -56,7 +56,8 @@ User (Web / Telegram / API)
 |-----------|--------|----------|
 | PostgreSQL | Users, sessions, messages, feedback, analytics events, **audit log** | Client DB volume |
 | Chroma | Embedding vectors + chunk metadata | Client volume (`chroma_data`) |
-| File system | Uploaded KB documents (`.txt`, `.pdf`, `.docx`) | `data/{tenant_id}/{domain_id}/` |
+| File system | KB document blobs + legacy dual-write | `KB_BLOB_DIR` or S3; `data/{tenant_id}/{domain_id}/` |
+| Postgres | KB metadata, ACL, versions | `kb_documents`, `kb_document_versions`, `kb_document_acl` |
 | Uploads | User images (optional) | Configured `UPLOAD_DIR` |
 
 Multi-tenant isolation: `tenant_id` on sessions and in Chroma metadata filters.

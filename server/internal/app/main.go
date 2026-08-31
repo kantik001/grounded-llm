@@ -57,6 +57,7 @@ func Run() {
 	if err != nil {
 		log.Fatalf("ChatStore: %v", err)
 	}
+	initKBRegistry(config)
 	bindDeps(config, chatStore)
 	defer chatStore.Close()
 	// Re-hydrate SaaS tenants/quotas/admin users now that Postgres is available.

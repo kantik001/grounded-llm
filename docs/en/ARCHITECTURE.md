@@ -68,7 +68,11 @@ Canonical ops for local LLMs and caches: [LLM_PROVIDERS.md](./LLM_PROVIDERS.md).
 
 Formats: **`.txt`**, **`.pdf`**, **`.docx`** → `rag/document_loaders.py` → chunking → configured vector backend.
 
-Layout: `data/{tenant_id}/{domain_id}/` (legacy `data/{domain_id}/` still supported).
+**Production source of truth:** Postgres `kb_documents` + blob store (`KB_BLOB_DIR` or S3). See [KB_SOURCE_OF_TRUTH.md](./KB_SOURCE_OF_TRUTH.md).
+
+**Legacy layout:** `data/{tenant_id}/{domain_id}/` — still dual-written on upload and used as ingest fallback.
+
+**Indexes (Chroma, BM25):** disposable — rebuild via `POST /admin/ingest` without touching originals.
 
 ---
 
@@ -89,9 +93,9 @@ Registry: `packs/registry.yaml` — validate with `python scripts/init_pack.py r
 ## New domain checklist (manual)
 
 1. Entry in `config/domains.json` (with `names.ru` / `names.en`)
-2. Documents in `data/{tenant_id}/{domain_id}/`
+2. Documents via admin upload (registry + blob) or `data/{tenant_id}/{domain_id}/` + `python scripts/backfill_kb_registry.py`
 3. Locale bundles: `config/locales/ru/` and `config/locales/en/`
-4. `python scripts/reindex_rag.py` or `scripts/init_domain.ps1`
+4. `POST /admin/ingest` or `python scripts/reindex_rag.py`
 5. `eval/rag_{domain}_baseline.jsonl` + `make eval-retrieval`
 
 Typical MVP estimate: **2–5 days** with documents ready.

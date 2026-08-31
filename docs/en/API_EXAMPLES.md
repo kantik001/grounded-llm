@@ -162,7 +162,32 @@ curl -sS -u admin:your-password -X POST "http://localhost:8080/api/admin/ingest?
   -d '{"sync": true}'
 ```
 
-See [INGESTION.md](./INGESTION.md).
+See [INGESTION.md](./INGESTION.md) · [KB_SOURCE_OF_TRUTH.md](./KB_SOURCE_OF_TRUTH.md).
+
+---
+
+## Admin — KB registry and index runs
+
+```bash
+# List documents from Postgres registry
+curl -sS -u admin:your-password \
+  "http://localhost:8080/api/admin/kb/documents?domain_id=default"
+
+# Backfill legacy data/ into registry (CLI, run on host with DATABASE_URL)
+python scripts/backfill_kb_registry.py --domain default
+
+# Create and activate a new index run (blue/green)
+curl -sS -u admin:your-password -X POST \
+  "http://localhost:8080/api/admin/kb/index-runs?domain_id=default" \
+  -H "Content-Type: application/json" \
+  -d '{"activate": true, "backend": "chroma"}'
+
+# Full ingest after new index run
+curl -sS -u admin:your-password -X POST \
+  "http://localhost:8080/api/admin/ingest?domain_id=default" \
+  -H "Content-Type: application/json" \
+  -d '{"mode": "full", "sync": false}'
+```
 
 ---
 

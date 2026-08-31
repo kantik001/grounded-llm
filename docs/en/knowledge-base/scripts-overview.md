@@ -4,7 +4,7 @@ Full catalog: [`scripts/README.md`](../../../scripts/README.md). Makefile: `make
 
 | Area | Examples |
 |------|----------|
-| RAG / eval | `reindex_rag.py`, `run_rag_eval.py`, `ci_eval_retrieval.sh` |
+| RAG / eval | `reindex_rag.py`, `backfill_kb_registry.py`, `run_rag_eval.py`, `ci_eval_retrieval.sh` |
 | Packs | `init_pack.py`, `pack_registry.py`, `init_domain.*` |
 | Smoke / CI | `smoke.*`, `load_smoke.*`, `ci_start_mock_server.sh` |
 | Codegen | `gen_retriever_grpc.py` |
@@ -25,7 +25,20 @@ Sets `FORCE_RAG_REINDEX=true`, rebuilds the configured vector backend (+ sparse 
 
 **Dependencies:** `pip install -r api/requirements.txt`
 
-**Alternatives:** admin UI reindex, `POST /admin/reindex`, `FORCE_RAG_REINDEX=true` on Python startup.
+**Alternatives:** admin ingest, `POST /admin/reindex`, `FORCE_RAG_REINDEX=true` on Python startup.
+
+---
+
+## `backfill_kb_registry.py`
+
+Register existing files from `data/{tenant}/{domain}/` into Postgres + blob store:
+
+```bash
+python scripts/backfill_kb_registry.py
+python scripts/backfill_kb_registry.py --tenant default --domain default --dry-run
+```
+
+Then run `POST /admin/ingest`. See [KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md).
 
 ---
 

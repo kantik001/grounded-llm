@@ -122,9 +122,20 @@ First RAG request may download embedding model `intfloat/multilingual-e5-small`.
 ## Service `ingest-worker`
 
 - Command: `python -m workers.ingest_worker` (polls Redis parse/embed/finalize queues)
-- Shares `chroma_data`, `data/`, `DATABASE_URL`, `REDIS_URL` with `python`
+- Shares `chroma_data`, `data/`, `DATABASE_URL`, `REDIS_URL`, `KB_BLOB_*` with `python`
+- Discovers documents from Postgres registry (fallback: `data/`)
 - Scale: `docker compose up -d --scale ingest-worker=2`
-- See [INGESTION.md](../INGESTION.md)
+- See [INGESTION.md](../INGESTION.md) · [KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md)
+
+---
+
+## Optional service `minio` (S3-compatible blobs)
+
+```bash
+docker compose --profile minio up -d
+```
+
+Set on `server`, `python`, `ingest-worker`: `KB_BLOB_BACKEND=s3`, `KB_S3_ENDPOINT=minio:9000`, `KB_S3_ACCESS_KEY`, `KB_S3_SECRET_KEY`, `KB_S3_BUCKET=grounded-kb`.
 
 ---
 
@@ -133,7 +144,8 @@ First RAG request may download embedding model `intfloat/multilingual-e5-small`.
 - Port **8080**
 - Depends on healthy `postgres` + `python`
 - Image: binary `main`, `/migrations`, `/config` (runtime override via volume)
-- `DATA_DIR=/app/data` — admin KB upload
+- `DATA_DIR=/app/data` — admin KB upload (legacy dual-write)
+- `KB_BLOB_BACKEND`, `KB_BLOB_DIR`, `KB_S3_*` — document blob store
 - `MIGRATIONS_DIR=/migrations` — SQL on startup
 - `LOCALES_ROOT=/config/locales`, `DEFAULT_LOCALE`
 

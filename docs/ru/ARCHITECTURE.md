@@ -68,10 +68,10 @@
 
 ## Документы базы знаний
 
-Форматы: **`.txt`**, **`.pdf`**, **`.docx`** → `rag/document_loaders.py` → чанки → выбранный vector backend.
+Форматы: **`.txt`**, **`.pdf`**, **`.docx`** → `rag/document_loaders.py` → чанки → vector backend.
 
-Рекомендуемый путь: `data/{tenant_id}/{domain_id}/`.  
-Старый layout `data/{domain_id}/` по-прежнему поддерживается.
+**Prod SoT:** Postgres `kb_documents` + blobs — [KB_SOURCE_OF_TRUTH.md](./KB_SOURCE_OF_TRUTH.md).  
+**Legacy:** `data/{tenant_id}/{domain_id}/` (dual-write, ingest fallback). Старый layout `data/{domain_id}/` поддерживается.
 
 ---
 

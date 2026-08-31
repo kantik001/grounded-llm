@@ -114,6 +114,9 @@ func handleDeleteArticle(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
 		return
 	}
+	if s := st(); s != nil {
+		_ = s.MarkKBDocumentDeleted(c.Request.Context(), tid, domainID, name)
+	}
 	log.Printf("Admin delete: %s", path)
 	audit.Record(c, audit.Opts{
 		Action:   store.AuditActionKBDelete,
@@ -166,13 +169,16 @@ func handleUpload(c *gin.Context) {
 		return
 	}
 	defer func() { _ = src.Close() }()
-	out, err := os.Create(dst)
+	data, err := io.ReadAll(io.LimitReader(src, maxKnowledgeFileBytes+1))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
 		return
 	}
-	defer func() { _ = out.Close() }()
-	if _, err := io.Copy(out, io.LimitReader(src, maxKnowledgeFileBytes+1)); err != nil {
+	if len(data) > maxKnowledgeFileBytes {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Max file size is 10 MB"})
+		return
+	}
+	if err := os.WriteFile(dst, data, 0o644); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
 		return
 	}
@@ -181,6 +187,18 @@ func handleUpload(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
 		return
 	}
+
+	var docID, versionID string
+	if s := st(); s != nil && kbBlob() != nil {
+		doc, ver, regErr := registerKBUpload(c.Request.Context(), s, tid, domainID, name, audit.ActorFromContext(c), data)
+		if regErr != nil {
+			log.Printf("KB registry upload: %v", regErr)
+		} else {
+			docID = doc.ID
+			versionID = ver.ID
+		}
+	}
+
 	log.Printf("Admin upload: %s -> %s", name, dst)
 	audit.Record(c, audit.Opts{
 		Action:   store.AuditActionKBUpload,
@@ -190,7 +208,14 @@ func handleUpload(c *gin.Context) {
 		Success:  true,
 		Details:  map[string]any{"size_bytes": fh.Size},
 	})
-	c.JSON(http.StatusOK, gin.H{"success": true, "domain_id": domainID, "filename": name, "path": dst})
+	c.JSON(http.StatusOK, gin.H{
+		"success":    true,
+		"domain_id":  domainID,
+		"filename":   name,
+		"path":       dst,
+		"document_id": docID,
+		"version_id": versionID,
+	})
 }
 
 type pythonIndexStatsResponse struct {

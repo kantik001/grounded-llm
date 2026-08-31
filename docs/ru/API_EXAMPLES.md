@@ -122,4 +122,10 @@ bash scripts/smoke.sh http://localhost:8080
 
 ---
 
+## Admin — KB registry (см. EN)
+
+Примеры `GET /admin/kb/documents`, `POST /admin/kb/index-runs`, `backfill_kb_registry.py` — в [API_EXAMPLES.md (EN)](../en/API_EXAMPLES.md) и [KB_SOURCE_OF_TRUTH.md](./KB_SOURCE_OF_TRUTH.md).
+
+---
+
 См. также: [DEPLOY.md](./DEPLOY.md), [knowledge-base/server-auth-and-limits.md](./knowledge-base/server-auth-and-limits.md).

@@ -3,15 +3,18 @@
 Library used by the Python RAG **service** (`api/`) and by scripts (`reindex_rag.py`, eval). Not an HTTP/gRPC process by itself.
 
 ```
-data/{tenant}/{domain}/  →  loaders → chunk → embed → vector (+ optional BM25)
-                                              ↓
-                         search / hybrid RRF / rerank → retrieve_rag_context
+Postgres kb_documents + blobs  →  loaders → chunk → embed → vector (+ optional BM25)
+         ↓ (legacy fallback)                              ↓
+data/{tenant}/{domain}/              search / hybrid RRF / rerank → retrieve_rag_context
 ```
 
 | Module | Role |
 |--------|------|
 | `document_loaders.py` | `.txt`, `.pdf`, `.docx` |
 | `kb_discovery.py` | Find `data/{tenant}/{domain}/` trees |
+| `kb/documents.py` | Postgres registry, discover for ingest |
+| `kb/index_runs.py` | Disposable index run pointers |
+| `storage/blob_store.py` | Local or S3 blob backend |
 | `indexing.py` | Load + chunk (500/50) + stable `chunk_id` |
 | `vector_backend/` | Chroma (default), Qdrant, pgvector |
 | `vector_store.py` | Facade: index, search, hybrid, readiness |

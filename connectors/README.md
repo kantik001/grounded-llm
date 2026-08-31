@@ -1,8 +1,9 @@
 # Ingest connectors
 
-Connectors sync documents into `data/{tenant}/{domain}/`, then index via **ingest** or **reindex**.
+Connectors sync documents into `data/{tenant}/{domain}/`, register them in the **KB registry** (Postgres + blobs), then index via **ingest** or **reindex**.
 
 - Ingest: [docs/en/INGESTION.md](../docs/en/INGESTION.md)
+- Registry / SoT: [docs/en/KB_SOURCE_OF_TRUTH.md](../docs/en/KB_SOURCE_OF_TRUTH.md)
 - Reindex fallback: `python scripts/reindex_rag.py`
 
 ## Connectors
@@ -14,8 +15,14 @@ Connectors sync documents into `data/{tenant}/{domain}/`, then index via **inges
 | `google_drive_export` | `google_drive_export.py` | Drive Takeout folder |
 | `confluence_export` | `confluence_export.py` | Confluence space export |
 | `sharepoint` | `sharepoint.py` | Live Microsoft Graph |
-| `google_drive` | `google_drive.py` | Live Google Drive API |
+| `google_drive` | `google_drive.py` | Live Google Drive API (+ registry sync) |
 | `confluence` | `confluence.py` | Live Confluence REST |
+
+Registry helper: [`registry_sync.py`](./registry_sync.py) — `register_synced_file`, `register_synced_tree`.
+
+| Env | Default | Purpose |
+|-----|---------|---------|
+| `KB_REGISTRY_SYNC` | `1` | Auto-register after Google Drive sync |
 
 Registry (names + factories): [`registry.py`](./registry.py) — `build_connector(name, source)`.
 
@@ -30,6 +37,14 @@ pip install -r connectors/requirements.txt
 
 ```bash
 python scripts/sync_connector.py <connector> --domain <id> [--source PATH] [--dry-run]
+```
+
+After sync, if registry was not updated automatically:
+
+```bash
+python scripts/backfill_kb_registry.py --domain <id>
+curl -u admin:pass -X POST "http://localhost:8080/api/admin/ingest?domain_id=<id>" \
+  -H "Content-Type: application/json" -d '{"sync": false}'
 ```
 
 Exit code `0` if `SyncResult.ok` (no errors); `1` on setup failure or sync errors.

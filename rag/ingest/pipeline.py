@@ -21,7 +21,8 @@ from rag.ingest.models import (
     IngestJobStatus,
     IngestTaskStatus,
 )
-from rag.kb_discovery import kb_data_dir
+from rag.kb.documents import DocumentTarget, discover_document_targets, materialize_to_temp
+from rag.kb.index_runs import ensure_active_index_run, upsert_index_document_state
 from rag.sparse_index import ensure_sparse_index
 from rag.vector_backend import get_vector_backend
 from rag.vector_backend.chroma_backend import ChromaBackend, _file_sha1, scan_kb_files
@@ -55,6 +56,9 @@ class FileTarget:
 
 
 def discover_files(job: ingest_store.IngestJob) -> list[FileTarget]:
+    """Legacy filesystem discovery (used when registry is empty)."""
+    from rag.kb_discovery import kb_data_dir
+
     domain_dir = kb_data_dir(job.tenant_id, job.domain_id)
     if not os.path.isdir(domain_dir):
         return []
@@ -83,6 +87,63 @@ def discover_files(job: ingest_store.IngestJob) -> list[FileTarget]:
             )
         )
     return out
+
+
+def discover_targets(job: ingest_store.IngestJob) -> list[DocumentTarget]:
+    """Resolve ingest targets from Postgres registry (fallback: filesystem)."""
+    explicit = [f for f in job.files if f]
+    return discover_document_targets(job.tenant_id, job.domain_id, explicit or None)
+
+
+def _target_file_key(target: DocumentTarget) -> str:
+    return f"{target.tenant_id}/{target.domain_id}/{target.logical_key}"
+
+
+def _target_to_file(target: DocumentTarget) -> FileTarget:
+    path = target.local_path
+    if not path and target.storage_key:
+        path = materialize_to_temp(target)
+    return FileTarget(
+        file_key=_target_file_key(target),
+        path=path,
+        tenant_id=target.tenant_id,
+        domain_id=target.domain_id,
+        filename=target.logical_key,
+    )
+
+
+def _resolve_parse_path(task: ingest_store.IngestTask) -> tuple[str, bool]:
+    """Return (path, is_temp)."""
+    payload = task.payload
+    path = payload.get("path") or ""
+    if path and os.path.isfile(path):
+        return path, False
+    storage_key = payload.get("storage_key") or ""
+    if storage_key:
+        target = DocumentTarget(
+            document_id=payload.get("document_id") or "",
+            version_id=payload.get("version_id") or "",
+            tenant_id=payload.get("tenant_id") or "",
+            domain_id=payload.get("domain_id") or "",
+            logical_key=payload.get("filename") or payload.get("logical_key") or "",
+            content_sha256=payload.get("content_sha256") or "",
+            storage_key=storage_key,
+        )
+        return materialize_to_temp(target), True
+    raise ValueError("parse task missing path or storage_key")
+
+
+def _enrich_chunks(docs: list[Document], payload: dict[str, Any]) -> None:
+    doc_id = payload.get("document_id") or ""
+    version_id = payload.get("version_id") or ""
+    if not doc_id:
+        return
+    for doc in docs:
+        meta = doc.metadata or {}
+        meta["document_id"] = doc_id
+        if version_id:
+            meta["document_version_id"] = version_id
+        doc.metadata = meta
 
 
 def _write_staging(file_key: str, docs: list[Document]) -> str:
@@ -127,25 +188,36 @@ def _upsert_chroma_file(target: FileTarget) -> int:
 
 def run_parse(task: ingest_store.IngestTask) -> dict[str, Any]:
     payload = task.payload
-    path = payload.get("path") or ""
     domain_id = payload.get("domain_id") or ""
     tenant_id = payload.get("tenant_id") or ""
-    if not path or not domain_id:
-        raise ValueError("parse task missing path/domain_id")
-    with metrics.timer("parse_duration"):
-        docs = split_file_documents(domain_id, path, tenant_id=tenant_id)
-    staging = _write_staging(task.file_key, docs)
-    return {"staging_path": staging, "chunks": len(docs)}
+    if not domain_id:
+        raise ValueError("parse task missing domain_id")
+    path, is_temp = _resolve_parse_path(task)
+    try:
+        with metrics.timer("parse_duration"):
+            docs = split_file_documents(domain_id, path, tenant_id=tenant_id)
+            _enrich_chunks(docs, payload)
+        staging = _write_staging(task.file_key, docs)
+        return {"staging_path": staging, "chunks": len(docs)}
+    finally:
+        if is_temp and os.path.isfile(path):
+            try:
+                os.remove(path)
+            except OSError:
+                pass
 
 
 def run_embed(task: ingest_store.IngestTask) -> dict[str, Any]:
     payload = task.payload
+    path = payload.get("path") or ""
+    if not path and payload.get("storage_key"):
+        path = _resolve_parse_path(task)[0]
     target = FileTarget(
         file_key=task.file_key,
-        path=payload.get("path") or "",
+        path=path,
         tenant_id=payload.get("tenant_id") or "",
         domain_id=payload.get("domain_id") or "",
-        filename=payload.get("filename") or os.path.basename(payload.get("path") or ""),
+        filename=payload.get("filename") or payload.get("logical_key") or os.path.basename(path),
     )
     if not target.path:
         raise ValueError("embed task missing path")
@@ -167,6 +239,17 @@ def run_embed(task: ingest_store.IngestTask) -> dict[str, Any]:
             embedded = len(docs)
         else:
             embedded = _upsert_chroma_file(target)
+
+    doc_id = payload.get("document_id") or ""
+    if doc_id:
+        run_id = ensure_active_index_run(target.tenant_id, target.domain_id)
+        upsert_index_document_state(
+            run_id,
+            doc_id,
+            int(payload.get("document_version") or payload.get("version") or 0),
+            payload.get("content_sha256") or "",
+            embedded,
+        )
     return {"embedded": embedded}
 
 
@@ -175,6 +258,7 @@ def run_finalize(job_id: int) -> dict[str, Any]:
     if job is None:
         raise ValueError(f"job {job_id} not found")
     with metrics.timer("finalize_duration"):
+        ensure_active_index_run(job.tenant_id, job.domain_id)
         ensure_sparse_index(force_reindex=True)
         backend = get_vector_backend()
         if isinstance(backend, ChromaBackend):
@@ -189,44 +273,59 @@ def run_finalize(job_id: int) -> dict[str, Any]:
     return stats
 
 
-def _enqueue_parse_tasks(job: ingest_store.IngestJob, targets: list[FileTarget], *, async_mode: bool) -> list[int]:
+def _enqueue_parse_tasks(
+    job: ingest_store.IngestJob,
+    targets: list[DocumentTarget],
+    *,
+    async_mode: bool,
+) -> list[int]:
     task_ids: list[int] = []
     for target in targets:
+        ft = _target_to_file(target)
+        sha = target.content_sha256 or (_file_sha1(ft.path) if ft.path else "")
         payload = {
-            "path": target.path,
+            "path": ft.path,
             "tenant_id": target.tenant_id,
             "domain_id": target.domain_id,
-            "filename": target.filename,
-            "sha1": _file_sha1(target.path),
+            "filename": target.logical_key,
+            "logical_key": target.logical_key,
+            "sha1": sha,
+            "document_id": target.document_id,
+            "version_id": target.version_id,
+            "document_version": target.current_version,
+            "content_sha256": target.content_sha256,
+            "storage_key": target.storage_key,
         }
+        file_key = _target_file_key(target)
         task_id = ingest_store.create_task(
             job.id,
             STAGE_PARSE,
-            file_key=target.file_key,
+            file_key=file_key,
             payload=payload,
         )
         task_ids.append(task_id)
         if async_mode:
             ingest_queue.enqueue(
                 STAGE_PARSE,
-                {"task_id": task_id, "job_id": job.id, "file_key": target.file_key},
+                {"task_id": task_id, "job_id": job.id, "file_key": file_key},
             )
     return task_ids
 
 
-def _enqueue_embed_task(job_id: int, target: FileTarget, parse_task_id: int, *, async_mode: bool) -> int:
-    payload = {
-        "path": target.path,
-        "tenant_id": target.tenant_id,
-        "domain_id": target.domain_id,
-        "filename": target.filename,
-        "parse_task_id": parse_task_id,
-    }
-    task_id = ingest_store.create_task(job_id, STAGE_EMBED, file_key=target.file_key, payload=payload)
+def _enqueue_embed_task(
+    job_id: int,
+    file_key: str,
+    payload: dict[str, Any],
+    parse_task_id: int,
+    *,
+    async_mode: bool,
+) -> int:
+    payload = {**payload, "parse_task_id": parse_task_id}
+    task_id = ingest_store.create_task(job_id, STAGE_EMBED, file_key=file_key, payload=payload)
     if async_mode:
         ingest_queue.enqueue(
             STAGE_EMBED,
-            {"task_id": task_id, "job_id": job_id, "file_key": target.file_key},
+            {"task_id": task_id, "job_id": job_id, "file_key": file_key},
         )
     return task_id
 
@@ -263,7 +362,7 @@ def start_job(job_id: int, *, sync: bool = False) -> dict[str, Any]:
         else:
             backend.load(force_reindex=True)
 
-    targets = discover_files(job)
+    targets = discover_targets(job)
     if not targets:
         ingest_store.update_job_status(
             job_id,
@@ -309,14 +408,13 @@ def process_task(stage: str, task_id: int) -> None:
             ingest_store.finish_task(task_id)
             metrics.inc("tasks.parse.done")
             ingest_store.merge_job_stats(task.job_id, {"last_parse_chunks": result.get("chunks", 0)})
-            target = FileTarget(
-                file_key=task.file_key,
-                path=task.payload.get("path") or "",
-                tenant_id=task.payload.get("tenant_id") or job.tenant_id,
-                domain_id=task.payload.get("domain_id") or job.domain_id,
-                filename=task.payload.get("filename") or "",
+            embed_id = _enqueue_embed_task(
+                task.job_id,
+                task.file_key,
+                dict(task.payload),
+                task_id,
+                async_mode=async_enabled(),
             )
-            embed_id = _enqueue_embed_task(task.job_id, target, task_id, async_mode=async_enabled())
             if not async_enabled():
                 process_task(STAGE_EMBED, embed_id)
             else:
