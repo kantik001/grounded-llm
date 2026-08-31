@@ -12,16 +12,15 @@ _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
 
-from rag.kb.index_collections import chroma_run_dir, run_suffix, sparse_run_dir
-from rag.kb.index_runs import list_retired_run_ids
-from rag.vector_backend.chroma_backend import _persist_dir
-
 
 def _sparse_base_dir() -> str:
     return (os.environ.get("SPARSE_INDEX_DIR") or os.path.join(_PROJECT_ROOT, "sparse_index")).strip()
 
 
 def _delete_chroma_run(tenant_id: str, domain_id: str, run_id: str, *, dry_run: bool) -> str | None:
+    from rag.kb.index_collections import chroma_run_dir
+    from rag.vector_backend.chroma_backend import _persist_dir
+
     path = chroma_run_dir(_persist_dir(), tenant_id, domain_id, run_id)
     if not os.path.isdir(path):
         return None
@@ -34,6 +33,8 @@ def _delete_chroma_run(tenant_id: str, domain_id: str, run_id: str, *, dry_run: 
 
 
 def _delete_sparse_run(tenant_id: str, domain_id: str, run_id: str, *, dry_run: bool) -> str | None:
+    from rag.kb.index_collections import sparse_run_dir
+
     path = sparse_run_dir(_sparse_base_dir(), tenant_id, domain_id, run_id)
     if not os.path.isdir(path):
         return None
@@ -46,6 +47,9 @@ def _delete_sparse_run(tenant_id: str, domain_id: str, run_id: str, *, dry_run: 
 
 
 def main() -> int:
+    from rag.kb.index_collections import run_suffix
+    from rag.kb.index_runs import list_retired_run_ids
+
     parser = argparse.ArgumentParser(description="GC retired index runs for a tenant/domain scope")
     parser.add_argument("--tenant", default="default", help="tenant id")
     parser.add_argument("--domain", default="default", help="domain id")

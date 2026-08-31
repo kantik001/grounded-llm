@@ -4,7 +4,7 @@ import os
 import tempfile
 
 from langchain_core.documents import Document
-from rag.sparse_index import BM25SparseIndex, reset_sparse_index
+from rag.sparse_index import BM25SparseIndex, ensure_sparse_index, reset_sparse_index
 
 _RUN_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 
@@ -58,6 +58,20 @@ def test_bm25_scoped_by_domain():
         persist=False,
     )
     assert idx_hr.search("VPN access", domain_id="hr", tenant_id="default", k=1) == []
+
+
+def test_ensure_sparse_index_force_rebuild(monkeypatch, tmp_path):
+    reset_sparse_index()
+    monkeypatch.setenv("SPARSE_INDEX_DIR", str(tmp_path))
+    monkeypatch.setattr("rag.sparse_index.resolve_run_id", lambda _t, _d: _RUN_ID)
+    monkeypatch.setattr(
+        "rag.sparse_index.split_kb_documents",
+        lambda: [_chunk("default", "default", "a.txt", 0, "Annual leave is 28 days.")],
+    )
+    idx = ensure_sparse_index(tenant_id="default", domain_id="default", force_reindex=True)
+    assert idx.is_ready()
+    hits = idx.search("annual leave", domain_id="default", tenant_id="default", k=1)
+    assert len(hits) == 1
 
 
 def test_bm25_persist_and_load():

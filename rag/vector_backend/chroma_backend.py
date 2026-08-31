@@ -11,7 +11,7 @@ from typing import Any
 from langchain_chroma import Chroma
 
 from rag.embedding_cache import CachedHuggingFaceEmbeddings, e5_prefixes_enabled
-from rag.indexing import split_file_documents, split_kb_documents
+from rag.indexing import split_file_documents
 from rag.kb.index_collections import chroma_run_dir
 from rag.vector_backend.base import VectorBackend
 
