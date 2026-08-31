@@ -17,9 +17,21 @@ export LOCALES_ROOT="${LOCALES_ROOT:-$ROOT/config/locales}"
 export DEFAULT_LOCALE="${DEFAULT_LOCALE:-en}"
 export FORCE_RAG_REINDEX="${FORCE_RAG_REINDEX:-true}"
 export PYTHON_SERVICE_PORT="${PYTHON_SERVICE_PORT:-5000}"
+export DATA_DIR="${DATA_DIR:-$ROOT/data}"
+export KB_BLOB_BACKEND="${KB_BLOB_BACKEND:-local}"
+export KB_BLOB_DIR="${KB_BLOB_DIR:-/tmp/grounded-kb-blobs}"
 RAG_URL="http://127.0.0.1:${PYTHON_SERVICE_PORT}/rag/context"
 
 if [ "$SKIP_REINDEX" = false ]; then
+  if [ -z "${DATABASE_URL:-}" ]; then
+    echo "DATABASE_URL is required (Postgres KB registry)"
+    exit 1
+  fi
+  if command -v psql >/dev/null 2>&1; then
+    bash scripts/ci_prepare_kb_registry.sh
+  else
+    echo "psql not found; assuming KB registry is already seeded"
+  fi
   echo "==> Reindexing Chroma (FORCE_RAG_REINDEX=${FORCE_RAG_REINDEX})"
   python scripts/reindex_rag.py
 else

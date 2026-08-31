@@ -104,14 +104,19 @@ jobs:
         run: |
           pip install -r api/requirements.txt requests
           python -c "from langchain_huggingface import HuggingFaceEmbeddings; HuggingFaceEmbeddings(model_name='intfloat/multilingual-e5-small')"
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
       - name: Reindex + start Python RAG
         env:
+          DATABASE_URL: postgres://grounded:grounded@localhost:5432/grounded?sslmode=disable
+          KB_BLOB_DIR: /tmp/grounded-kb-blobs
           FORCE_RAG_REINDEX: "true"
           RAG_RETRIEVAL_MODE: hybrid
           RAG_RERANKER: keyword
           DATA_DIR: ${{ github.workspace }}/data
           PYTHON_SERVICE_PORT: "5000"
         run: |
+          bash scripts/ci_prepare_kb_registry.sh
           python scripts/reindex_rag.py
           export FORCE_RAG_REINDEX=false
           export PYTHONPATH="${GITHUB_WORKSPACE}${PYTHONPATH:+:$PYTHONPATH}"
