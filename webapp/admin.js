@@ -133,6 +133,7 @@ async function checkLogin() {
     if (hasAdminRole('kb_editor')) {
         await loadDomainsCatalog();
         await refreshFiles();
+        await resumeIngestIfActive();
         await resumeReindexIfActive();
     }
     if (hasAdminRole('admin')) {
@@ -366,6 +367,88 @@ async function refreshAPIKeys() {
 document.getElementById('apiKeysRefreshBtn').addEventListener('click', refreshAPIKeys);
 
 var reindexPollTimer = null;
+var ingestPollTimer = null;
+
+async function pollIngestJob(jobId) {
+    var data = await adminFetch('/ingest/status?job_id=' + encodeURIComponent(jobId), { method: 'GET' });
+    var job = data.job || {};
+    var label = data.status_label || job.status || '?';
+    var hint = document.getElementById('ingestJobHint');
+    hint.hidden = false;
+    hint.textContent = 'Ingest job #' + job.id + ' · ' + label;
+    if (data.done) {
+        if (ingestPollTimer) {
+            clearInterval(ingestPollTimer);
+            ingestPollTimer = null;
+        }
+        document.getElementById('ingestBtn').disabled = false;
+        if (job.status === 'failed') {
+            setStatus(document.getElementById('actionStatus'), 'Ingest failed: ' + (job.error_msg || 'unknown error'), false);
+        } else if (job.status === 'partial') {
+            setStatus(document.getElementById('actionStatus'), 'Ingest partially completed (job #' + job.id + ')', false);
+        } else {
+            setStatus(document.getElementById('actionStatus'), 'Ingest completed (job #' + job.id + ')', true);
+            await refreshFiles();
+            await refreshAuditLog();
+        }
+        return;
+    }
+    setStatus(document.getElementById('actionStatus'), 'Ingest ' + label + ' (job #' + job.id + ')…', true);
+}
+
+async function resumeIngestIfActive() {
+    try {
+        var domain = selectedDomainId();
+        if (!domain) return;
+        var data = await adminFetch('/ingest/status?domain_id=' + encodeURIComponent(domain), { method: 'GET' });
+        if (!data.success || data.done) return;
+        var job = data.job || {};
+        if (!job.id) return;
+        document.getElementById('ingestBtn').disabled = true;
+        await pollIngestJob(job.id);
+        if (ingestPollTimer) clearInterval(ingestPollTimer);
+        ingestPollTimer = setInterval(function() {
+            pollIngestJob(job.id).catch(function(e) {
+                setStatus(document.getElementById('actionStatus'), e.message, false);
+            });
+        }, 2000);
+    } catch (e) { /* no prior job */ }
+}
+
+document.getElementById('ingestBtn').addEventListener('click', async function() {
+    var btn = document.getElementById('ingestBtn');
+    var domain = selectedDomainId();
+    if (!domain) {
+        setStatus(document.getElementById('actionStatus'), 'Select a domain first', false);
+        return;
+    }
+    btn.disabled = true;
+    setStatus(document.getElementById('actionStatus'), 'Queuing ingest…', true);
+    try {
+        var data = await adminFetch('/ingest?domain_id=' + encodeURIComponent(domain), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: 'incremental', sync: false, files: [] })
+        });
+        var jobId = data.job_id;
+        if (!jobId) throw new Error('No job_id in response');
+        await pollIngestJob(jobId);
+        if (ingestPollTimer) clearInterval(ingestPollTimer);
+        ingestPollTimer = setInterval(function() {
+            pollIngestJob(jobId).catch(function(e) {
+                setStatus(document.getElementById('actionStatus'), e.message, false);
+                btn.disabled = false;
+                if (ingestPollTimer) {
+                    clearInterval(ingestPollTimer);
+                    ingestPollTimer = null;
+                }
+            });
+        }, 2000);
+    } catch (e) {
+        setStatus(document.getElementById('actionStatus'), e.message, false);
+        btn.disabled = false;
+    }
+});
 
 async function pollReindexJob(jobId) {
     var data = await adminFetch('/reindex/status?job_id=' + encodeURIComponent(jobId), { method: 'GET' });

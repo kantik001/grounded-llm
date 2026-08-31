@@ -1,6 +1,9 @@
 # Ingest connectors
 
-Connectors sync documents from external systems into `data/{tenant}/{domain}/` before RAG reindex.
+Connectors sync documents from external systems into `data/{tenant}/{domain}/`, then index via **ingest** or **reindex**.
+
+- **Recommended:** `POST /admin/ingest` after sync — see [INGESTION.md](./INGESTION.md)
+- **Fallback:** `python scripts/reindex_rag.py` or `POST /admin/reindex`
 
 ---
 
@@ -9,7 +12,7 @@ Connectors sync documents from external systems into `data/{tenant}/{domain}/` b
 ```text
 External source  →  Connector.sync()  →  data/{tenant}/{domain}/
                                               ↓
-                                    python scripts/reindex_rag.py
+                         POST /admin/ingest  (async)  or  reindex_rag.py (sync)
 ```
 
 Supported file types: `.txt`, `.pdf`, `.docx` (+ Google Docs exported as `.txt`).
@@ -40,9 +43,14 @@ pip install -r connectors/requirements.txt
 python scripts/sync_connector.py google_drive --domain default --dry-run
 ```
 
-Then:
+Then index (pick one):
 
 ```bash
+# Async ingest (production)
+curl -u admin:pass -X POST "http://localhost:8080/api/admin/ingest?domain_id=it_support" \
+  -H "Content-Type: application/json" -d '{"sync": false}'
+
+# Or sync reindex (dev/CI)
 python scripts/reindex_rag.py
 python scripts/run_rag_eval.py --suite it_support
 ```

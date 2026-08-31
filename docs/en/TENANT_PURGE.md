@@ -43,7 +43,7 @@ Authorization: Basic (admin) or OIDC session with role `admin`
 |------|-----------|
 | `403` | Insufficient role (requires `admin`) |
 | `400` | Missing `confirm=true` or invalid tenant_id |
-| `409` | Reindex job running for tenant |
+| `409` | Reindex or ingest job running for tenant |
 
 ---
 

@@ -16,6 +16,7 @@ Override directory: `MIGRATIONS_DIR` (Compose: `/migrations`).
 | `009_pgvector.sql` | `CREATE EXTENSION vector` |
 | `010_saas_tenants.sql` | saas_tenants, tenant_quotas, stripe_webhook_events |
 | `011_admin_users_membership.sql` | admin_users, user_tenant_memberships |
+| `012_ingest_jobs.sql` | async ingest jobs + tasks (parse/embed/index) |
 
 There is no `004_*.sql` (numbering gap is historical; apply order is lexical sort of filenames).
 

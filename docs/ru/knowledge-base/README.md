@@ -29,7 +29,8 @@ English: [../../en/knowledge-base/README.md](../../en/knowledge-base/README.md).
 | [github-ci.yml.md](./github-ci.yml.md) | GitHub Actions CI (Go 1.25, 99 eval) |
 | [config-overview.md](./config-overview.md) | `config/` и локали |
 | [data-pipeline.md](./data-pipeline.md) | Документы KB → RAG → чат |
-| [migrations-overview.md](./migrations-overview.md) | SQL-миграции `001`–`011` |
+| [../INGESTION.md](../INGESTION.md) | Async ingest pipeline |
+| [migrations-overview.md](./migrations-overview.md) | SQL-миграции `001`–`012` |
 
 ### Python RAG
 

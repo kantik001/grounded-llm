@@ -47,7 +47,7 @@ Authorization: Basic (admin) или OIDC session с ролью `admin`
 |------|---------|
 | `403` | Нужна роль `admin` |
 | `400` | Нет `confirm=true` или невалидный tenant_id |
-| `409` | Идёт reindex job для tenant |
+| `409` | Идёт reindex или ingest job для tenant |
 
 ---
 

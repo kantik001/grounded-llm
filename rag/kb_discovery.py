@@ -26,6 +26,20 @@ def data_dir() -> str:
 DATA_DIR = data_dir()
 
 
+def kb_data_dir(tenant_id: str, domain_id: str) -> str:
+    """Path to KB files for tenant/domain (matches Go tenant.KBDataDir)."""
+    root = data_dir()
+    tid = (tenant_id or DEFAULT_TENANT).strip().lower() or DEFAULT_TENANT
+    nested = os.path.join(root, tid, domain_id)
+    if os.path.isdir(nested):
+        return nested
+    if tid == DEFAULT_TENANT:
+        legacy = os.path.join(root, domain_id)
+        if os.path.isdir(legacy):
+            return legacy
+    return nested
+
+
 def _has_kb_files(path: str) -> bool:
     if not os.path.isdir(path):
         return False

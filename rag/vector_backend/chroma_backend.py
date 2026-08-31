@@ -215,6 +215,62 @@ class ChromaBackend(VectorBackend):
         print(f"Incremental reindex: {summary}")
         return summary
 
+    def delete_kb_file(self, tenant_id: str, domain_id: str, filename: str) -> None:
+        self.load()
+        if self._store is None:
+            return
+        self._store._collection.delete(  # noqa: SLF001
+            where={
+                "$and": [
+                    {"tenant_id": tenant_id},
+                    {"domain_id": domain_id},
+                    {"filename": filename},
+                ]
+            }
+        )
+
+    def upsert_kb_file(
+        self,
+        tenant_id: str,
+        domain_id: str,
+        path: str,
+        *,
+        filename: str | None = None,
+    ) -> int:
+        """Re-embed one file and update manifest entry."""
+        self.load()
+        if self._store is None:
+            self._store = self._create_store()
+        if self._store is None:
+            return 0
+        name = filename or os.path.basename(path)
+        self.delete_kb_file(tenant_id, domain_id, name)
+        chunks = split_file_documents(domain_id, path, tenant_id=tenant_id)
+        if chunks:
+            self._store.add_documents(chunks)
+        self.touch_manifest_entry(tenant_id, domain_id, path, name)
+        return len(chunks)
+
+    def touch_manifest_entry(
+        self,
+        tenant_id: str,
+        domain_id: str,
+        path: str,
+        filename: str | None = None,
+    ) -> None:
+        name = filename or os.path.basename(path)
+        key = f"{tenant_id}/{domain_id}/{name}"
+        manifest = self._read_json(self._manifest_path()) or {}
+        manifest[key] = {"sha1": _file_sha1(path)}
+        self._write_json(self._manifest_path(), manifest)
+        meta = self._read_json(self._meta_path()) or {}
+        if "embedding" not in meta:
+            meta["embedding"] = embedding_signature()
+        self._write_json(self._meta_path(), meta)
+
+    def sync_manifest(self, manifest: dict[str, dict]) -> None:
+        self._save_index_state(manifest)
+
     # --- search -----------------------------------------------------------
 
     def _filter(self, domain_id: str, tenant_id: str) -> dict:

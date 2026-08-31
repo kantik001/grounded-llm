@@ -27,6 +27,8 @@ func registerRouteGroup(g *gin.RouterGroup, auth gin.HandlerFunc) {
 	kb.POST("/upload", handleUpload)
 	kb.POST("/reindex", handleReindex)
 	kb.GET("/reindex/status", handleReindexStatus)
+	kb.POST("/ingest", handleIngest)
+	kb.GET("/ingest/status", handleIngestStatus)
 	kb.GET("/quotas", handleQuotas)
 
 	adminOnly := g.Group("")

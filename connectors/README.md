@@ -1,6 +1,9 @@
 # Ingest connectors
 
-Connectors sync documents from external systems into `data/{tenant}/{domain}/` before RAG reindex.
+Connectors sync documents into `data/{tenant}/{domain}/`, then index via **ingest** or **reindex**.
+
+- Ingest: [docs/en/INGESTION.md](../docs/en/INGESTION.md)
+- Reindex fallback: `python scripts/reindex_rag.py`
 
 ## Connectors
 

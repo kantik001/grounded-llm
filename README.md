@@ -159,7 +159,7 @@ Guide: [docs/en/QUICKSTART_SDK.md](docs/en/QUICKSTART_SDK.md) · Example: [sdk/p
 - `POST /session`, `GET /history`, `POST /message` — chat (`domain_id` in JSON)
 - `POST /message?stream=1` — SSE streaming
 - `GET /branding`, `GET /onboarding` — locale via `X-Locale`, `?locale=`, `Accept-Language`
-- Admin: upload, reindex, index stats, feedback summary
+- Admin: upload, **ingest**, reindex, index stats, feedback summary
 - Integrators: `X-API-Key` + `X-Tenant-ID`, OpenAPI at `/api/v1/openapi.json`
 
 Examples: [docs/en/API_EXAMPLES.md](docs/en/API_EXAMPLES.md)
@@ -195,6 +195,7 @@ Full index: **[docs/README.md](docs/README.md)** · site: [GitHub Pages](https:/
 | [docs/en/ECOSYSTEM.md](docs/en/ECOSYSTEM.md) | Agents, guardrails, bench, vllm |
 | [docs/en/GUARDRAILS.md](docs/en/GUARDRAILS.md) | Optional remote verify `:50052` |
 | [docs/en/BENCHMARK.md](docs/en/BENCHMARK.md) | Retrieval eval + [grounded-bench](https://github.com/kantik001/grounded-bench) |
+| [docs/en/INGESTION.md](docs/en/INGESTION.md) | Async KB ingest (parse → embed → index) |
 | [docs/en/QUICKSTART_SDK.md](docs/en/QUICKSTART_SDK.md) | SDK + CLI |
 | [docs/en/COMPARISON.md](docs/en/COMPARISON.md) | vs alternatives |
 | [docs/en/spec/GROUNDED_SPEC_v1.md](docs/en/spec/GROUNDED_SPEC_v1.md) | Normative API Spec v1 |

@@ -16,6 +16,7 @@ const (
 	AuditActionKBUpload    = "kb_upload"
 	AuditActionKBDelete    = "kb_delete"
 	AuditActionKBReindex   = "kb_reindex"
+	AuditActionKBIngest    = "kb_ingest"
 	AuditActionLogout      = "admin_logout"
 )
 

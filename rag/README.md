@@ -20,6 +20,7 @@ data/{tenant}/{domain}/  →  loaders → chunk → embed → vector (+ optional
 | `embedding_cache.py` | Redis cache when `REDIS_URL` is set |
 | `domains_config.py` | `config/domains.json` |
 | `retrieval.py` | Context string + few-shot for callers |
+| `ingest/` | Async pipeline: parse → staging → embed → index (`rag/ingest/`) |
 | `verifier.py` | Local numeric check (tests / Spec path) |
 
 **vs `api/`:** transport (HTTP `:5000`, gRPC `:50051`, auth, metrics) lives in [`api/`](../api/README.md). This package is the retrieval core.
@@ -52,9 +53,12 @@ Optional pip extras: `api/requirements-qdrant.txt`, `api/requirements-pgvector.t
 ## Ops
 
 ```bash
-python scripts/reindex_rag.py          # full rebuild from data/
-# POST /admin/reindex               → incremental (only added/changed/removed files re-embedded)
-# POST /admin/reindex {"full":true} → full rebuild
+python scripts/reindex_rag.py          # full rebuild from data/ (dev/CI)
+# POST /admin/ingest                  → async per-file pipeline (production)
+# POST /admin/reindex                 → incremental sync job (legacy)
+# POST /admin/reindex {"full":true}   → full rebuild
 ```
+
+Ingestion: [docs/en/INGESTION.md](../docs/en/INGESTION.md).
 
 Quality gates: [`eval/`](../eval/README.md). Architecture: [`docs/en/ARCHITECTURE.md`](../docs/en/ARCHITECTURE.md).

@@ -30,9 +30,17 @@ docker compose up -d --build
 After adding documents under `data/`:
 
 ```bash
+# Production (async per-file pipeline)
+curl -u admin:pass -X POST "http://localhost:8080/api/admin/ingest?domain_id=default" \
+  -H "Content-Type: application/json" -d '{"sync": false}'
+docker compose up -d ingest-worker
+
+# Dev / CI (sync fallback)
 python scripts/reindex_rag.py
-# or POST /admin/reindex (Basic auth + ADMIN_SECRET for Python)
+# or POST /admin/reindex
 ```
+
+See [INGESTION.md](./INGESTION.md).
 
 Supported KB formats: **`.txt`**, **`.pdf`**, **`.docx`**.
 

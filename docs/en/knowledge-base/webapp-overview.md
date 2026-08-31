@@ -39,7 +39,7 @@ Header `X-Telegram-Init-Data` from Telegram (or dev bypass on server).
 
 - Basic auth → `/api/admin/*`
 - Upload: `.txt`, `.pdf`, `.docx` (up to 10 MB)
-- List articles, delete, reindex RAG
+- List articles, delete, ingest documents, reindex RAG (legacy)
 
 Domain list from `GET /api/domains` (same as main chat).
 

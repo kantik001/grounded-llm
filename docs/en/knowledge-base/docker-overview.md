@@ -59,7 +59,9 @@ docker compose up -d --build
 # Optional: docker compose --profile ollama up -d
 # Optional remote verify (sibling repo grounded-guardrails):
 # docker compose -f docker-compose.yml -f docker-compose.guardrails.yml up -d --build
-python scripts/reindex_rag.py   # or POST /admin/reindex
+python scripts/reindex_rag.py   # dev/CI sync
+# POST /api/admin/ingest        # production async (see INGESTION.md)
+# POST /admin/reindex           # legacy incremental job
 ```
 
 Useful commands:
@@ -110,10 +112,19 @@ Makefile: `make up`, `make logs`, `make smoke`, `make test`.
 - Ports **5000** (HTTP) and **50051** (gRPC); `tini` + `api/entrypoint.sh` (Gunicorn + gRPC side-by-side)
 - Env: `DOMAINS_CONFIG_PATH`, `LOCALES_ROOT`, `DEFAULT_LOCALE`, `ADMIN_SECRET`, `FORCE_RAG_REINDEX`, `PYTHON_SERVICE_PORT`, `PYTHON_GRPC_PORT`, `REDIS_URL`, `RAG_SERVICE_TOKEN`
 - Healthcheck: `start_period: 180s` (first RAG / embeddings can be slow)
-- HTTP: `/health`, `/ready`, `/metrics`, `/rag/context`, `/domains`, `/admin/reindex`
+- HTTP: `/health`, `/ready`, `/metrics`, `/rag/context`, `/domains`, `/admin/reindex`, `/admin/ingest/*`
 - gRPC: `grounded.rag.v1.Retriever/Retrieve` (+ health)
 
 First RAG request may download embedding model `intfloat/multilingual-e5-small`.
+
+---
+
+## Service `ingest-worker`
+
+- Command: `python -m workers.ingest_worker` (polls Redis parse/embed/finalize queues)
+- Shares `chroma_data`, `data/`, `DATABASE_URL`, `REDIS_URL` with `python`
+- Scale: `docker compose up -d --scale ingest-worker=2`
+- See [INGESTION.md](../INGESTION.md)
 
 ---
 
@@ -173,7 +184,7 @@ From host: `localhost:8080` (Go), `localhost/api/` (via nginx), `127.0.0.1:5000`
 |---------|-----|
 | python unhealthy 2–3 min | normal on first start; check `docker compose logs python` |
 | server unhealthy | wait for postgres/python; `docker compose logs server` |
-| new docs not in RAG | upload + `POST /admin/reindex` or `scripts/reindex_rag.py` |
+| new docs not in RAG | upload + `POST /admin/ingest` (or `ingest-worker` running) · fallback: `reindex_rag.py` |
 | `config/` changes | volume `./config`; Go: `docker compose kill -s HUP server` or `CONFIG_RELOAD_INTERVAL_SEC` |
 | 401 in chat | `TELEGRAM_AUTH_DISABLED=true` + recreate server |
 | stale Python image | `docker compose build --no-cache python && docker compose up -d --force-recreate python server` |

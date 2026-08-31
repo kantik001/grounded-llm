@@ -39,7 +39,7 @@ flowchart LR
 
 - Basic auth → `/api/admin/*`
 - Upload: `.txt`, `.pdf`, `.docx` (до 10 МБ)
-- Список статей, удаление, reindex
+- Список статей, удаление, ingest, reindex (legacy)
 
 Список доменов: `GET /api/domains`.
 
