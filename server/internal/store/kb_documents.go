@@ -184,6 +184,12 @@ func (st *ChatStore) UpsertKBDocument(ctx context.Context, in UpsertKBDocumentIn
 		return zeroDoc, zeroVer, err
 	}
 
+	if err := EnqueueKBIngestOutboxTx(
+		ctx, tx, in.TenantID, in.DomainID, doc.ID, ver.ID, in.LogicalKey, in.ContentSHA256, in.Source,
+	); err != nil {
+		return zeroDoc, zeroVer, err
+	}
+
 	if err := tx.Commit(ctx); err != nil {
 		return zeroDoc, zeroVer, err
 	}

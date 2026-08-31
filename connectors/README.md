@@ -39,12 +39,17 @@ pip install -r connectors/requirements.txt
 python scripts/sync_connector.py <connector> --domain <id> [--source PATH] [--dry-run]
 ```
 
-`sync_connector.py` registers synced files automatically, then run ingest:
+`sync_connector.py` registers synced files automatically. With `KB_AUTO_INGEST=1` it also flushes the ingest outbox (HTTP `POST /admin/ingest`). Otherwise run ingest manually:
 
 ```bash
 curl -u admin:pass -X POST "http://localhost:8080/api/admin/ingest?domain_id=<id>" \
   -H "Content-Type: application/json" -d '{"sync": false}'
 ```
+
+| Env | Default | Purpose |
+|-----|---------|---------|
+| `KB_AUTO_INGEST` | `0` | Auto enqueue ingest after registry upsert |
+| `GROUNDED_SERVER_URL` | `http://127.0.0.1:8080` | Go server for outbox flush from CLI |
 
 Exit code `0` if `SyncResult.ok` (no errors); `1` on setup failure or sync errors.
 

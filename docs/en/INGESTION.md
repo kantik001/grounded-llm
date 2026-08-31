@@ -25,6 +25,20 @@ finalize            →  BM25 rebuild + index run pointer
 
 Retrieve path (`/rag/context`) is unchanged and does not block on ingestion. Set `KB_ACL_ENFORCE=1` to filter hits by `kb_document_acl`.
 
+## Auto-ingest (`KB_AUTO_INGEST`)
+
+When `KB_AUTO_INGEST=1`, every registry upsert (upload, connector sync, pack install) writes a row to `kb_ingest_outbox`. A flush step creates `POST /admin/ingest` jobs:
+
+| Trigger | Flush |
+|---------|--------|
+| Admin upload (Go) | In-process after `registerKBUpload` |
+| Connector CLI (`sync_connector.py`) | HTTP `POST /api/admin/ingest` after registry sync |
+| Manual / cron | `python scripts/flush_kb_ingest_outbox.py --domain hr` |
+
+Default is **`0`** (opt-in) so CI backfill and `reindex_rag.py` do not enqueue jobs.
+
+Future (event-driven): a dedicated outbox consumer can replace the HTTP flush without changing upsert call sites.
+
 ## Rollout (weeks)
 
 | Week | Deliverable |
@@ -33,7 +47,7 @@ Retrieve path (`/rag/context`) is unchanged and does not block on ingestion. Set
 | 2 | Redis queues, parse stage, chunk staging on disk |
 | 3 | Embed worker, per-file Chroma upsert (`upsert_kb_file`) |
 | 4 | Status API, retries, DLQ, Prometheus-style metrics |
-| 5+ | KB registry + blobs, index runs, connector registry sync |
+| 5+ | KB registry + blobs, index runs, connector registry sync, **auto-ingest outbox** (`KB_AUTO_INGEST`) |
 
 ## API
 
@@ -79,14 +93,20 @@ GET  /admin/ingest/metrics
 | `KB_S3_*` | — | S3/MinIO when `KB_BLOB_BACKEND=s3` |
 | `KB_ACL_ENFORCE` | `0` | Filter retrieval by document ACL |
 | `KB_REGISTRY_SYNC` | `1` | Auto-register blobs after connector sync |
+| `KB_AUTO_INGEST` | `0` | Outbox + auto flush → ingest after registry upsert |
+| `GROUNDED_SERVER_URL` | `http://127.0.0.1:8080` | Go base URL for Python outbox flush |
 
 See [KB_SOURCE_OF_TRUTH.md](./KB_SOURCE_OF_TRUTH.md) for full SoT env list.
 
 ## Local dev
 
 ```bash
-# Backfill legacy data/ into registry (once)
+# Backfill legacy data/ into registry (once; KB_AUTO_INGEST=0 recommended)
 python scripts/backfill_kb_registry.py
+
+# Production: auto-ingest after upload / connector sync
+export KB_AUTO_INGEST=1
+export GROUNDED_SERVER_URL=http://127.0.0.1:8080
 
 # Sync (no worker container)
 curl -X POST "http://localhost:8080/admin/ingest?domain_id=default" \

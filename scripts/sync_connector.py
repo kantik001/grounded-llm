@@ -71,6 +71,20 @@ def main() -> int:
     )
     print(f"registered {len(ids)} document(s) into KB registry")
     shutil.rmtree(target, ignore_errors=True)
+
+    from rag.kb.outbox import auto_ingest_enabled, flush_outbox
+
+    if auto_ingest_enabled():
+        result = flush_outbox(tenant_id=args.tenant, domain_id=args.domain, sync=False)
+        if result.error:
+            print(f"auto-ingest flush failed: {result.error}", file=sys.stderr)
+            return 1
+        if result.flushed:
+            msg = f"auto-ingest queued job_id={result.job_id} flushed={result.flushed}"
+            if result.already_running:
+                msg += " (already running)"
+            print(msg)
+
     return 0
 
 

@@ -184,14 +184,23 @@ func handleUpload(c *gin.Context) {
 		Success:  true,
 		Details:  map[string]any{"size_bytes": fh.Size},
 	})
-	c.JSON(http.StatusOK, gin.H{
+	autoIngest := maybeFlushAutoIngest(c.Request.Context(), s, tid, domainID, audit.ActorFromContext(c), "upload", false)
+	resp := gin.H{
 		"success":     true,
 		"domain_id":   domainID,
 		"filename":    name,
 		"document_id": docID,
 		"version_id":  versionID,
-		"reindex_recommended": true,
-	})
+	}
+	if autoIngest.Queued {
+		resp["ingest_queued"] = true
+		resp["ingest_job_id"] = autoIngest.JobID
+		resp["ingest_already_running"] = autoIngest.AlreadyRunning
+		resp["reindex_recommended"] = false
+	} else {
+		resp["reindex_recommended"] = true
+	}
+	c.JSON(http.StatusOK, resp)
 }
 
 type pythonIndexStatsResponse struct {

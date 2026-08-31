@@ -184,6 +184,14 @@ See [KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md).
 
 ---
 
+## `014_kb_ingest_outbox.sql` — ingest outbox
+
+Table `kb_ingest_outbox`: pending registry changes awaiting ingest enqueue when `KB_AUTO_INGEST=1`. Flushed by Go (upload) or Python CLI (`flush_kb_ingest_outbox.py`, `sync_connector.py`).
+
+See [INGESTION.md](../INGESTION.md#auto-ingest-kb_auto_ingest).
+
+---
+
 ## `009_pgvector.sql` — pgvector extension
 
 `CREATE EXTENSION vector` when using `VECTOR_STORE=pgvector`.
@@ -226,6 +234,7 @@ See [SAAS.md](../SAAS.md), [BILLING.md](../BILLING.md).
 011_admin_users_membership.sql
 012_ingest_jobs.sql
 013_kb_documents.sql
+014_kb_ingest_outbox.sql
 ```
 
 Go sorts by name. **New migration:** e.g. `007_something.sql` — do not edit old files after production deploy.

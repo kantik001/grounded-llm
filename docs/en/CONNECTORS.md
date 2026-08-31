@@ -14,13 +14,16 @@ Connectors download documents into a **staging directory**, register them in the
 External source  →  Connector.sync()  →  connector_staging/{tenant}/{domain}/
                          ↓
                     register_synced_tree() → kb_documents + blobs
-                                              ↓
-                         POST /admin/ingest  (async)  or  reindex_rag.py (sync)
+                         ↓ (KB_AUTO_INGEST=1)
+                    kb_ingest_outbox → POST /admin/ingest  (async)
+                         ↓ (KB_AUTO_INGEST=0)
+                    manual POST /admin/ingest  or  reindex_rag.py
 ```
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `KB_REGISTRY_SYNC` | `1` | Auto-register synced files (Google Drive) |
+| `KB_AUTO_INGEST` | `0` | After sync, flush outbox → `POST /admin/ingest` (requires Go server + `GROUNDED_SERVER_URL`) |
 | `KB_BLOB_BACKEND` | `local` | Blob storage backend |
 
 One-time migration from old `data/` trees: `python scripts/backfill_kb_registry.py`.
@@ -56,13 +59,19 @@ python scripts/sync_connector.py google_drive --domain default --dry-run
 Then index (pick one):
 
 ```bash
-# Async ingest (production)
+# With KB_AUTO_INGEST=1 (Go server must be running):
+python scripts/sync_connector.py google_drive --domain it_support
+# → registers + auto POST /admin/ingest
+
+# Manual async ingest
 curl -u admin:pass -X POST "http://localhost:8080/api/admin/ingest?domain_id=it_support" \
   -H "Content-Type: application/json" -d '{"sync": false}'
 
+# Or flush pending outbox rows
+python scripts/flush_kb_ingest_outbox.py --domain it_support
+
 # Or sync reindex (dev/CI)
 python scripts/reindex_rag.py
-python scripts/run_rag_eval.py --suite it_support
 ```
 
 ---

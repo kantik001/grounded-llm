@@ -29,7 +29,11 @@ flowchart TB
     U --> REG[kb_documents + blobs]
     C --> REG
     P --> REG
-    REG --> I{Index}
+    REG --> O{KB_AUTO_INGEST?}
+    O -->|yes| OB[kb_ingest_outbox → POST /admin/ingest]
+    O -->|no| MAN[manual ingest / reindex]
+    OB --> I{Index}
+    MAN --> I
     I -->|ingest job| P[parse → staging → embed → Chroma + BM25]
     I -->|reindex| R[refresh_vector_store sync]
     P --> S[search / hybrid RRF]
@@ -41,6 +45,7 @@ flowchart TB
 | Stage | Where |
 |-------|-------|
 | **Source of truth** | Postgres `kb_documents` + blobs (`KB_BLOB_DIR` or S3) — see [KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md) |
+| **Auto-ingest** | `KB_AUTO_INGEST=1` → outbox flush after upload/connector (`kb_ingest_outbox`) |
 | **Ingest (async)** | `POST /admin/ingest` → `ingest_jobs` → discover registry → Redis → `ingest-worker` |
 | **Reindex (sync fallback)** | `python scripts/reindex_rag.py` or `POST /admin/reindex` |
 | Load + parse | `rag/document_loaders.py` |

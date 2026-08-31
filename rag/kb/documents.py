@@ -6,30 +6,11 @@ import hashlib
 import json
 import os
 import uuid
-from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Any
 
+from rag.kb.db import connect as _connect
 from rag.storage.blob_store import get_blob_store
-
-
-def _database_url() -> str:
-    url = (os.environ.get("DATABASE_URL") or "").strip()
-    if not url:
-        raise RuntimeError("DATABASE_URL is required for KB document registry")
-    return url
-
-
-def _psycopg_dsn(connection: str) -> str:
-    return connection.replace("postgresql+psycopg://", "postgresql://", 1)
-
-
-@contextmanager
-def _connect():
-    import psycopg
-
-    with psycopg.connect(_psycopg_dsn(_database_url())) as conn:
-        yield conn
 
 
 def content_sha256(data: bytes) -> str:
@@ -150,6 +131,18 @@ def upsert_document(
                 ON CONFLICT (document_id, principal_type, principal_id) DO NOTHING
                 """,
                 (doc_id, tenant_id),
+            )
+            from rag.kb.outbox import enqueue_outbox_tx
+
+            enqueue_outbox_tx(
+                cur,
+                tenant_id=tenant_id,
+                domain_id=domain_id,
+                document_id=doc_id,
+                version_id=version_id,
+                logical_key=logical_key,
+                content_sha256=sha,
+                source=source,
             )
         conn.commit()
 

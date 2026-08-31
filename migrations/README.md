@@ -18,6 +18,7 @@ Override directory: `MIGRATIONS_DIR` (Compose: `/migrations`).
 | `011_admin_users_membership.sql` | admin_users, user_tenant_memberships |
 | `012_ingest_jobs.sql` | async ingest jobs + tasks (parse/embed/index) |
 | `013_kb_documents.sql` | KB document registry, ACL, index runs (enterprise SoT) |
+| `014_kb_ingest_outbox.sql` | Outbox: registry upserts → ingest enqueue |
 
 There is no `004_*.sql` (numbering gap is historical; apply order is lexical sort of filenames).
 

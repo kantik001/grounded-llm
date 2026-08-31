@@ -25,6 +25,7 @@ Upload / connector
 | `KB_S3_ACCESS_KEY` / `KB_S3_SECRET_KEY` | — | Credentials |
 | `KB_ACL_ENFORCE` | `0` | Filter retrieval by `kb_document_acl` |
 | `KB_REGISTRY_SYNC` | `1` | Register blobs after connector sync (Google Drive) |
+| `KB_AUTO_INGEST` | `0` | Write `kb_ingest_outbox` on upsert; flush → ingest job |
 
 Optional MinIO in Compose:
 
@@ -39,7 +40,7 @@ docker compose --profile minio up -d
 |--------|------|---------|
 | GET | `/admin/kb/documents?domain_id=` | List active documents from Postgres |
 | POST | `/admin/kb/index-runs?domain_id=` | Create index run; `"activate": true` to flip blue/green pointer |
-| POST | `/admin/upload` | Writes blob + registry; response includes `document_id`, `version_id`, `reindex_recommended` |
+| POST | `/admin/upload` | Writes blob + registry; with `KB_AUTO_INGEST=1` also queues ingest (`ingest_job_id`) |
 | DELETE | `/admin/articles?filename=` | Soft-deletes document in registry (`status=deleted`) |
 
 ## Migration
@@ -82,14 +83,17 @@ Upload and first ingest also call `EnsureActiveIndexRun` for the scope.
 
 With `KB_REGISTRY_SYNC=1` (default), **Google Drive** registers synced files via `connectors/registry_sync.py` after staging download.
 
-For other connectors, `scripts/sync_connector.py` registers via `register_synced_tree(...)` automatically. One-time migration from old `data/` trees: `scripts/backfill_kb_registry.py`.
+For other connectors, `scripts/sync_connector.py` registers via `register_synced_tree(...)` automatically. With `KB_AUTO_INGEST=1`, the CLI flushes `kb_ingest_outbox` via `POST /admin/ingest`. One-time migration from old `data/` trees: `scripts/backfill_kb_registry.py` (keep `KB_AUTO_INGEST=0`).
 
 ## Code layout
 
 | Path | Role |
 |------|------|
 | `migrations/013_kb_documents.sql` | Schema |
+| `migrations/014_kb_ingest_outbox.sql` | Ingest outbox (auto-enqueue) |
 | `server/internal/store/kb_documents.go` | Go registry + ACL |
+| `server/internal/store/kb_outbox.go` | Go outbox flush |
+| `rag/kb/outbox.py` | Python outbox + HTTP flush |
 | `server/internal/kb/blobstore/` | Go blob backend |
 | `rag/kb/documents.py` | Python registry + discover |
 | `rag/kb/index_runs.py` | Index run helpers |

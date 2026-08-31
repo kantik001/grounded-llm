@@ -40,7 +40,7 @@ Response: `articles[]` with `filename`, `size_bytes`, `modified`, `chunks` (from
 - Regex: `^[a-zA-Z0-9._-]+\.(txt|pdf|docx)$`
 - Max size: **10 MB**
 - Writes: blob store + `kb_documents` / `kb_document_versions` (Postgres)
-- Response includes `document_id`, `version_id`, `reindex_recommended`
+- Response includes `document_id`, `version_id`, and either `ingest_job_id` (when `KB_AUTO_INGEST=1`) or `reindex_recommended: true`
 
 See [KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md).
 
