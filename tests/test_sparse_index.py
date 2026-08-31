@@ -4,7 +4,9 @@ import os
 import tempfile
 
 from langchain_core.documents import Document
-from rag.sparse_index import BM25SparseIndex, reset_sparse_index
+from rag.sparse_index import BM25SparseIndex, ensure_sparse_index, reset_sparse_index
+
+_RUN_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
 
 
 def _chunk(tenant: str, domain: str, filename: str, seq: int, text: str) -> Document:
@@ -21,7 +23,7 @@ def _chunk(tenant: str, domain: str, filename: str, seq: int, text: str) -> Docu
 
 def test_bm25_search_finds_keyword_match():
     reset_sparse_index()
-    idx = BM25SparseIndex()
+    idx = BM25SparseIndex(tenant_id="default", domain_id="default", run_id=_RUN_ID)
     idx.build(
         [
             _chunk("default", "default", "a.txt", 0, "IT portal hours are 08:00 to 18:00."),
@@ -41,17 +43,35 @@ def test_bm25_search_finds_keyword_match():
 
 def test_bm25_scoped_by_domain():
     reset_sparse_index()
-    idx = BM25SparseIndex()
-    idx.build(
-        [
-            _chunk("default", "hr", "a.txt", 0, "Vacation policy allows 28 days."),
-            _chunk("default", "it", "b.txt", 0, "VPN access request via portal."),
-        ],
+    idx_it = BM25SparseIndex(tenant_id="default", domain_id="it", run_id=_RUN_ID)
+    idx_it.build(
+        [_chunk("default", "it", "b.txt", 0, "VPN access request via portal.")],
         persist=False,
     )
-    hits = idx.search("VPN access", domain_id="it", tenant_id="default", k=1)
+    hits = idx_it.search("VPN access", domain_id="it", tenant_id="default", k=1)
     assert len(hits) == 1
     assert "VPN" in hits[0].page_content
+
+    idx_hr = BM25SparseIndex(tenant_id="default", domain_id="hr", run_id=_RUN_ID)
+    idx_hr.build(
+        [_chunk("default", "hr", "a.txt", 0, "Vacation policy allows 28 days.")],
+        persist=False,
+    )
+    assert idx_hr.search("VPN access", domain_id="hr", tenant_id="default", k=1) == []
+
+
+def test_ensure_sparse_index_force_rebuild(monkeypatch, tmp_path):
+    reset_sparse_index()
+    monkeypatch.setenv("SPARSE_INDEX_DIR", str(tmp_path))
+    monkeypatch.setattr("rag.sparse_index.resolve_run_id", lambda _t, _d: _RUN_ID)
+    monkeypatch.setattr(
+        "rag.sparse_index.split_kb_documents",
+        lambda: [_chunk("default", "default", "a.txt", 0, "Annual leave is 28 days.")],
+    )
+    idx = ensure_sparse_index(tenant_id="default", domain_id="default", force_reindex=True)
+    assert idx.is_ready()
+    hits = idx.search("annual leave", domain_id="default", tenant_id="default", k=1)
+    assert len(hits) == 1
 
 
 def test_bm25_persist_and_load():
@@ -59,12 +79,12 @@ def test_bm25_persist_and_load():
     with tempfile.TemporaryDirectory() as tmp:
         os.environ["SPARSE_INDEX_DIR"] = tmp
         try:
-            idx = BM25SparseIndex()
+            idx = BM25SparseIndex(tenant_id="default", domain_id="default", run_id=_RUN_ID)
             idx.build(
                 [_chunk("default", "default", "a.txt", 0, "Annual leave is 28 days.")],
                 persist=True,
             )
-            loaded = BM25SparseIndex()
+            loaded = BM25SparseIndex(tenant_id="default", domain_id="default", run_id=_RUN_ID)
             assert loaded.load() is True
             hits = loaded.search("annual leave", domain_id="default", tenant_id="default", k=1)
             assert len(hits) == 1

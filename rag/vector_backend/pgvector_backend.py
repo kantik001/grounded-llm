@@ -7,13 +7,13 @@ import uuid
 from typing import Any
 
 from rag.embedding_cache import CachedHuggingFaceEmbeddings
-from rag.indexing import split_kb_documents
+from rag.indexing import split_file_documents, split_kb_documents
+from rag.kb.index_collections import collection_name
 from rag.vector_backend.base import VectorBackend
-from rag.vector_backend.chroma_backend import EMBEDDING_MODEL
+from rag.vector_backend.chroma_backend import EMBEDDING_MODEL, scan_kb_files
 
 
 def normalize_pg_connection(url: str) -> str:
-    """Convert postgres:// or postgresql:// to postgresql+psycopg:// for langchain-postgres."""
     raw = (url or "").strip()
     if not raw:
         return ""
@@ -38,7 +38,6 @@ def pg_connection_url() -> str:
 
 
 def psycopg_dsn(connection: str) -> str:
-    """DSN for psycopg (without SQLAlchemy driver suffix)."""
     return connection.replace("postgresql+psycopg://", "postgresql://", 1)
 
 
@@ -46,15 +45,20 @@ class PGVectorBackend(VectorBackend):
     """LangChain PGVector store. Requires: pip install -r api/requirements-pgvector.txt"""
 
     def __init__(self) -> None:
-        self._store = None
+        self._scope_stores: dict[str, Any] = {}
+        self._scope_collections: dict[str, str] = {}
         self._embeddings = CachedHuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
-        self._collection = (
+        self._collection_base = (
             os.environ.get("PGVECTOR_COLLECTION", "grounded_chunks").strip() or "grounded_chunks"
         )
         self._connection = pg_connection_url()
 
     def reset(self) -> None:
-        self._store = None
+        self._scope_stores = {}
+        self._scope_collections = {}
+
+    def _scope_cache_key(self, tenant_id: str, domain_id: str, run_id: str) -> str:
+        return f"{tenant_id}/{domain_id}/{run_id}"
 
     def _pgvector_cls(self):
         try:
@@ -65,55 +69,92 @@ class PGVectorBackend(VectorBackend):
             ) from exc
         return PGVector
 
-    def _open_store(self):
-        PGVector = self._pgvector_cls()
-        return PGVector(
-            embeddings=self._embeddings,
-            collection_name=self._collection,
-            connection=self._connection,
-            use_jsonb=True,
-        )
+    def open_scope(
+        self,
+        tenant_id: str,
+        domain_id: str,
+        *,
+        run_id: str | None = None,
+        for_write: bool = False,
+    ):
+        resolved = self.resolve_run_id(tenant_id, domain_id, run_id=run_id, for_write=for_write)
+        cache_key = self._scope_cache_key(tenant_id, domain_id, resolved)
+        if cache_key in self._scope_stores:
+            return self._scope_stores[cache_key]
 
-    def _index_documents(self, documents: list[Any]) -> None:
+        collection = collection_name(self._collection_base, tenant_id, domain_id, resolved)
         PGVector = self._pgvector_cls()
-        if not documents:
-            self._store = self._open_store()
-            return
-        ids = [str(doc.metadata.get("chunk_id") or uuid.uuid4()) for doc in documents]
-        print(f"pgvector indexing chunks: {len(documents)}")
-        self._store = PGVector.from_documents(
-            documents=documents,
-            embedding=self._embeddings,
-            collection_name=self._collection,
+        store = PGVector(
+            embeddings=self._embeddings,
+            collection_name=collection,
             connection=self._connection,
             use_jsonb=True,
-            ids=ids,
         )
-        print(f"pgvector collection ready: {self._collection}")
+        self._scope_stores[cache_key] = store
+        self._scope_collections[cache_key] = collection
+        return store
 
     def load(self, *, force_reindex: bool = False) -> None:
-        if self._store is not None and not force_reindex:
+        if force_reindex or os.environ.get("FORCE_RAG_REINDEX", "").lower() in ("1", "true", "yes"):
+            self.reset()
+            self._index_all_scopes()
+
+    def _index_all_scopes(self) -> None:
+        documents = split_kb_documents()
+        if not documents:
             return
-
-        force = force_reindex or os.environ.get("FORCE_RAG_REINDEX", "").lower() in (
-            "1",
-            "true",
-            "yes",
-        )
-
-        if force:
-            store = self._open_store()
+        by_scope: dict[tuple[str, str], list] = {}
+        for doc in documents:
+            meta = doc.metadata or {}
+            key = (str(meta.get("tenant_id") or "default"), str(meta.get("domain_id") or "default"))
+            by_scope.setdefault(key, []).append(doc)
+        PGVector = self._pgvector_cls()
+        for (tenant, domain), scope_docs in by_scope.items():
+            run_id = self.resolve_run_id(tenant, domain, for_write=True)
+            collection = collection_name(self._collection_base, tenant, domain, run_id)
+            store = self.open_scope(tenant, domain, run_id=run_id, for_write=True)
             try:
                 store.delete_collection()
             except Exception:
                 pass
-            self._index_documents(split_kb_documents())
-            return
+            ids = [str(doc.metadata.get("chunk_id") or uuid.uuid4()) for doc in scope_docs]
+            PGVector.from_documents(
+                documents=scope_docs,
+                embedding=self._embeddings,
+                collection_name=collection,
+                connection=self._connection,
+                use_jsonb=True,
+                ids=ids,
+            )
+            print(f"pgvector indexed {len(scope_docs)} chunks → {collection}")
 
-        self._store = self._open_store()
+    def refresh(self) -> dict:
+        current = scan_kb_files()
+        if not current:
+            return {"mode": "full", "files": 0, "empty": True}
+        self.load(force_reindex=True)
+        return {"mode": "full", "files": len(current), "empty": False}
 
-    def _metadata_filter(self, domain_id: str, tenant_id: str) -> dict[str, str]:
-        return {"domain_id": domain_id, "tenant_id": tenant_id}
+    def upsert_kb_file(
+        self,
+        tenant_id: str,
+        domain_id: str,
+        path: str,
+        *,
+        filename: str | None = None,
+        run_id: str | None = None,
+    ) -> int:
+        store = self.open_scope(tenant_id, domain_id, run_id=run_id, for_write=True)
+        name = filename or os.path.basename(path)
+        try:
+            store.delete(filter={"tenant_id": tenant_id, "domain_id": domain_id, "filename": name})
+        except Exception:
+            pass
+        chunks = split_file_documents(domain_id, path, tenant_id=tenant_id)
+        if chunks:
+            ids = [str(doc.metadata.get("chunk_id") or uuid.uuid4()) for doc in chunks]
+            store.add_documents(chunks, ids=ids)
+        return len(chunks)
 
     def similarity_search(
         self,
@@ -123,17 +164,20 @@ class PGVectorBackend(VectorBackend):
         domain_id: str,
         tenant_id: str,
     ) -> list[Any]:
-        self.load()
-        if self._store is None:
-            return []
-        return self._store.similarity_search(
+        run_id = self.resolve_run_id(tenant_id, domain_id)
+        store = self.open_scope(tenant_id, domain_id, run_id=run_id)
+        return store.similarity_search(
             query,
             k=k,
-            filter=self._metadata_filter(domain_id, tenant_id),
+            filter={"domain_id": domain_id, "tenant_id": tenant_id},
         )
 
     def index_stats_for_domain(self, domain_id: str, tenant_id: str) -> list[dict]:
-        self.load()
+        run_id = self.resolve_run_id(tenant_id, domain_id)
+        collection = self._scope_collections.get(
+            self._scope_cache_key(tenant_id, domain_id, run_id),
+            collection_name(self._collection_base, tenant_id, domain_id, run_id),
+        )
         try:
             import psycopg
         except ImportError:
@@ -152,13 +196,9 @@ class PGVectorBackend(VectorBackend):
         try:
             with psycopg.connect(psycopg_dsn(self._connection)) as conn:
                 with conn.cursor() as cur:
-                    cur.execute(sql, (self._collection, domain_id, tenant_id))
+                    cur.execute(sql, (collection, domain_id, tenant_id))
                     rows = cur.fetchall()
         except Exception:
             return []
 
-        out: list[dict] = []
-        for filename, chunks in rows:
-            name = filename or "unknown"
-            out.append({"filename": name, "chunks": int(chunks)})
-        return out
+        return [{"filename": filename or "unknown", "chunks": int(chunks)} for filename, chunks in rows]

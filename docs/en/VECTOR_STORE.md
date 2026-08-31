@@ -37,6 +37,19 @@ VECTOR_STORE=chroma python scripts/reindex_rag.py
 
 Metadata filter: `domain_id` + `tenant_id` on every chunk.
 
+### Index runs (blue/green)
+
+When `index_run_active` has a run for tenant+domain, retrieval opens a **scoped collection**:
+
+| Backend | Isolation |
+|---------|-----------|
+| Chroma | `{CHROMA_PERSIST_DIR}/runs/{tenant}_{domain}_{run_suffix}/` |
+| Qdrant | `{QDRANT_COLLECTION}_{tenant}_{domain}_{run_suffix}` |
+| pgvector | `{PGVECTOR_COLLECTION}_{tenant}_{domain}_{run_suffix}` |
+| BM25 | `{SPARSE_INDEX_DIR}/runs/{tenant}_{domain}_{run_suffix}/bm25_index.pkl` |
+
+Every tenant+domain scope requires an active index run (`index_run_active`); missing runs are created on first read/write. GC retired runs: `python scripts/gc_index_runs.py`.
+
 ---
 
 ## Qdrant (optional)

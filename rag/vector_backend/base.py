@@ -32,6 +32,18 @@ class VectorBackend(ABC):
     def reset(self) -> None:
         """Drop cached client handles (tests / hot reload)."""
 
+    def upsert_kb_file(
+        self,
+        tenant_id: str,
+        domain_id: str,
+        path: str,
+        *,
+        filename: str | None = None,
+        run_id: str | None = None,
+    ) -> int:
+        """Re-embed one KB file into the scoped index run."""
+        raise NotImplementedError
+
     def refresh(self) -> dict:
         """Sync the index with files on disk.
 
@@ -40,3 +52,19 @@ class VectorBackend(ABC):
         """
         self.load(force_reindex=True)
         return {"mode": "full"}
+
+    def resolve_run_id(
+        self,
+        tenant_id: str,
+        domain_id: str,
+        *,
+        run_id: str | None = None,
+        for_write: bool = False,
+    ) -> str:
+        from rag.kb.index_runs import resolve_run_id as kb_resolve_run_id
+
+        if run_id:
+            return run_id
+        if for_write:
+            return kb_resolve_run_id(tenant_id, domain_id)
+        return kb_resolve_run_id(tenant_id, domain_id)

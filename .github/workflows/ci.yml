@@ -148,6 +148,9 @@ jobs:
   eval-retrieval-gate:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      DATABASE_URL: postgres://grounded:grounded@localhost:5432/grounded?sslmode=disable
+      KB_BLOB_DIR: /tmp/grounded-kb-blobs
     services:
       postgres:
         image: pgvector/pgvector:pg16
@@ -194,6 +197,8 @@ jobs:
           PYTHON_SERVICE_PORT: "5000"
           RAG_RETRIEVAL_MODE: hybrid
           RAG_RERANKER: keyword
+          DATABASE_URL: postgres://grounded:grounded@localhost:5432/grounded?sslmode=disable
+          KB_BLOB_DIR: /tmp/grounded-kb-blobs
         run: bash scripts/ci_eval_retrieval.sh --skip-reindex
 
   smoke-api:
