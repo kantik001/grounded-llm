@@ -7,15 +7,14 @@ import os
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Iterator
+from typing import Any
 
 from rag.ingest.models import (
     STAGE_EMBED,
     STAGE_FINALIZE,
     STAGE_PARSE,
-    IngestJobStatus,
-    IngestTaskStatus,
     TERMINAL_JOB_STATUSES,
+    IngestTaskStatus,
 )
 from rag.vector_backend.pgvector_backend import psycopg_dsn
 

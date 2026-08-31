@@ -12,6 +12,8 @@ from langchain_core.documents import Document
 from rag.document_loaders import is_supported_filename
 from rag.indexing import split_file_documents
 from rag.ingest import metrics
+from rag.ingest import queue as ingest_queue
+from rag.ingest import store as ingest_store
 from rag.ingest.models import (
     STAGE_EMBED,
     STAGE_FINALIZE,
@@ -19,12 +21,10 @@ from rag.ingest.models import (
     IngestJobStatus,
     IngestTaskStatus,
 )
-from rag.ingest import queue as ingest_queue
-from rag.ingest import store as ingest_store
 from rag.kb_discovery import kb_data_dir
 from rag.sparse_index import ensure_sparse_index
-from rag.vector_backend.chroma_backend import ChromaBackend, scan_kb_files, _file_sha1
 from rag.vector_backend import get_vector_backend
+from rag.vector_backend.chroma_backend import ChromaBackend, _file_sha1, scan_kb_files
 
 
 def staging_root() -> str:

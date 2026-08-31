@@ -5,11 +5,10 @@ from __future__ import annotations
 import os
 import time
 
-from rag.ingest import metrics
-from rag.ingest.models import STAGE_EMBED, STAGE_FINALIZE, STAGE_PARSE, IngestTaskStatus
-from rag.ingest import pipeline
+from rag.ingest import metrics, pipeline
 from rag.ingest import queue as ingest_queue
 from rag.ingest import store as ingest_store
+from rag.ingest.models import STAGE_EMBED, STAGE_FINALIZE, STAGE_PARSE, IngestTaskStatus
 
 
 def drain_job_sync(job_id: int) -> dict:

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import os
-import tempfile
 
 from rag.ingest.pipeline import discover_files, staging_path
 from rag.ingest.store import IngestJob
