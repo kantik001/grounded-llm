@@ -105,7 +105,6 @@ def test_split_file_documents_assigns_chunk_id(tmp_path):
 
 def test_document_key_prefers_chunk_id():
     from langchain_core.documents import Document
-
     from rag.indexing import document_key
 
     doc = Document(page_content="x", metadata={"chunk_id": "t/d/f/0"})
