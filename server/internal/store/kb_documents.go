@@ -230,14 +230,115 @@ func (st *ChatStore) GetKBDocumentVersion(ctx context.Context, versionID string)
 	return &ver, nil
 }
 
-// MarkKBDocumentDeleted soft-deletes a document by logical key.
-func (st *ChatStore) MarkKBDocumentDeleted(ctx context.Context, tenantID, domainID, logicalKey string) error {
-	_, err := st.Pool.Exec(ctx, `
-		UPDATE kb_documents SET status = $1, updated_at = NOW()
-		WHERE tenant_id = $2 AND domain_id = $3 AND logical_key = $4`,
-		KBDocStatusDeleted, tenantID, domainID, logicalKey,
+// KBArticleRow is one active document with current version metadata (admin list).
+type KBArticleRow struct {
+	LogicalKey string
+	SizeBytes  int64
+	UpdatedAt  string
+}
+
+// ListKBArticles returns active documents with current version size and updated_at.
+func (st *ChatStore) ListKBArticles(ctx context.Context, tenantID, domainID string) ([]KBArticleRow, error) {
+	rows, err := st.Pool.Query(ctx, `
+		SELECT d.logical_key, v.size_bytes, d.updated_at
+		FROM kb_documents d
+		JOIN kb_document_versions v
+		  ON v.document_id = d.id AND v.version = d.current_version
+		WHERE d.tenant_id = $1 AND d.domain_id = $2 AND d.status = $3
+		ORDER BY d.logical_key`,
+		tenantID, domainID, KBDocStatusActive,
 	)
-	return err
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []KBArticleRow
+	for rows.Next() {
+		var row KBArticleRow
+		var updatedAt time.Time
+		if err := rows.Scan(&row.LogicalKey, &row.SizeBytes, &updatedAt); err != nil {
+			return nil, err
+		}
+		row.UpdatedAt = updatedAt.UTC().Format(time.RFC3339)
+		out = append(out, row)
+	}
+	return out, rows.Err()
+}
+
+// TenantKBStorageBytes sums current-version blob sizes for active documents.
+func (st *ChatStore) TenantKBStorageBytes(ctx context.Context, tenantID string) (int64, error) {
+	var total int64
+	err := st.Pool.QueryRow(ctx, `
+		SELECT COALESCE(SUM(v.size_bytes), 0)::bigint
+		FROM kb_documents d
+		JOIN kb_document_versions v
+		  ON v.document_id = d.id AND v.version = d.current_version
+		WHERE d.tenant_id = $1 AND d.status = $2`,
+		tenantID, KBDocStatusActive,
+	).Scan(&total)
+	return total, err
+}
+
+// CountTenantKBDomains counts distinct domains with active documents.
+func (st *ChatStore) CountTenantKBDomains(ctx context.Context, tenantID string) (int, error) {
+	var n int
+	err := st.Pool.QueryRow(ctx, `
+		SELECT COUNT(DISTINCT domain_id)::int
+		FROM kb_documents
+		WHERE tenant_id = $1 AND status = $2`,
+		tenantID, KBDocStatusActive,
+	).Scan(&n)
+	return n, err
+}
+
+// TenantHasKBDomain reports whether tenant already has documents in domainID.
+func (st *ChatStore) TenantHasKBDomain(ctx context.Context, tenantID, domainID string) (bool, error) {
+	var n int
+	err := st.Pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int FROM kb_documents
+		WHERE tenant_id = $1 AND domain_id = $2 AND status = $3`,
+		tenantID, domainID, KBDocStatusActive,
+	).Scan(&n)
+	return n > 0, err
+}
+
+// ListKBStorageKeysForTenant returns blob keys for all document versions (purge).
+func (st *ChatStore) ListKBStorageKeysForTenant(ctx context.Context, tenantID string) ([]string, error) {
+	rows, err := st.Pool.Query(ctx, `
+		SELECT DISTINCT v.storage_key
+		FROM kb_document_versions v
+		JOIN kb_documents d ON d.id = v.document_id
+		WHERE d.tenant_id = $1`,
+		tenantID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var keys []string
+	for rows.Next() {
+		var key string
+		if err := rows.Scan(&key); err != nil {
+			return nil, err
+		}
+		if key != "" {
+			keys = append(keys, key)
+		}
+	}
+	return keys, rows.Err()
+}
+
+// MarkKBDocumentDeleted soft-deletes a document by logical key.
+func (st *ChatStore) MarkKBDocumentDeleted(ctx context.Context, tenantID, domainID, logicalKey string) (bool, error) {
+	tag, err := st.Pool.Exec(ctx, `
+		UPDATE kb_documents SET status = $1, updated_at = NOW()
+		WHERE tenant_id = $2 AND domain_id = $3 AND logical_key = $4 AND status = $5`,
+		KBDocStatusDeleted, tenantID, domainID, logicalKey, KBDocStatusActive,
+	)
+	if err != nil {
+		return false, err
+	}
+	return tag.RowsAffected() > 0, nil
 }
 
 // AllowedDocumentIDsForPrincipal returns document ids readable by principal (tenant-wide + role/user/group).

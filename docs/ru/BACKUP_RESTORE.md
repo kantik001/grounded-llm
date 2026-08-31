@@ -10,7 +10,7 @@
 |------|-----------------|------------|------|
 | **Postgres** | `DATABASE_URL` | Users, sessions, **kb_documents**, ingest jobs, … | **Да** (metadata) |
 | **KB blobs** | `KB_BLOB_DIR` или S3 | Версии документов | **Да** (content) |
-| **Legacy `data/`** | `data/{tenant}/{domain}/` | Dual-write копия | Опционально |
+| **Demo `data/`** | git-tracked samples only | Optional; use backfill for migration |
 | **Chroma / BM25** | `chroma_db/`, sparse | Индексы | **Нет** — rebuild через ingest |
 | **Uploads** | `UPLOAD_DIR` | Картинки чата | Да |
 | **Config** | `config/` | domains, locales | Да |

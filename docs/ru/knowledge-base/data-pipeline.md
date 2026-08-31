@@ -24,15 +24,12 @@ flowchart TB
     subgraph sources
         U[Admin upload]
         C[Connectors]
-        G[Git / packs]
+        P[Pack install]
     end
     U --> REG[kb_documents + blobs]
     C --> REG
-    G --> D[data/tenant/domain/]
-    U --> D
-    C --> D
+    P --> REG
     REG --> I{Индекс}
-    D --> I
     I -->|ingest| P[parse → staging → embed → Chroma + BM25]
     I -->|reindex| R[sync refresh]
     P --> S[search / hybrid]
@@ -44,7 +41,6 @@ flowchart TB
 | Этап | Где |
 |------|-----|
 | **Source of truth** | Postgres `kb_documents` + blobs — [KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md) |
-| Legacy `data/` | upload / connectors / git (dual-write) |
 | **Ingest** | `POST /admin/ingest` → registry discover → Redis → `ingest-worker` |
 | **Reindex** | `scripts/reindex_rag.py` или `POST /admin/reindex` |
 | Парсинг | `rag/document_loaders.py` |

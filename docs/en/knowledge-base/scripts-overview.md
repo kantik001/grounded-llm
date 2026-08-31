@@ -13,7 +13,7 @@ Full catalog: [`scripts/README.md`](../../../scripts/README.md). Makefile: `make
 
 ## `reindex_rag.py`
 
-After changes in `data/{tenant}/{domain}/` (`.txt`, `.pdf`, `.docx`):
+After new documents are registered (upload, connector, pack install):
 
 ```bash
 python scripts/reindex_rag.py
@@ -31,7 +31,7 @@ Sets `FORCE_RAG_REINDEX=true`, rebuilds the configured vector backend (+ sparse 
 
 ## `backfill_kb_registry.py`
 
-Register existing files from `data/{tenant}/{domain}/` into Postgres + blob store:
+Register existing files from git-tracked `data/` into Postgres + blob store (one-time migration):
 
 ```bash
 python scripts/backfill_kb_registry.py

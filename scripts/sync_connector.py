@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Sync external documents into KB data/ via a connector."""
+"""Sync external documents into KB registry via a connector."""
 
 from __future__ import annotations
 
 import argparse
 import os
+import shutil
 import sys
 
 _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -19,7 +20,7 @@ from connectors.registry import (  # noqa: E402
     requires_source,
 )
 
-from pack_installer import data_target_dir  # noqa: E402
+from pack_installer import connector_staging_dir  # noqa: E402
 
 
 def main() -> int:
@@ -39,7 +40,7 @@ def main() -> int:
         print("--source is required for folder/export connectors", file=sys.stderr)
         return 1
 
-    target = data_target_dir(args.tenant, args.domain)
+    target = connector_staging_dir(args.tenant, args.domain)
     try:
         conn = build_connector(args.connector, args.source)
     except (FileNotFoundError, ValueError, RuntimeError) as exc:
@@ -49,14 +50,28 @@ def main() -> int:
     result = conn.sync(target, dry_run=args.dry_run)
     print(
         f"{result.connector}: copied={result.files_copied} skipped={result.files_skipped} "
-        f"target={target}"
+        f"staging={target}"
     )
     for err in result.errors:
         print(f"  error: {err}", file=sys.stderr)
     if args.dry_run:
         print("(dry run — no files written)")
-    # Non-zero when SyncResult.errors is non-empty (see SyncResult.ok).
-    return 0 if result.ok else 1
+        return 0 if result.ok else 1
+
+    if not result.ok:
+        return 1
+
+    from connectors.registry_sync import register_synced_tree
+
+    ids = register_synced_tree(
+        tenant_id=args.tenant,
+        domain_id=args.domain,
+        target_dir=target,
+        source=args.connector,
+    )
+    print(f"registered {len(ids)} document(s) into KB registry")
+    shutil.rmtree(target, ignore_errors=True)
+    return 0
 
 
 if __name__ == "__main__":

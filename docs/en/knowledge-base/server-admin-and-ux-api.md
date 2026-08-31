@@ -16,10 +16,10 @@ HTTP Basic: `ADMIN_USER` / `ADMIN_PASSWORD`. Empty password → **503**.
 | Method | Handler | Action |
 |--------|---------|--------|
 | GET | `handleAdminStatus` | `{ data_dir, domains }` |
-| GET | `handleAdminListArticles` | files in `data/{tenant}/{domain}/` (legacy listing) |
+| GET | `handleAdminListArticles` | active documents from Postgres registry (+ chunk counts from Python) |
 | GET | `handleListKBDocuments` | documents from Postgres registry (`/kb/documents`) |
-| POST | `handleAdminUpload` | dual-write: `data/` + blob + registry |
-| DELETE | `handleAdminDeleteArticle` | delete file + soft-delete in registry |
+| POST | `handleAdminUpload` | blob + registry (requires Postgres + blob store) |
+| DELETE | `handleAdminDeleteArticle` | soft-delete in registry |
 | POST | `handleRebuildIndexRun` | create/activate index run (`/kb/index-runs`) |
 | POST | `handleAdminReindex` | reindex via Python |
 | POST | `handleIngest` | ingest job → Python pipeline |
@@ -39,8 +39,8 @@ Response: `articles[]` with `filename`, `size_bytes`, `modified`, `chunks` (from
 - Formats: **`.txt`**, **`.pdf`**, **`.docx`**
 - Regex: `^[a-zA-Z0-9._-]+\.(txt|pdf|docx)$`
 - Max size: **10 MB**
-- Writes: `{DATA_DIR}/{tenant_id}/{domain_id}/{filename}` **and** blob store **and** `kb_documents` / `kb_document_versions`
-- Response includes `document_id`, `version_id` when registry is available
+- Writes: blob store + `kb_documents` / `kb_document_versions` (Postgres)
+- Response includes `document_id`, `version_id`, `reindex_recommended`
 
 See [KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md).
 
@@ -107,7 +107,7 @@ See [KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md).
 
 ---
 
-## Reindex chain (legacy / dev)
+## Reindex chain (dev / CI fallback)
 
 Go `POST /admin/reindex` → Python `POST /admin/reindex` + header `X-Admin-Secret`.
 

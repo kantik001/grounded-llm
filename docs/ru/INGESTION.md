@@ -6,17 +6,16 @@
 
 ## Архитектура
 
-**Source of truth (prod):** Postgres (`kb_documents`) + blob store (`KB_BLOB_DIR` или S3). Каталог `data/{tenant}/{domain}/` по-прежнему получает dual-write при upload и используется как fallback, если registry пуст.
+**Source of truth (prod):** Postgres (`kb_documents`) + blob store (`KB_BLOB_DIR` или S3).
 
 ```
 Upload / connector
     → kb_documents + kb_document_versions (Postgres)
     → blobs (local / S3)
-    → data/{tenant}/{domain}/          (legacy)
         ↓
 POST /admin/ingest (Go) → ingest_jobs
         ↓
-Python worker → Redis → discover (Postgres → fallback data/)
+Python worker → Redis → discover (Postgres)
     → parse → staging → embed → Chroma → BM25
 ```
 

@@ -10,7 +10,7 @@
 
 ```
 signup.html / POST /api/v1/signup
-    → реестр tenant + квоты + data/{tenant}/
+    → реестр tenant + квоты
     → опционально Stripe Checkout → webhook
     → существующий стек (Go + Python RAG + Postgres)
 ```
@@ -23,9 +23,8 @@ signup.html / POST /api/v1/signup
 2. План из `GET /api/v1/plans` (`config/plans.yaml`)
 3. Tenant → `TENANTS_REGISTRY_FILE`
 4. Квоты → `TENANT_QUOTAS_FILE`
-5. Каталог `data/{tenant}/`
-6. Admin `{tenant}-admin` при `ADMIN_USERS_FILE` (пароль один раз в ответе)
-7. Платный план → `checkout_url` при настроенном Stripe
+5. Admin `{tenant}-admin` при `ADMIN_USERS_FILE` (пароль один раз в ответе)
+6. Платный план → `checkout_url` при настроенном Stripe
 
 ---
 

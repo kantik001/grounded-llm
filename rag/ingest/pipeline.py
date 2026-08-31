@@ -9,7 +9,6 @@ from typing import Any
 
 from langchain_core.documents import Document
 
-from rag.document_loaders import is_supported_filename
 from rag.indexing import split_file_documents
 from rag.ingest import metrics
 from rag.ingest import queue as ingest_queue
@@ -21,11 +20,11 @@ from rag.ingest.models import (
     IngestJobStatus,
     IngestTaskStatus,
 )
-from rag.kb.documents import DocumentTarget, discover_document_targets, materialize_to_temp
+from rag.kb.documents import DocumentTarget, discover_document_targets, materialize_to_temp, scan_registry_documents
 from rag.kb.index_runs import ensure_active_index_run, upsert_index_document_state
 from rag.sparse_index import ensure_sparse_index
 from rag.vector_backend import get_vector_backend
-from rag.vector_backend.chroma_backend import ChromaBackend, _file_sha1, scan_kb_files
+from rag.vector_backend.chroma_backend import ChromaBackend
 
 
 def staging_root() -> str:
@@ -55,42 +54,8 @@ class FileTarget:
     filename: str
 
 
-def discover_files(job: ingest_store.IngestJob) -> list[FileTarget]:
-    """Legacy filesystem discovery (used when registry is empty)."""
-    from rag.kb_discovery import kb_data_dir
-
-    domain_dir = kb_data_dir(job.tenant_id, job.domain_id)
-    if not os.path.isdir(domain_dir):
-        return []
-
-    explicit = [f for f in job.files if f]
-    if explicit:
-        names = explicit
-    else:
-        names = sorted(os.listdir(domain_dir))
-
-    out: list[FileTarget] = []
-    for name in names:
-        if not is_supported_filename(name):
-            continue
-        path = os.path.join(domain_dir, name)
-        if not os.path.isfile(path):
-            continue
-        key = f"{job.tenant_id}/{job.domain_id}/{name}"
-        out.append(
-            FileTarget(
-                file_key=key,
-                path=path,
-                tenant_id=job.tenant_id,
-                domain_id=job.domain_id,
-                filename=name,
-            )
-        )
-    return out
-
-
 def discover_targets(job: ingest_store.IngestJob) -> list[DocumentTarget]:
-    """Resolve ingest targets from Postgres registry (fallback: filesystem)."""
+    """Resolve ingest targets from Postgres registry."""
     explicit = [f for f in job.files if f]
     return discover_document_targets(job.tenant_id, job.domain_id, explicit or None)
 
@@ -262,7 +227,7 @@ def run_finalize(job_id: int) -> dict[str, Any]:
         ensure_sparse_index(force_reindex=True)
         backend = get_vector_backend()
         if isinstance(backend, ChromaBackend):
-            backend.sync_manifest(scan_kb_files())
+            backend.sync_manifest(scan_registry_documents())
     stats = ingest_store.merge_job_stats(
         job_id,
         {
@@ -282,7 +247,7 @@ def _enqueue_parse_tasks(
     task_ids: list[int] = []
     for target in targets:
         ft = _target_to_file(target)
-        sha = target.content_sha256 or (_file_sha1(ft.path) if ft.path else "")
+        sha = target.content_sha256 or ""
         payload = {
             "path": ft.path,
             "tenant_id": target.tenant_id,

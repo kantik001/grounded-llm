@@ -13,7 +13,7 @@
 | `proto/` | Guardrails gRPC IDL; Retriever в `api/proto/` — см. `proto/README.md` |
 | `rag/` | Retrieval **engine** (библиотека); HTTP/gRPC в `api/` — см. [`rag/README.md`](../../../rag/README.md) |
 | `config/` | Domain pack + `locales/{ru,en}/` |
-| `data/{tenant}/{domain}/` | База знаний: `.txt`, `.pdf`, `.docx` |
+| `data/{tenant}/{domain}/` | Demo-файлы в git (SoT = Postgres + blobs) |
 | `webapp/` | Эталонный UI — [`webapp/README.md`](../../../webapp/README.md) |
 | `site/` | GitHub Pages лендинг — [`site/README.md`](../../../site/README.md) |
 | `migrations/` | Схема PostgreSQL — см. [`migrations/README.md`](../../../migrations/README.md) |

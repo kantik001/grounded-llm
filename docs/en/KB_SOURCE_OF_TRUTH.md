@@ -8,7 +8,6 @@ Postgres holds **document metadata + ACL**; object storage holds **versioned blo
 Upload / connector
     → kb_documents + kb_document_versions (Postgres)
     → blobs in local KB_BLOB_DIR or S3 (MinIO)
-    → data/{tenant}/{domain}/              (legacy dual-write on upload)
     → ingest pipeline → Chroma + BM25 (rebuild anytime)
 ```
 
@@ -40,8 +39,8 @@ docker compose --profile minio up -d
 |--------|------|---------|
 | GET | `/admin/kb/documents?domain_id=` | List active documents from Postgres |
 | POST | `/admin/kb/index-runs?domain_id=` | Create index run; `"activate": true` to flip blue/green pointer |
-| POST | `/admin/upload` | Dual-write: `data/` + blob + registry; response includes `document_id`, `version_id` |
-| DELETE | `/admin/articles?filename=` | Removes file from `data/` and marks document `deleted` in registry |
+| POST | `/admin/upload` | Writes blob + registry; response includes `document_id`, `version_id`, `reindex_recommended` |
+| DELETE | `/admin/articles?filename=` | Soft-deletes document in registry (`status=deleted`) |
 
 ## Migration
 
@@ -81,9 +80,9 @@ Upload and first ingest also call `EnsureActiveIndexRun` for the scope.
 
 ## Connectors
 
-With `KB_REGISTRY_SYNC=1` (default), **Google Drive** registers synced files via `connectors/registry_sync.py` after writing to `data/`.
+With `KB_REGISTRY_SYNC=1` (default), **Google Drive** registers synced files via `connectors/registry_sync.py` after staging download.
 
-For other connectors or offline exports, call `register_synced_tree(...)` or run `scripts/backfill_kb_registry.py`.
+For other connectors, `scripts/sync_connector.py` registers via `register_synced_tree(...)` automatically. One-time migration from old `data/` trees: `scripts/backfill_kb_registry.py`.
 
 ## Code layout
 

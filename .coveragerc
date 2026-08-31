@@ -9,6 +9,11 @@ omit =
     rag/embedding_cache.py
     # Async ingest needs Postgres + Redis integration harness (see tests/test_ingest_*.py).
     rag/ingest/*
+    # KB registry needs Postgres + blob store (see tests/test_kb_registry.py, scripts/backfill_kb_registry.py).
+    rag/kb/documents.py
+    rag/kb/index_runs.py
+    rag/kb_discovery.py
+    rag/storage/blob_store.py
 
 [report]
 fail_under = 70

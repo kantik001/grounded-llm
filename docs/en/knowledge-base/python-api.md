@@ -107,7 +107,7 @@ Called by Go after `POST /api/admin/ingest` (see [INGESTION.md](../INGESTION.md)
 
 `sync: true` processes parse → embed → finalize in-process (no Redis worker).
 
-Indexes files from `data/{tenant_id}/{domain_id}/`: `.txt`, `.pdf`, `.docx`.
+Indexes documents from Postgres registry + blob store (formats `.txt`, `.pdf`, `.docx`).
 
 ---
 

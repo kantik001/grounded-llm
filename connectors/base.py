@@ -20,7 +20,7 @@ class SyncResult:
 
 
 class Connector(ABC):
-    """Copy or download documents into data/{tenant}/{domain}/."""
+    """Copy or download documents into a staging directory for registry upsert."""
 
     name: str = "base"
 

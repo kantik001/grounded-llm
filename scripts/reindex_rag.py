@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reindex Chroma after adding documents under data/{domain_id}/."""
+"""Force full RAG reindex from Postgres KB registry."""
 
 import os
 import sys

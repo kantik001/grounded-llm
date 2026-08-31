@@ -1,7 +1,7 @@
 # Architecture: Grounded LLM
 
 This repository is the **platform core** for grounded assistants in any industry.  
-Product packs (HR, legal, support, etc.) are a **domain pack**: `config/` + `data/{tenant_id}/{domain_id}/`.
+Product packs (HR, legal, support, etc.) are a **domain pack**: `config/` + source documents under `packs/*/data/` (registered into Postgres + blob store on install).
 
 Canonical ops for local LLMs and caches: [LLM_PROVIDERS.md](./LLM_PROVIDERS.md).
 
@@ -18,13 +18,13 @@ Canonical ops for local LLMs and caches: [LLM_PROVIDERS.md](./LLM_PROVIDERS.md).
               ┌─────────────┴─────────────┐
               ▼                           ▼
         Domain pack A              Domain pack B
-        config + data/               config + data/
+        config + packs/*/data        config + packs/*/data
 ```
 
 | Layer | Paths | Changes often? |
 |-------|-------|----------------|
 | **Core** | `server/`, `api/`, `rag/`, `migrations/`, `webapp/`, `scripts/` | No |
-| **Domain pack** | `config/domains.json`, `config/locales/{ru,en}/`, `data/*` | **Yes** |
+| **Domain pack** | `config/domains.json`, `config/locales/{ru,en}/`, `packs/*/data/` | **Yes** |
 | **Optional runtime** | Redis (caches), Ollama / vLLM (local LLM), grounded-guardrails (`:50052`) | As needed |
 
 **`domain_id`** — workspace / knowledge base identifier.  
@@ -70,7 +70,7 @@ Formats: **`.txt`**, **`.pdf`**, **`.docx`** → `rag/document_loaders.py` → c
 
 **Production source of truth:** Postgres `kb_documents` + blob store (`KB_BLOB_DIR` or S3). See [KB_SOURCE_OF_TRUTH.md](./KB_SOURCE_OF_TRUTH.md).
 
-**Legacy layout:** `data/{tenant_id}/{domain_id}/` — still dual-written on upload and used as ingest fallback.
+**Demo tree `data/`:** optional git-tracked samples; not used at runtime unless you run `scripts/backfill_kb_registry.py` for one-time migration.
 
 **Indexes (Chroma, BM25):** disposable — rebuild via `POST /admin/ingest` without touching originals.
 
@@ -82,8 +82,9 @@ Prefer [packs/](../../packs/) over legacy `init_domain`:
 
 ```bash
 python scripts/init_pack.py list
-python scripts/init_pack.py install it_support   # or: hr, legal_faq
-python scripts/reindex_rag.py
+python scripts/init_pack.py install it_support   # registers pack data → registry + blobs
+curl -u admin:pass -X POST "http://localhost:8080/api/admin/ingest?domain_id=it_support" \
+  -H "Content-Type: application/json" -d '{"sync": true}'
 ```
 
 Registry: `packs/registry.yaml` — validate with `python scripts/init_pack.py registry --validate`.
@@ -93,9 +94,9 @@ Registry: `packs/registry.yaml` — validate with `python scripts/init_pack.py r
 ## New domain checklist (manual)
 
 1. Entry in `config/domains.json` (with `names.ru` / `names.en`)
-2. Documents via admin upload (registry + blob) or `data/{tenant_id}/{domain_id}/` + `python scripts/backfill_kb_registry.py`
+2. Documents via admin upload (registry + blob) or `python scripts/init_pack.py install <pack>`
 3. Locale bundles: `config/locales/ru/` and `config/locales/en/`
-4. `POST /admin/ingest` or `python scripts/reindex_rag.py`
+4. `POST /admin/ingest` (recommended) or `python scripts/reindex_rag.py` (dev full rebuild)
 5. `eval/rag_{domain}_baseline.jsonl` + `make eval-retrieval`
 
 Typical MVP estimate: **2–5 days** with documents ready.

@@ -28,7 +28,7 @@ Grounded LLM — ассистент по **вашим документам**, р
         │
         ├──► Python RAG ──► Chroma (векторный индекс)
         │         ▲
-        │         └── читает data/{tenant}/{domain}/
+        │         └── читает Postgres registry + blob store
         │
         └──► LLM API (HTTPS) — вопрос + найденный контекст
 ```

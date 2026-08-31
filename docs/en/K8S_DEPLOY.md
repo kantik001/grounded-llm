@@ -50,7 +50,7 @@ Set the same `RAG_SERVICE_TOKEN` on Go server and Python service. Go sends `X-RA
 ## Production checklist
 
 1. **Secrets** — use External Secrets Operator or sealed secrets; never commit real values.
-2. **Knowledge base** — Postgres (`kb_documents`); blob store via S3/CSI or `KB_BLOB_DIR` PVC; legacy `data/` optional. See [KB_SOURCE_OF_TRUTH.md](./KB_SOURCE_OF_TRUTH.md).
+2. **Knowledge base** — Postgres (`kb_documents`); blob store via S3/CSI or `KB_BLOB_DIR` PVC. See [KB_SOURCE_OF_TRUTH.md](./KB_SOURCE_OF_TRUTH.md).
 3. **Ingress TLS** — enable `ingress.tls` and restrict admin routes at the edge.
 4. **Retention** — set `retention.messageRetentionDays` / `sessionRetentionDays` per policy.
 5. **Backups** — schedule [BACKUP_RESTORE.md](./BACKUP_RESTORE.md) for Postgres, KB blobs, optional Chroma PVC, uploads.

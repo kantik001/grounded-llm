@@ -17,7 +17,7 @@ def register_synced_file(
     source_ref: dict | None = None,
     created_by: str = "",
 ) -> str:
-    """Upsert one file from data/ into the KB registry. Returns document id."""
+    """Upsert one synced file into the KB registry. Returns document id."""
     data = path.read_bytes()
     mime, _ = mimetypes.guess_type(str(path))
     doc = upsert_document(

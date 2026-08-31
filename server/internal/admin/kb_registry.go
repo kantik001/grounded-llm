@@ -49,7 +49,7 @@ func mimeForFilename(name string) string {
 	}
 }
 
-// registerKBUpload dual-writes: legacy data/ path + blob store + Postgres registry.
+// registerKBUpload stores blob bytes and upserts Postgres registry metadata.
 func registerKBUpload(
 	ctx context.Context,
 	st *store.ChatStore,

@@ -9,14 +9,14 @@
 ```text
 signup.html / POST /api/v1/signup
         ↓
-tenant registry + quotas + data/{tenant}/
+tenant registry + quotas
         ↓
 optional Stripe Checkout → webhook → plan upgrade
         ↓
 existing stack (Go + Python RAG + Postgres)
 ```
 
-Reference deployment: **single-cluster** Docker Compose / Helm with multi-tenant paths (`X-Tenant-ID`, `data/{tenant}/`).
+Reference deployment: **single-cluster** Docker Compose / Helm with multi-tenant isolation (`X-Tenant-ID`, Postgres registry, blob store).
 
 ---
 
@@ -25,10 +25,9 @@ Reference deployment: **single-cluster** Docker Compose / Helm with multi-tenant
 1. User opens `webapp/signup.html` or calls `POST /api/v1/signup`
 2. Plan from `GET /api/v1/plans` ([plans.yaml](../../config/plans.yaml))
 3. Tenant id → `TENANTS_REGISTRY_FILE`
-4. Quotas → `TENANT_QUOTAS_FILE`
-5. Data dir `data/{tenant}/` created
-6. Admin user `{tenant}-admin` when `ADMIN_USERS_FILE` is set (password returned once)
-7. Paid plan → `checkout_url` when `STRIPE_SECRET_KEY` + `stripe_price_id` configured
+4. Quotas → `TENANT_QUOTAS_FILE` (storage counted from Postgres `kb_documents` sizes)
+5. Admin user `{tenant}-admin` when `ADMIN_USERS_FILE` is set (password returned once)
+6. Paid plan → `checkout_url` when `STRIPE_SECRET_KEY` + `stripe_price_id` configured
 
 Upgrade / renew via Stripe webhook ([BILLING.md](./BILLING.md)).
 

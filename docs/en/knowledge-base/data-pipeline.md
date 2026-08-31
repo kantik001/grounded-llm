@@ -24,15 +24,12 @@ flowchart TB
     subgraph sources
         U[Admin upload]
         C[Connectors sync]
-        G[Git / packs → data/]
+        P[Pack install]
     end
     U --> REG[kb_documents + blobs]
     C --> REG
-    G --> D[data/tenant/domain/]
-    U --> D
-    C --> D
+    P --> REG
     REG --> I{Index}
-    D --> I
     I -->|ingest job| P[parse → staging → embed → Chroma + BM25]
     I -->|reindex| R[refresh_vector_store sync]
     P --> S[search / hybrid RRF]
@@ -44,7 +41,6 @@ flowchart TB
 | Stage | Where |
 |-------|-------|
 | **Source of truth** | Postgres `kb_documents` + blobs (`KB_BLOB_DIR` or S3) — see [KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md) |
-| Legacy file tree | `POST /admin/upload`, connectors, git → `data/{tenant_id}/{domain_id}/` (dual-write) |
 | **Ingest (async)** | `POST /admin/ingest` → `ingest_jobs` → discover registry → Redis → `ingest-worker` |
 | **Reindex (sync fallback)** | `python scripts/reindex_rag.py` or `POST /admin/reindex` |
 | Load + parse | `rag/document_loaders.py` |
@@ -68,7 +64,7 @@ curl -u admin:pass -X POST "http://localhost:8080/api/admin/ingest?domain_id=def
 curl -u admin:pass "http://localhost:8080/api/admin/ingest/status?job_id=1"
 ```
 
-- Empty `files` = all supported files in the domain directory.
+- Empty `files` = all active documents in the domain (from Postgres registry).
 - `sync: true` = week-1 style: process entire job in one Python call (no Redis worker).
 - Job states: `queued → parsing → embedding → indexing → succeeded | failed | partial`.
 
@@ -90,16 +86,11 @@ Admin upload filename: **Latin** letters, digits, `_`, `-`, up to **10 MB**.
 
 ## Step 1 — prepare documents
 
-**Production:** upload via admin UI/API (registry + blob + `data/`) or connector sync + optional `python scripts/backfill_kb_registry.py` for existing trees.
+**Production:** upload via admin UI/API (registry + blob) or connector sync / pack install.
 
-**Dev / packs:** copy files into `data/` then backfill or ingest:
+**Migration:** existing files under git-tracked `data/` → `python scripts/backfill_kb_registry.py` (once).
 
-```
-data/default/default/vacation_policy_en.txt
-data/acme/legal/contract_template.docx
-```
-
-Demo domain `default`: HR policies in `data/default/default/` (legacy flat `data/default/*.txt` still discovered if present).
+Demo domain `default`: HR policies in `packs/default/data/` — registered on `init_pack.py install`.
 
 ---
 

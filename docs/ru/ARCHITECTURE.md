@@ -1,7 +1,7 @@
 # Архитектура Grounded LLM
 
 Репозиторий — **ядро платформы** для ассистентов с ответами по документам (RAG) в любой отрасли.  
-Отраслевые пакеты (HR, юриспруденция, поддержка и т.д.) — это **domain pack**: `config/` + `data/{tenant_id}/{domain_id}/`.
+Отраслевые пакеты — **domain pack**: `config/` + исходники в `packs/*/data/` (регистрируются в registry при install).
 
 Локальные LLM и кэши: [../en/LLM_PROVIDERS.md](../en/LLM_PROVIDERS.md) (EN).
 
@@ -71,7 +71,7 @@
 Форматы: **`.txt`**, **`.pdf`**, **`.docx`** → `rag/document_loaders.py` → чанки → vector backend.
 
 **Prod SoT:** Postgres `kb_documents` + blobs — [KB_SOURCE_OF_TRUTH.md](./KB_SOURCE_OF_TRUTH.md).  
-**Legacy:** `data/{tenant_id}/{domain_id}/` (dual-write, ingest fallback). Старый layout `data/{domain_id}/` поддерживается.
+Каталог `data/` — только demo-файлы в git; для runtime используйте upload, pack install или backfill.
 
 ---
 

@@ -6,19 +6,18 @@ See also: [KB_SOURCE_OF_TRUTH.md](./KB_SOURCE_OF_TRUTH.md) · [CONNECTORS.md](./
 
 ## Architecture
 
-**Document source (production):** Postgres registry (`kb_documents`) + blob store (`KB_BLOB_DIR` or S3). Legacy `data/{tenant}/{domain}/` is still dual-written on upload and used as fallback when the registry is empty.
+**Document source (production):** Postgres registry (`kb_documents`) + blob store (`KB_BLOB_DIR` or S3).
 
 ```
 Upload / connector
     → kb_documents + kb_document_versions (Postgres)
     → blobs (local or S3/MinIO)
-    → data/{tenant}/{domain}/          (legacy dual-write)
         ↓
 POST /admin/ingest (Go) → ingest_jobs (Postgres)
         ↓
 POST /admin/ingest/run (Python) → Redis queues
         ↓
-discover_targets()  →  Postgres registry (fallback: scan data/)
+discover_targets()  →  Postgres registry
 parse worker        →  blob or local path → staging/*.chunks.jsonl
 embed worker        →  Chroma (+ index_document_state)
 finalize            →  BM25 rebuild + index run pointer
@@ -55,7 +54,7 @@ POST /admin/kb/index-runs?domain_id=hr
 {"activate": true, "backend": "chroma", "embedding_model": "intfloat/multilingual-e5-small"}
 ```
 
-Empty `files` in ingest = all active documents in the domain (from registry, or legacy `data/` scan).
+Empty `files` in ingest = all active documents in the domain (from Postgres registry).
 
 ### Python (internal)
 

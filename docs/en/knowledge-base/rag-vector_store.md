@@ -1,7 +1,7 @@
 # `rag/vector_store.py` — vector store
 
 **Sources:** `rag/vector_store.py`, `rag/vector_backend/` (Chroma / Qdrant / pgvector), `rag/indexing.py`, `rag/sparse_index.py`  
-**Data:** `data/{tenant_id}/{domain_id}/*.{txt,pdf,docx}`  
+**Data:** Postgres `kb_documents` + blob store (`KB_BLOB_DIR` / S3); formats `.txt`, `.pdf`, `.docx`  
 **Ops guide (env):** [../VECTOR_STORE.md](../VECTOR_STORE.md)  
 **Called by:** `rag/retrieval.py`, admin reindex, `scripts/reindex_rag.py`
 
@@ -18,7 +18,7 @@ Backend via `VECTOR_STORE=chroma|qdrant|pgvector` (default Chroma).
 
 ```mermaid
 flowchart LR
-    A[data/tenant/domain/*] --> B[document_loaders]
+    A[Postgres registry + blobs] --> B[document_loaders]
     B --> C[metadata tenant_id domain_id filename]
     C --> D[RecursiveCharacterTextSplitter]
     D --> E[chunk 500 overlap 50]

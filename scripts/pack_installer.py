@@ -54,11 +54,27 @@ def _locale(manifest: dict[str, Any]) -> str:
     return loc if loc.startswith("ru") else "en"
 
 
-def data_target_dir(tenant_id: str, domain_id: str) -> Path:
-    """Resolve KB directory: data/{tenant}/{domain}/."""
+def connector_staging_dir(tenant_id: str, domain_id: str) -> Path:
+    """Temporary directory for connector downloads before registry upsert."""
     tenant_id = (tenant_id or "").strip() or "default"
     domain_id = (domain_id or "").strip() or "default"
-    return ROOT / "data" / tenant_id / domain_id
+    return ROOT / "connector_staging" / tenant_id / domain_id
+
+
+def register_pack_data(pack_dir: Path, tenant_id: str, domain_id: str) -> int:
+    """Register pack files into Postgres + blob store (no data/ copy)."""
+    from connectors.registry_sync import register_synced_tree
+
+    src = pack_dir / "data"
+    if not src.is_dir():
+        raise FileNotFoundError(f"Pack data/ missing: {src}")
+    ids = register_synced_tree(
+        tenant_id=tenant_id,
+        domain_id=domain_id,
+        target_dir=src,
+        source="pack",
+    )
+    return len(ids)
 
 
 def _read_json(path: Path) -> dict | list:
@@ -121,16 +137,9 @@ def merge_locale_bundle(manifest: dict[str, Any], *, force: bool = False) -> Non
         _write_json(few_shot_path, few_shot)
 
 
-def copy_pack_data(pack_dir: Path, tenant_id: str, domain_id: str) -> Path:
-    src = pack_dir / "data"
-    if not src.is_dir():
-        raise FileNotFoundError(f"Pack data/ missing: {src}")
-    dest = data_target_dir(tenant_id, domain_id)
-    dest.mkdir(parents=True, exist_ok=True)
-    for item in src.iterdir():
-        if item.is_file():
-            shutil.copy2(item, dest / item.name)
-    return dest
+def copy_pack_data(pack_dir: Path, tenant_id: str, domain_id: str) -> int:
+    """Register pack KB files (deprecated alias)."""
+    return register_pack_data(pack_dir, tenant_id, domain_id)
 
 
 def copy_pack_eval(pack_dir: Path, manifest: dict[str, Any]) -> Path:
@@ -161,7 +170,6 @@ def install_pack(
         "pack": pack_name,
         "domain_id": domain_id,
         "tenant_id": tenant_id,
-        "data_dir": str(data_target_dir(tenant_id, domain_id)),
         "eval_suite": suite,
         "locale": _locale(manifest),
     }
@@ -170,7 +178,7 @@ def install_pack(
 
     merge_domains_json(manifest, force=force)
     merge_locale_bundle(manifest, force=force)
-    copy_pack_data(pack_dir, tenant_id, domain_id)
+    plan["registered_files"] = register_pack_data(pack_dir, tenant_id, domain_id)
     eval_path = copy_pack_eval(pack_dir, manifest)
     plan["eval_path"] = str(eval_path)
     return plan

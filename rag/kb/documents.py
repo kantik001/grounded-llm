@@ -11,7 +11,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from rag.storage.blob_store import get_blob_store
-from rag.vector_backend.pgvector_backend import psycopg_dsn
 
 
 def _database_url() -> str:
@@ -21,11 +20,15 @@ def _database_url() -> str:
     return url
 
 
+def _psycopg_dsn(connection: str) -> str:
+    return connection.replace("postgresql+psycopg://", "postgresql://", 1)
+
+
 @contextmanager
 def _connect():
     import psycopg
 
-    with psycopg.connect(psycopg_dsn(_database_url())) as conn:
+    with psycopg.connect(_psycopg_dsn(_database_url())) as conn:
         yield conn
 
 
@@ -217,55 +220,67 @@ def materialize_to_temp(target: DocumentTarget) -> str:
     return path
 
 
+def list_all_active_documents() -> list[DocumentTarget]:
+    """All active documents across tenants (full reindex / manifest scan)."""
+    sql = """
+        SELECT d.id, d.tenant_id, d.domain_id, d.logical_key, d.mime_type,
+               d.current_version, v.id, v.storage_key, v.content_sha256
+        FROM kb_documents d
+        JOIN kb_document_versions v
+          ON v.document_id = d.id AND v.version = d.current_version
+        WHERE d.status = 'active'
+        ORDER BY d.tenant_id, d.domain_id, d.logical_key
+    """
+    out: list[DocumentTarget] = []
+    with _connect() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql)
+            for row in cur.fetchall():
+                out.append(
+                    DocumentTarget(
+                        document_id=str(row[0]),
+                        version_id=str(row[6]),
+                        tenant_id=row[1],
+                        domain_id=row[2],
+                        logical_key=row[3],
+                        content_sha256=row[8] or "",
+                        storage_key=row[7] or "",
+                        mime_type=row[4] or "application/octet-stream",
+                        current_version=int(row[5] or 0),
+                    )
+                )
+    return out
+
+
+def scan_registry_documents() -> dict[str, dict]:
+    """Current KB state for Chroma manifest: {tenant/domain/file: metadata}."""
+    from rag.document_loaders import is_supported_filename
+
+    state: dict[str, dict] = {}
+    for target in list_all_active_documents():
+        if not is_supported_filename(target.logical_key):
+            continue
+        key = f"{target.tenant_id}/{target.domain_id}/{target.logical_key}"
+        state[key] = {
+            "sha1": target.content_sha256,
+            "sha256": target.content_sha256,
+            "storage_key": target.storage_key,
+            "document_id": target.document_id,
+            "tenant": target.tenant_id,
+            "domain": target.domain_id,
+            "filename": target.logical_key,
+        }
+    return state
+
+
 def discover_document_targets(
     tenant_id: str,
     domain_id: str,
     files: list[str] | None = None,
 ) -> list[DocumentTarget]:
-    """Resolve ingest targets from Postgres registry (fallback: filesystem scan)."""
+    """Resolve ingest targets from Postgres registry."""
     keys = [f for f in (files or []) if f]
-    docs = list_active_documents(tenant_id, domain_id, logical_keys=keys or None)
-    if docs:
-        return [
-            DocumentTarget(
-                document_id=d.id,
-                version_id=d.version_id,
-                tenant_id=d.tenant_id,
-                domain_id=d.domain_id,
-                logical_key=d.logical_key,
-                content_sha256=d.content_sha256,
-                storage_key=d.storage_key,
-                mime_type=d.mime_type,
-            )
-            for d in docs
-        ]
-
-    # Fallback: legacy filesystem layout (dual-write migration period)
-    from rag.document_loaders import is_supported_filename
-    from rag.ingest.pipeline import FileTarget, discover_files
-    from rag.ingest import store as ingest_store
-
-    class _Job:
-        id = 0
-        tenant_id = tenant_id
-        domain_id = domain_id
-        files = keys
-
-    legacy = discover_files(_Job())  # type: ignore[arg-type]
-    return [
-        DocumentTarget(
-            document_id="",
-            version_id="",
-            tenant_id=t.tenant_id,
-            domain_id=t.domain_id,
-            logical_key=t.filename,
-            content_sha256="",
-            storage_key="",
-            mime_type="application/octet-stream",
-            local_path=t.path,
-        )
-        for t in legacy
-    ]
+    return list_active_documents(tenant_id, domain_id, logical_keys=keys or None)
 
 
 def mark_deleted(tenant_id: str, domain_id: str, logical_key: str) -> None:

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"path/filepath"
 	"testing"
 
@@ -62,50 +61,17 @@ func TestTenantAllowlistAcceptsKnown(t *testing.T) {
 
 func TestKbDataDirIsolatesTenants(t *testing.T) {
 	dir := t.TempDir()
-	acmeDoc := filepath.Join(dir, "acme", "default", "secret_acme.txt")
-	betaDoc := filepath.Join(dir, "beta", "default", "secret_beta.txt")
-	if err := os.MkdirAll(filepath.Dir(acmeDoc), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.MkdirAll(filepath.Dir(betaDoc), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(acmeDoc, []byte("acme-only"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(betaDoc, []byte("beta-only"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-
 	config = &Config{DataDir: dir, DefaultTenantID: "default"}
 	acmeDir := kbDataDir("acme", "default")
 	betaDir := kbDataDir("beta", "default")
 	if acmeDir == betaDir {
 		t.Fatalf("tenants must not share KB path: %s", acmeDir)
 	}
-
-	acmeListing, err := os.ReadDir(acmeDir)
-	if err != nil {
-		t.Fatal(err)
+	if acmeDir != filepath.Join(dir, "acme", "default") {
+		t.Fatalf("unexpected acme dir: %s", acmeDir)
 	}
-	betaListing, err := os.ReadDir(betaDir)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(acmeListing) != 1 || acmeListing[0].Name() != "secret_acme.txt" {
-		t.Fatalf("acme listing=%v", acmeListing)
-	}
-	if len(betaListing) != 1 || betaListing[0].Name() != "secret_beta.txt" {
-		t.Fatalf("beta listing=%v", betaListing)
-	}
-	if !filepath.IsAbs(acmeDir) || !filepath.IsAbs(betaDir) {
-		t.Fatal("expected absolute KB paths")
-	}
-	if filepath.Dir(acmeDir) == filepath.Dir(betaDir) {
-		// same domain leaf name is OK; parents must differ by tenant
-		if filepath.Base(filepath.Dir(acmeDir)) == filepath.Base(filepath.Dir(betaDir)) {
-			t.Fatalf("tenant parent collision: acme=%s beta=%s", acmeDir, betaDir)
-		}
+	if betaDir != filepath.Join(dir, "beta", "default") {
+		t.Fatalf("unexpected beta dir: %s", betaDir)
 	}
 }
 

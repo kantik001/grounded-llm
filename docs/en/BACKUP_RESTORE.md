@@ -8,7 +8,6 @@ Grounded LLM state spans three layers. Plan backups before production go-live.
 |-------|-----------------|----------|------|
 | **Postgres** | `DATABASE_URL` | Users, sessions, messages, audit, **kb_documents**, ingest jobs | **Yes** (metadata) |
 | **KB blobs** | `KB_BLOB_DIR` or S3 (`KB_S3_*`) | Versioned document bytes | **Yes** (content) |
-| **Legacy KB tree** | `data/{tenant}/{domain}/` | Dual-write copy of uploads | Optional cache |
 | **Chroma / BM25** | `chroma_db/`, sparse `.pkl` | Vector + sparse indexes | **No** — rebuild via ingest |
 | **Uploads** | `UPLOAD_DIR` | User image attachments | Yes (chat images) |
 | **Config** | `config/` | domains.json, locales, RBAC, quotas | Yes |
@@ -70,9 +69,6 @@ Legacy one-shot: `POST /admin/reindex` or `FORCE_RAG_REINDEX=true`.
 ```bash
 # Local blobs
 tar czf kb-blobs-backup.tar.gz -C "$(dirname "$KB_BLOB_DIR")" "$(basename "$KB_BLOB_DIR")"
-
-# Legacy data/ tree (optional, dual-write cache)
-tar czf data-backup.tar.gz data/
 ```
 
 For S3/MinIO: use bucket versioning and provider backup policies (`KB_S3_BUCKET`).
@@ -88,9 +84,8 @@ docker run --rm -v grounded_llm_uploads_data:/data -v "$PWD":/backup alpine \
 
 1. Restore Postgres (includes `kb_documents`, ACL, index run metadata)
 2. Restore blob store (`KB_BLOB_DIR` or S3) and `config/`
-3. Optionally restore legacy `data/` (not required if blobs + registry intact)
-4. Rebuild indexes: `POST /admin/ingest` with `"mode": "full"` (or restore Chroma backup)
-5. Restore uploads (optional; chat history may reference missing images)
+3. Rebuild indexes: `POST /admin/ingest` with `"mode": "full"` (or restore Chroma backup)
+4. Restore uploads (optional; chat history may reference missing images)
 6. Run `scripts/smoke.sh` against the API
 
 ## RPO / RTO guidance

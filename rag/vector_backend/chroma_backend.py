@@ -12,7 +12,6 @@ from langchain_chroma import Chroma
 
 from rag.embedding_cache import CachedHuggingFaceEmbeddings, e5_prefixes_enabled
 from rag.indexing import split_file_documents, split_kb_documents
-from rag.kb_discovery import discover_kb_directories
 from rag.vector_backend.base import VectorBackend
 
 _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -47,24 +46,32 @@ def _file_sha1(path: str) -> str:
 
 
 def scan_kb_files() -> dict[str, dict]:
-    """Current KB state: {tenant/domain/filename: {sha1, path, tenant, domain, filename}}."""
-    from rag.document_loaders import is_supported_filename
+    """Current KB state from Postgres registry (compat alias for scan_registry_documents)."""
+    from rag.kb.documents import scan_registry_documents
 
-    state: dict[str, dict] = {}
-    for tenant_id, domain_id, domain_dir in discover_kb_directories():
-        for name in sorted(os.listdir(domain_dir)):
-            path = os.path.join(domain_dir, name)
-            if not os.path.isfile(path) or not is_supported_filename(name):
-                continue
-            key = f"{tenant_id}/{domain_id}/{name}"
-            state[key] = {
-                "sha1": _file_sha1(path),
-                "path": path,
-                "tenant": tenant_id,
-                "domain": domain_id,
-                "filename": name,
-            }
-    return state
+    return scan_registry_documents()
+
+
+def _resolve_scan_path(entry: dict) -> tuple[str, bool]:
+    """Return local path for a registry scan entry; materialize blob when needed."""
+    path = entry.get("path") or ""
+    if path and os.path.isfile(path):
+        return path, False
+    storage_key = entry.get("storage_key") or ""
+    if not storage_key:
+        raise FileNotFoundError(f"missing storage_key for {entry.get('filename')}")
+    from rag.kb.documents import DocumentTarget, materialize_to_temp
+
+    target = DocumentTarget(
+        document_id=str(entry.get("document_id") or ""),
+        version_id="",
+        tenant_id=str(entry.get("tenant") or "default"),
+        domain_id=str(entry.get("domain") or "default"),
+        logical_key=str(entry.get("filename") or ""),
+        content_sha256=str(entry.get("sha256") or entry.get("sha1") or ""),
+        storage_key=storage_key,
+    )
+    return materialize_to_temp(target), True
 
 
 class ChromaBackend(VectorBackend):
@@ -199,10 +206,15 @@ class ChromaBackend(VectorBackend):
         chunks_added = 0
         for key in added + changed:
             st = current[key]
-            chunks = split_file_documents(st["domain"], st["path"], tenant_id=st["tenant"])
-            if chunks:
-                self._store.add_documents(chunks)
-                chunks_added += len(chunks)
+            path, is_temp = _resolve_scan_path(st)
+            try:
+                chunks = split_file_documents(st["domain"], path, tenant_id=st["tenant"])
+                if chunks:
+                    self._store.add_documents(chunks)
+                    chunks_added += len(chunks)
+            finally:
+                if is_temp:
+                    os.remove(path)
 
         self._save_index_state(current)
         summary = {
@@ -261,7 +273,10 @@ class ChromaBackend(VectorBackend):
         name = filename or os.path.basename(path)
         key = f"{tenant_id}/{domain_id}/{name}"
         manifest = self._read_json(self._manifest_path()) or {}
-        manifest[key] = {"sha1": _file_sha1(path)}
+        sha = ""
+        if os.path.isfile(path):
+            sha = _file_sha1(path)
+        manifest[key] = {"sha1": sha}
         self._write_json(self._manifest_path(), manifest)
         meta = self._read_json(self._meta_path()) or {}
         if "embedding" not in meta:

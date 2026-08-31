@@ -8,7 +8,6 @@ Postgres — **метаданные и ACL**; object storage — **версио�
 Upload / connector
     → kb_documents + kb_document_versions (Postgres)
     → blobs: KB_BLOB_DIR или S3/MinIO
-    → data/{tenant}/{domain}/              (legacy dual-write)
     → ingest → Chroma + BM25
 ```
 
@@ -31,7 +30,8 @@ MinIO: `docker compose --profile minio up -d`
 |-------|------|------------|
 | GET | `/admin/kb/documents?domain_id=` | Список документов из Postgres |
 | POST | `/admin/kb/index-runs?domain_id=` | Новый index run; `"activate": true` |
-| POST | `/admin/upload` | Dual-write + `document_id` / `version_id` в ответе |
+| POST | `/admin/upload` | blob + registry; в ответе `document_id`, `version_id` |
+| DELETE | `/admin/articles?filename=` | soft-delete в registry |
 
 ## Миграция
 

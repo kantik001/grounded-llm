@@ -1,6 +1,6 @@
 # Ingest connectors
 
-Connectors sync documents into `data/{tenant}/{domain}/`, register them in the **KB registry** (Postgres + blobs), then index via **ingest** or **reindex**.
+Connectors download documents into a **staging directory**, register them in the **KB registry** (Postgres + blobs), then index via **ingest** or **reindex**.
 
 - Ingest: [docs/en/INGESTION.md](../docs/en/INGESTION.md)
 - Registry / SoT: [docs/en/KB_SOURCE_OF_TRUTH.md](../docs/en/KB_SOURCE_OF_TRUTH.md)
@@ -39,10 +39,9 @@ pip install -r connectors/requirements.txt
 python scripts/sync_connector.py <connector> --domain <id> [--source PATH] [--dry-run]
 ```
 
-After sync, if registry was not updated automatically:
+`sync_connector.py` registers synced files automatically, then run ingest:
 
 ```bash
-python scripts/backfill_kb_registry.py --domain <id>
 curl -u admin:pass -X POST "http://localhost:8080/api/admin/ingest?domain_id=<id>" \
   -H "Content-Type: application/json" -d '{"sync": false}'
 ```

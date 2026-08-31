@@ -9,13 +9,8 @@ import (
 	"unicode/utf8"
 )
 
-// validateKnowledgeFileContent checks magic bytes / content shape after upload.
-func validateKnowledgeFileContent(path, filename string) error {
+func validateKnowledgeFileBytes(data []byte, filename string) error {
 	ext := strings.ToLower(strings.TrimPrefix(filepath.Ext(filename), "."))
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return err
-	}
 	if len(data) == 0 {
 		return fmt.Errorf("file is empty")
 	}
@@ -44,7 +39,21 @@ func validateKnowledgeFileContent(path, filename string) error {
 	return nil
 }
 
+// validateKnowledgeFileContent checks magic bytes / content shape after upload.
+func validateKnowledgeFileContent(path, filename string) error {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	return validateKnowledgeFileBytes(data, filename)
+}
+
 // ValidateKnowledgeFileContent is exported for tests.
 func ValidateKnowledgeFileContent(path, filename string) error {
 	return validateKnowledgeFileContent(path, filename)
+}
+
+// ValidateKnowledgeFileBytes is exported for tests.
+func ValidateKnowledgeFileBytes(data []byte, filename string) error {
+	return validateKnowledgeFileBytes(data, filename)
 }

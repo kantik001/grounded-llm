@@ -34,21 +34,16 @@ def test_load_hr_manifest_domain_id():
     assert manifest["eval"]["suite"] == "default_en"
 
 
-def test_data_target_dir_hr_nested():
-    path = pack_installer.data_target_dir("default", "default")
-    assert path == _ROOT / "data" / "default" / "default"
-
-
-def test_data_target_dir_nested_it():
-    path = pack_installer.data_target_dir("default", "it_support")
-    assert path == _ROOT / "data" / "default" / "it_support"
+def test_connector_staging_dir():
+    path = pack_installer.connector_staging_dir("default", "it_support")
+    assert path == _ROOT / "connector_staging" / "default" / "it_support"
 
 
 def test_install_it_support_dry_run():
     plan = pack_installer.install_pack("it_support", dry_run=True)
     assert plan["domain_id"] == "it_support"
     assert plan["eval_suite"] == "it_support"
-    assert "it_support" in plan["data_dir"]
+    assert plan["pack"] == "it_support"
 
 
 def test_scaffold_new_pack(tmp_path, monkeypatch):
@@ -73,7 +68,8 @@ def test_scaffold_new_pack(tmp_path, monkeypatch):
         encoding="utf-8",
     )
 
+    monkeypatch.setattr(pack_installer, "register_pack_data", lambda *_a, **_k: 1)
     result = pack_installer.install_pack("legal_faq", tenant_id="default")
     assert result["domain_id"] == "legal_faq"
-    assert (tmp_path / "data" / "default" / "legal_faq" / "sample_policy.txt").is_file()
+    assert result["registered_files"] == 1
     assert (tmp_path / "eval" / "rag_legal_faq_baseline.jsonl").is_file()

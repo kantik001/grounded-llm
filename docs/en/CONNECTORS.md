@@ -1,6 +1,6 @@
 # Ingest connectors
 
-Connectors sync documents into `data/{tenant}/{domain}/`, register them in the **KB registry** (Postgres + blobs), then index via **ingest** or **reindex**.
+Connectors download documents into a **staging directory**, register them in the **KB registry** (Postgres + blobs), then index via **ingest** or **reindex**.
 
 - **Registry:** [KB_SOURCE_OF_TRUTH.md](./KB_SOURCE_OF_TRUTH.md)
 - **Recommended:** `POST /admin/ingest` after sync — [INGESTION.md](./INGESTION.md)
@@ -11,9 +11,9 @@ Connectors sync documents into `data/{tenant}/{domain}/`, register them in the *
 ## Architecture
 
 ```text
-External source  →  Connector.sync()  →  data/{tenant}/{domain}/
-                         ↓ (KB_REGISTRY_SYNC=1, Google Drive)
-                    kb_documents + blobs (Postgres + KB_BLOB_DIR / S3)
+External source  →  Connector.sync()  →  connector_staging/{tenant}/{domain}/
+                         ↓
+                    register_synced_tree() → kb_documents + blobs
                                               ↓
                          POST /admin/ingest  (async)  or  reindex_rag.py (sync)
 ```
@@ -23,7 +23,7 @@ External source  →  Connector.sync()  →  data/{tenant}/{domain}/
 | `KB_REGISTRY_SYNC` | `1` | Auto-register synced files (Google Drive) |
 | `KB_BLOB_BACKEND` | `local` | Blob storage backend |
 
-For connectors without auto-sync, use `connectors/registry_sync.py` or `python scripts/backfill_kb_registry.py`.
+One-time migration from old `data/` trees: `python scripts/backfill_kb_registry.py`.
 
 Supported file types: `.txt`, `.pdf`, `.docx` (+ Google Docs exported as `.txt`).
 
