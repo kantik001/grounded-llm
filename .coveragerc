@@ -7,6 +7,8 @@ omit =
     rag/vector_backend/chroma_backend.py
     # Embedding/disk cache and live vector stores need integration harnesses.
     rag/embedding_cache.py
+    # Async ingest needs Postgres + Redis integration harness (see tests/test_ingest_*.py).
+    rag/ingest/*
 
 [report]
 fail_under = 70
