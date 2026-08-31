@@ -174,12 +174,7 @@ func handlePurgeTenant(c *gin.Context) {
 		c.JSON(http.StatusConflict, gin.H{"success": false, "error": "ingest job in progress for tenant"})
 		return
 	}
-	cCfg := cfg()
-	dataDir := ""
-	if cCfg != nil {
-		dataDir = cCfg.DataDir
-	}
-	stats, err := s.PurgeTenant(ctx, dataDir, tenantID)
+	stats, blobKeys, err := s.PurgeTenant(ctx, tenantID)
 	if err != nil {
 		audit.Record(c, audit.Opts{
 			Action:   auditActionTenantPurge,
@@ -189,6 +184,11 @@ func handlePurgeTenant(c *gin.Context) {
 		})
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
 		return
+	}
+	if blob := kbBlob(); blob != nil {
+		for _, key := range blobKeys {
+			_ = blob.Delete(ctx, key)
+		}
 	}
 	audit.Record(c, audit.Opts{
 		Action:   auditActionTenantPurge,

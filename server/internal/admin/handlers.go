@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -23,16 +22,6 @@ import (
 var safeFilename = regexp.MustCompile(`^[a-zA-Z0-9._-]+\.(txt|pdf|docx)$`)
 
 const maxKnowledgeFileBytes = 10 * 1024 * 1024
-
-var knowledgeFileExtensions = map[string]bool{
-	".txt":  true,
-	".pdf":  true,
-	".docx": true,
-}
-
-func isKnowledgeFile(name string) bool {
-	return knowledgeFileExtensions[strings.ToLower(filepath.Ext(name))]
-}
 
 func handleStatus(c *gin.Context) {
 	cCfg := cfg()
@@ -62,31 +51,24 @@ func handleListArticles(c *gin.Context) {
 		return
 	}
 	tid := tenant.AdminID(c)
-	dir := tenant.KBDataDir(tid, domainID)
-	entries, err := os.ReadDir(dir)
+	s := st()
+	if s == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"success": false, "error": "Store not ready"})
+		return
+	}
+	rows, err := s.ListKBArticles(c.Request.Context(), tid, domainID)
 	if err != nil {
-		if os.IsNotExist(err) {
-			c.JSON(http.StatusOK, gin.H{"success": true, "domain_id": domainID, "articles": []articleInfo{}})
-			return
-		}
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
 		return
 	}
 	chunkCounts, _ := fetchPythonIndexStats(tid, domainID)
 	var articles []articleInfo
-	for _, e := range entries {
-		if e.IsDir() || !isKnowledgeFile(e.Name()) {
-			continue
-		}
-		info, err := e.Info()
-		if err != nil {
-			continue
-		}
+	for _, row := range rows {
 		a := articleInfo{
-			Filename:  e.Name(),
-			SizeBytes: info.Size(),
-			Modified:  info.ModTime().UTC().Format(time.RFC3339),
-			Chunks:    chunkCounts[e.Name()],
+			Filename:  row.LogicalKey,
+			SizeBytes: row.SizeBytes,
+			Modified:  row.UpdatedAt,
+			Chunks:    chunkCounts[row.LogicalKey],
 		}
 		articles = append(articles, a)
 	}
@@ -105,16 +87,21 @@ func handleDeleteArticle(c *gin.Context) {
 		return
 	}
 	tid := tenant.AdminID(c)
-	path := filepath.Join(tenant.KBDataDir(tid, domainID), name)
-	if err := os.Remove(path); err != nil {
-		if os.IsNotExist(err) {
-			c.JSON(http.StatusNotFound, gin.H{"success": false, "error": "File not found"})
-			return
-		}
+	s := st()
+	if s == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"success": false, "error": "Store not ready"})
+		return
+	}
+	ok, err := s.MarkKBDocumentDeleted(c.Request.Context(), tid, domainID, name)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
 		return
 	}
-	log.Printf("Admin delete: %s", path)
+	if !ok {
+		c.JSON(http.StatusNotFound, gin.H{"success": false, "error": "Document not found"})
+		return
+	}
+	log.Printf("Admin delete: tenant=%s domain=%s file=%s", tid, domainID, name)
 	audit.Record(c, audit.Opts{
 		Action:   store.AuditActionKBDelete,
 		TenantID: tid,
@@ -146,42 +133,49 @@ func handleUpload(c *gin.Context) {
 		return
 	}
 	tid := tenant.AdminID(c)
-	dir := tenant.KBDataDir(tid, domainID)
-	if err := tenant.CheckDomainQuota(tid, domainID); err != nil {
+	s := st()
+	if s == nil || kbBlob() == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"success": false, "error": "KB registry not ready"})
+		return
+	}
+	if err := tenant.CheckDomainQuota(c.Request.Context(), tid, domainID); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error(), "code": "quota_exceeded"})
 		return
 	}
-	if err := tenant.CheckStorageQuota(tid, fh.Size); err != nil {
+	if err := tenant.CheckStorageQuota(c.Request.Context(), tid, fh.Size); err != nil {
 		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"success": false, "error": err.Error(), "code": "quota_exceeded"})
 		return
 	}
-	if err := os.MkdirAll(dir, 0o755); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
-		return
-	}
-	dst := filepath.Join(dir, name)
 	src, err := fh.Open()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
 		return
 	}
 	defer func() { _ = src.Close() }()
-	out, err := os.Create(dst)
+	data, err := io.ReadAll(io.LimitReader(src, maxKnowledgeFileBytes+1))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
 		return
 	}
-	defer func() { _ = out.Close() }()
-	if _, err := io.Copy(out, io.LimitReader(src, maxKnowledgeFileBytes+1)); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
+	if len(data) > maxKnowledgeFileBytes {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": "Max file size is 10 MB"})
 		return
 	}
-	if err := validateKnowledgeFileContent(dst, name); err != nil {
-		_ = os.Remove(dst)
+	if err := validateKnowledgeFileBytes(data, name); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"success": false, "error": err.Error()})
 		return
 	}
-	log.Printf("Admin upload: %s -> %s", name, dst)
+
+	doc, ver, regErr := registerKBUpload(c.Request.Context(), s, tid, domainID, name, audit.ActorFromContext(c), data)
+	if regErr != nil {
+		log.Printf("KB registry upload: %v", regErr)
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": "Failed to register document"})
+		return
+	}
+	docID := doc.ID
+	versionID := ver.ID
+
+	log.Printf("Admin upload: %s -> registry (tenant=%s domain=%s)", name, tid, domainID)
 	audit.Record(c, audit.Opts{
 		Action:   store.AuditActionKBUpload,
 		TenantID: tid,
@@ -190,7 +184,14 @@ func handleUpload(c *gin.Context) {
 		Success:  true,
 		Details:  map[string]any{"size_bytes": fh.Size},
 	})
-	c.JSON(http.StatusOK, gin.H{"success": true, "domain_id": domainID, "filename": name, "path": dst})
+	c.JSON(http.StatusOK, gin.H{
+		"success":     true,
+		"domain_id":   domainID,
+		"filename":    name,
+		"document_id": docID,
+		"version_id":  versionID,
+		"reindex_recommended": true,
+	})
 }
 
 type pythonIndexStatsResponse struct {

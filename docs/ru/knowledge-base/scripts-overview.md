@@ -4,7 +4,7 @@
 
 | Область | Примеры |
 |---------|---------|
-| RAG / eval | `reindex_rag.py`, `run_rag_eval.py`, `ci_eval_retrieval.sh` |
+| RAG / eval | `reindex_rag.py`, `backfill_kb_registry.py`, `run_rag_eval.py`, `ci_eval_retrieval.sh` |
 | Packs | `init_pack.py`, `pack_registry.py`, `init_domain.*` |
 | Smoke / CI | `smoke.*`, `load_smoke.*`, `ci_start_mock_server.sh` |
 | Codegen | `gen_retriever_grpc.py` |
@@ -23,7 +23,17 @@ make reindex
 
 **Зависимости:** `pip install -r api/requirements.txt`
 
-**Альтернативы:** админка → reindex, `POST /admin/reindex`, `FORCE_RAG_REINDEX=true` при старте Python.
+**Альтернативы:** ingest, `POST /admin/reindex`, `FORCE_RAG_REINDEX=true` при старте Python.
+
+---
+
+## `backfill_kb_registry.py`
+
+```bash
+python scripts/backfill_kb_registry.py --domain default
+```
+
+См. [KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md).
 
 ---
 

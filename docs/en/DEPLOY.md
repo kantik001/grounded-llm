@@ -121,7 +121,7 @@ cd client-assistant
 
 | Action | Path |
 |--------|------|
-| KB documents | `data/{tenant_id}/{domain_id}/` (`.txt`, `.pdf`, `.docx`) |
+| KB documents | Postgres `kb_documents` + blobs (`KB_BLOB_DIR` / S3) | See [KB_SOURCE_OF_TRUTH.md](./KB_SOURCE_OF_TRUTH.md) |
 | Domain catalog | `config/domains.json` |
 | Prompts & few-shot | `config/locales/ru/`, `config/locales/en/` |
 | UI branding | locale `branding.json`; customize `webapp/` if needed |

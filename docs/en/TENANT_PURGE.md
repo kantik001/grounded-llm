@@ -52,8 +52,9 @@ Authorization: Basic (admin) or OIDC session with role `admin`
 | Store | Action |
 |-------|--------|
 | Postgres `chat_sessions`, `messages`, `message_feedback` | DELETE WHERE tenant_id |
-| Postgres `audit_log` | DELETE WHERE tenant_id (optional retain anonymized aggregate — config) |
-| Filesystem `data/{tenant_id}/` | Recursive delete |
+| Postgres `kb_documents`, versions, ACL, index runs | DELETE WHERE tenant_id (cascade) |
+| Postgres `audit_log` | DELETE WHERE tenant_id |
+| Blob store | Delete storage keys for tenant versions (`data_files` count in response) |
 | Upload dir | Delete image tokens linked to purged sessions |
 | Chroma | Filter-delete by tenant metadata (Python admin call) |
 

@@ -57,7 +57,7 @@ Authorization: Basic (admin) или OIDC session с ролью `admin`
 |-------|----------|
 | Postgres `chat_sessions`, `messages`, `message_feedback` | DELETE WHERE tenant_id |
 | Postgres `audit_log` | DELETE WHERE tenant_id (опц. анонимные агрегаты — config) |
-| ФС `data/{tenant_id}/` | Recursive delete |
+| Postgres `kb_documents`, blobs | DELETE + удаление blob keys |
 | Upload dir | Image tokens сессий tenant |
 | Chroma | Filter-delete по metadata tenant (Python admin call) |
 

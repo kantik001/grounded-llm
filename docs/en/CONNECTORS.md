@@ -1,8 +1,9 @@
 # Ingest connectors
 
-Connectors sync documents from external systems into `data/{tenant}/{domain}/`, then index via **ingest** or **reindex**.
+Connectors download documents into a **staging directory**, register them in the **KB registry** (Postgres + blobs), then index via **ingest** or **reindex**.
 
-- **Recommended:** `POST /admin/ingest` after sync — see [INGESTION.md](./INGESTION.md)
+- **Registry:** [KB_SOURCE_OF_TRUTH.md](./KB_SOURCE_OF_TRUTH.md)
+- **Recommended:** `POST /admin/ingest` after sync — [INGESTION.md](./INGESTION.md)
 - **Fallback:** `python scripts/reindex_rag.py` or `POST /admin/reindex`
 
 ---
@@ -10,10 +11,19 @@ Connectors sync documents from external systems into `data/{tenant}/{domain}/`, 
 ## Architecture
 
 ```text
-External source  →  Connector.sync()  →  data/{tenant}/{domain}/
+External source  →  Connector.sync()  →  connector_staging/{tenant}/{domain}/
+                         ↓
+                    register_synced_tree() → kb_documents + blobs
                                               ↓
                          POST /admin/ingest  (async)  or  reindex_rag.py (sync)
 ```
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `KB_REGISTRY_SYNC` | `1` | Auto-register synced files (Google Drive) |
+| `KB_BLOB_BACKEND` | `local` | Blob storage backend |
+
+One-time migration from old `data/` trees: `python scripts/backfill_kb_registry.py`.
 
 Supported file types: `.txt`, `.pdf`, `.docx` (+ Google Docs exported as `.txt`).
 
@@ -32,7 +42,7 @@ python scripts/sync_connector.py <connector> --domain <domain_id> [options]
 | `google_drive_export` | Takeout folder | Google Drive export |
 | `confluence_export` | Space export | Confluence PDF/attachments tree |
 | `sharepoint` | Optional subfolder | Live Microsoft Graph |
-| `google_drive` | — | Live Google Drive API |
+| `google_drive` | — | Live Google Drive API + registry sync |
 | `confluence` | — | Live Confluence REST |
 
 Examples:
@@ -79,7 +89,7 @@ python scripts/run_rag_eval.py --suite it_support
 
 Install: `pip install -r connectors/requirements.txt`
 
-Share the target folder with the service account email.
+Share the target folder with the service account email. With `KB_REGISTRY_SYNC=1`, synced files are registered in Postgres + blob store automatically.
 
 ---
 
@@ -99,4 +109,5 @@ Pages are saved as `.txt` (HTML stripped); attachments copied when supported.
 ## Related
 
 - [connectors/README.md](../../connectors/README.md)
+- [KB_SOURCE_OF_TRUTH.md](./KB_SOURCE_OF_TRUTH.md)
 - [LAUNCH.md](./LAUNCH.md)

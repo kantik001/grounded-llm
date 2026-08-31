@@ -16,9 +16,11 @@ HTTP Basic: `ADMIN_USER` / `ADMIN_PASSWORD`. Empty password → **503**.
 | Method | Handler | Action |
 |--------|---------|--------|
 | GET | `handleAdminStatus` | `{ data_dir, domains }` |
-| GET | `handleAdminListArticles` | files in `data/{tenant}/{domain}/` |
-| POST | `handleAdminUpload` | save document |
-| DELETE | `handleAdminDeleteArticle` | delete document (`?domain_id=&filename=&tenant_id=`) |
+| GET | `handleAdminListArticles` | active documents from Postgres registry (+ chunk counts from Python) |
+| GET | `handleListKBDocuments` | documents from Postgres registry (`/kb/documents`) |
+| POST | `handleAdminUpload` | blob + registry (requires Postgres + blob store) |
+| DELETE | `handleAdminDeleteArticle` | soft-delete in registry |
+| POST | `handleRebuildIndexRun` | create/activate index run (`/kb/index-runs`) |
 | POST | `handleAdminReindex` | reindex via Python |
 | POST | `handleIngest` | ingest job → Python pipeline |
 | GET | `handleAdminFeedbackSummary` | aggregated thumbs up/down |
@@ -37,7 +39,10 @@ Response: `articles[]` with `filename`, `size_bytes`, `modified`, `chunks` (from
 - Formats: **`.txt`**, **`.pdf`**, **`.docx`**
 - Regex: `^[a-zA-Z0-9._-]+\.(txt|pdf|docx)$`
 - Max size: **10 MB**
-- Path: `{DATA_DIR}/{tenant_id}/{domain_id}/{filename}`
+- Writes: blob store + `kb_documents` / `kb_document_versions` (Postgres)
+- Response includes `document_id`, `version_id`, `reindex_recommended`
+
+See [KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md).
 
 ---
 
@@ -91,9 +96,18 @@ Go `POST /admin/ingest` → creates `ingest_jobs` row → Python `POST /admin/in
 
 See [INGESTION.md](../INGESTION.md) and [data-pipeline.md](./data-pipeline.md).
 
+### KB registry + index runs
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/admin/kb/documents?domain_id=` | Active documents from Postgres |
+| POST | `/admin/kb/index-runs?domain_id=` | New index run; body `{"activate": true}` |
+
+See [KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md).
+
 ---
 
-## Reindex chain (legacy / dev)
+## Reindex chain (dev / CI fallback)
 
 Go `POST /admin/reindex` → Python `POST /admin/reindex` + header `X-Admin-Secret`.
 

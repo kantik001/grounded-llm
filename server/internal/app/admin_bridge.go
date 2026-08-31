@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"log"
 
 	"github.com/gin-gonic/gin"
 
@@ -16,6 +17,15 @@ func init() {
 	audit.BindStore(func() *ChatStore { return chatStore })
 	audit.BindRequestID(ctxRequestID)
 	analytics.BindStore(func() *ChatStore { return chatStore })
+}
+
+func initKBRegistry(cfg *Config) {
+	if cfg == nil {
+		return
+	}
+	if err := admin.InitKBBlobStore(cfg.DataDir); err != nil {
+		log.Fatalf("KB blob store: %v", err)
+	}
 }
 
 func registerAdminRoutes(router *gin.Engine, cfg *Config) {

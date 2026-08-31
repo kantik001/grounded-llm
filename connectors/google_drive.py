@@ -169,4 +169,29 @@ class GoogleDriveConnector(Connector):
             except (OSError, ValueError) as exc:
                 result.errors.append(f"{name}: {exc}")
 
+        if os.environ.get("KB_REGISTRY_SYNC", "1").strip().lower() not in ("0", "false", "no"):
+            self._register_to_registry(target_dir, result)
         return result
+
+    def _register_to_registry(self, target_dir: Path, result: SyncResult) -> None:
+        parts = target_dir.parts
+        tenant_id = "default"
+        domain_id = "default"
+        if "data" in parts:
+            idx = parts.index("data")
+            rest = parts[idx + 1 :]
+            if len(rest) >= 2:
+                tenant_id, domain_id = rest[0], rest[1]
+            elif len(rest) == 1:
+                domain_id = rest[0]
+        try:
+            from connectors.registry_sync import register_synced_tree
+
+            register_synced_tree(
+                tenant_id=tenant_id,
+                domain_id=domain_id,
+                target_dir=target_dir,
+                source=self.name,
+            )
+        except Exception as exc:
+            result.errors.append(f"registry sync: {exc}")

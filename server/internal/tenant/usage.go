@@ -3,9 +3,6 @@ package tenant
 import (
 	"context"
 	"fmt"
-	"io/fs"
-	"os"
-	"path/filepath"
 )
 
 // QuotaUsage summarizes current tenant resource consumption.
@@ -24,78 +21,29 @@ type QuotaStatus struct {
 	Enforced bool        `json:"enforced"`
 }
 
-func tenantStorageBytes(dataDir, tenantID string) int64 {
-	tenantID = NormalizeTenantID(tenantID)
-	if tenantID == "" {
-		tenantID = "default"
-	}
-	root := filepath.Join(dataDir, tenantID)
-	var total int64
-	_ = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return nil
-		}
-		if d.IsDir() {
-			return nil
-		}
-		if !isKnowledgeFile(d.Name()) {
-			return nil
-		}
-		info, err := d.Info()
-		if err != nil {
-			return nil
-		}
-		total += info.Size()
-		return nil
-	})
-	return total
-}
-
-func countTenantKBDomains(dataDir, tenantID string) int {
-	tenantID = NormalizeTenantID(tenantID)
-	if tenantID == "" {
-		tenantID = "default"
-	}
-	root := filepath.Join(dataDir, tenantID)
-	entries, err := os.ReadDir(root)
-	if err != nil {
-		return 0
-	}
-	domains := make(map[string]struct{})
-	for _, e := range entries {
-		if e.IsDir() {
-			if hasKnowledgeFiles(filepath.Join(root, e.Name())) {
-				domains[e.Name()] = struct{}{}
-			}
-			continue
-		}
-		if isKnowledgeFile(e.Name()) {
-			domains["default"] = struct{}{}
-		}
-	}
-	return len(domains)
-}
-
-func tenantHasKBDomains(tenantID, domainID string) bool {
-	dir := KBDataDir(tenantID, domainID)
-	return hasKnowledgeFiles(dir)
-}
-
 // CollectQuotaUsage gathers usage metrics for tenantID.
 func CollectQuotaUsage(ctx context.Context, tenantID string) (QuotaUsage, error) {
-	c := cfg()
-	usage := QuotaUsage{
-		Domains: countTenantKBDomains(c.DataDir, tenantID),
+	usage := QuotaUsage{}
+	st := chatStore()
+	if st == nil {
+		return usage, nil
 	}
-	if st := chatStore(); st != nil {
-		n, err := st.CountTenantUserMessagesToday(ctx, tenantID)
-		if err != nil {
-			return usage, err
-		}
-		usage.MessagesToday = n
+	n, err := st.CountTenantUserMessagesToday(ctx, tenantID)
+	if err != nil {
+		return usage, err
 	}
-	usage.StorageBytes = tenantStorageBytes(c.DataDir, tenantID)
+	usage.MessagesToday = n
+	storage, err := st.TenantKBStorageBytes(ctx, tenantID)
+	if err != nil {
+		return usage, err
+	}
+	usage.StorageBytes = storage
 	usage.StorageMB = float64(usage.StorageBytes) / (1024 * 1024)
+	domains, err := st.CountTenantKBDomains(ctx, tenantID)
+	if err != nil {
+		return usage, err
+	}
+	usage.Domains = domains
 	return usage, nil
 }
 
@@ -135,13 +83,20 @@ func CheckMessageQuota(ctx context.Context, tenantID string) error {
 }
 
 // CheckStorageQuota returns an error when storage would exceed the tenant cap.
-func CheckStorageQuota(tenantID string, additionalBytes int64) error {
+func CheckStorageQuota(ctx context.Context, tenantID string, additionalBytes int64) error {
 	limits, ok := QuotaLimitsFor(tenantID)
 	if !ok || !limitActive(limits.StorageMB) {
 		return nil
 	}
+	st := chatStore()
+	if st == nil {
+		return nil
+	}
 	maxBytes := int64(limits.StorageMB) * 1024 * 1024
-	used := tenantStorageBytes(cfg().DataDir, tenantID)
+	used, err := st.TenantKBStorageBytes(ctx, tenantID)
+	if err != nil {
+		return err
+	}
 	if used+additionalBytes > maxBytes {
 		usedMB := float64(used) / (1024 * 1024)
 		return fmt.Errorf("storage quota exceeded for tenant %s (%.1f/%d MB)", tenantID, usedMB, limits.StorageMB)
@@ -150,15 +105,26 @@ func CheckStorageQuota(tenantID string, additionalBytes int64) error {
 }
 
 // CheckDomainQuota returns an error when adding domainID would exceed max domains.
-func CheckDomainQuota(tenantID, domainID string) error {
+func CheckDomainQuota(ctx context.Context, tenantID, domainID string) error {
 	limits, ok := QuotaLimitsFor(tenantID)
 	if !ok || !limitActive(limits.MaxDomains) {
 		return nil
 	}
-	if tenantHasKBDomains(tenantID, domainID) {
+	st := chatStore()
+	if st == nil {
 		return nil
 	}
-	count := countTenantKBDomains(cfg().DataDir, tenantID)
+	has, err := st.TenantHasKBDomain(ctx, tenantID, domainID)
+	if err != nil {
+		return err
+	}
+	if has {
+		return nil
+	}
+	count, err := st.CountTenantKBDomains(ctx, tenantID)
+	if err != nil {
+		return err
+	}
 	if count >= limits.MaxDomains {
 		return fmt.Errorf("domain quota exceeded for tenant %s (%d/%d)", tenantID, count, limits.MaxDomains)
 	}

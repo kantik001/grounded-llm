@@ -179,21 +179,14 @@ func CtxID(c *gin.Context) string {
 	return "default"
 }
 
-// KBDataDir returns the knowledge-base directory for tenant and domain.
+// KBDataDir returns the legacy filesystem path (deprecated; KB uses Postgres + blobs).
 func KBDataDir(tenantID, domainID string) string {
 	c := cfg()
 	tenantID = NormalizeTenantID(tenantID)
 	if tenantID == "" {
 		tenantID = "default"
 	}
-	nested := filepath.Join(c.DataDir, tenantID, domainID)
-	if tenantID == c.DefaultTenantID {
-		legacy := filepath.Join(c.DataDir, domainID)
-		if hasKnowledgeFiles(legacy) {
-			return legacy
-		}
-	}
-	return nested
+	return filepath.Join(c.DataDir, tenantID, domainID)
 }
 
 // AdminID reads optional tenant_id query param for admin routes.
@@ -203,22 +196,4 @@ func AdminID(c *gin.Context) string {
 		return cfg().DefaultTenantID
 	}
 	return NormalizeTenantID(raw)
-}
-
-func hasKnowledgeFiles(dir string) bool {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return false
-	}
-	for _, e := range entries {
-		if !e.IsDir() && isKnowledgeFile(e.Name()) {
-			return true
-		}
-	}
-	return false
-}
-
-func isKnowledgeFile(name string) bool {
-	n := strings.ToLower(name)
-	return strings.HasSuffix(n, ".txt") || strings.HasSuffix(n, ".pdf") || strings.HasSuffix(n, ".docx")
 }

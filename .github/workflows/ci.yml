@@ -148,6 +148,20 @@ jobs:
   eval-retrieval-gate:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: grounded
+          POSTGRES_PASSWORD: grounded
+          POSTGRES_DB: grounded
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U grounded -d grounded"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-python-ci
@@ -157,11 +171,21 @@ jobs:
       - uses: ./.github/actions/cache-hf-e5
       - name: Install RAG dependencies
         run: pip install -r api/requirements.txt requests
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
       - name: Prefetch embedding model
         run: |
           python -c "from langchain_huggingface import HuggingFaceEmbeddings; HuggingFaceEmbeddings(model_name='intfloat/multilingual-e5-small')"
+      - name: Seed KB registry from data/
+        env:
+          DATABASE_URL: postgres://grounded:grounded@localhost:5432/grounded?sslmode=disable
+          DATA_DIR: ${{ github.workspace }}/data
+          KB_BLOB_DIR: /tmp/grounded-kb-blobs
+        run: bash scripts/ci_prepare_kb_registry.sh
       - name: Reindex Chroma
         env:
+          DATABASE_URL: postgres://grounded:grounded@localhost:5432/grounded?sslmode=disable
+          KB_BLOB_DIR: /tmp/grounded-kb-blobs
           FORCE_RAG_REINDEX: "true"
           RAG_RETRIEVAL_MODE: hybrid
         run: python scripts/reindex_rag.py

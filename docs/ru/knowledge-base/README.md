@@ -30,7 +30,8 @@ English: [../../en/knowledge-base/README.md](../../en/knowledge-base/README.md).
 | [config-overview.md](./config-overview.md) | `config/` и локали |
 | [data-pipeline.md](./data-pipeline.md) | Документы KB → RAG → чат |
 | [../INGESTION.md](../INGESTION.md) | Async ingest pipeline |
-| [migrations-overview.md](./migrations-overview.md) | SQL-миграции `001`–`012` |
+| [../KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md) | Document registry, blobs, index runs |
+| [migrations-overview.md](./migrations-overview.md) | SQL-миграции `001`–`013` |
 
 ### Python RAG
 

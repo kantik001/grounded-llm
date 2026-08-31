@@ -67,7 +67,7 @@ Week 3–4 Tenant purge admin endpoint + audit + Trust Center update
 
 ### 6. Tenant purge (RTBF)
 - Admin-only `DELETE /api/admin/tenants/:tenant_id?confirm=true`
-- Deletes: Postgres rows (sessions, messages, feedback, audit for tenant), `data/{tenant}/`, upload refs
+- Deletes: Postgres rows (sessions, messages, feedback, audit, kb_documents for tenant), blob keys, upload refs
 - Audit log entry before delete; documented in Trust Center
 - See [TENANT_PURGE.md](./TENANT_PURGE.md) for API contract (implement in Phase 4)
 

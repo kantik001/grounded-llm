@@ -138,6 +138,7 @@ def _hybrid_search(
     k: int,
     fetch_k: int,
     rerank: str,
+    allowed_doc_ids: list[str] | None = None,
 ):
     backend = get_vector_backend()
     sparse = ensure_sparse_index()
@@ -153,6 +154,8 @@ def _hybrid_search(
         tenant_id=tenant_id,
         k=fetch_k,
     )
+    dense_hits = _filter_by_acl(dense_hits, tenant_id, allowed_doc_ids)
+    sparse_hits = _filter_by_acl(sparse_hits, tenant_id, allowed_doc_ids)
     fused = reciprocal_rank_fusion(
         dense_hits,
         sparse_hits,
@@ -164,23 +167,51 @@ def _hybrid_search(
     return fused[:k]
 
 
-def search(query: str, domain_id: str, tenant_id: str = DEFAULT_TENANT, k: int = 8):
+def _filter_by_acl(docs: list, tenant_id: str, allowed_ids: list[str] | None) -> list:
+    if not allowed_ids:
+        return docs
+    allowed = set(allowed_ids)
+    out = []
+    for doc in docs:
+        meta = getattr(doc, "metadata", None) or {}
+        doc_id = meta.get("document_id") or ""
+        if not doc_id or doc_id in allowed:
+            out.append(doc)
+    return out
+
+
+def search(
+    query: str,
+    domain_id: str,
+    tenant_id: str = DEFAULT_TENANT,
+    k: int = 8,
+    *,
+    acl_principals: list[tuple[str, str]] | None = None,
+):
     domain_id = normalize_domain_id(domain_id)
     tenant_id = (tenant_id or DEFAULT_TENANT).strip().lower() or DEFAULT_TENANT
+    allowed_doc_ids: list[str] | None = None
+    if acl_principals is not None or (os.environ.get("KB_ACL_ENFORCE") or "").lower() in ("1", "true", "yes"):
+        from rag.kb.documents import allowed_document_ids
+
+        allowed_doc_ids = allowed_document_ids(tenant_id, acl_principals)
+
     backend = get_vector_backend()
     rerank = reranker_mode()
     hybrid = retrieval_mode() == "hybrid"
 
     if hybrid:
         fetch_k = _fetch_multiplier(k, hybrid=True, rerank=rerank)
-        return _hybrid_search(
+        results = _hybrid_search(
             query,
             domain_id=domain_id,
             tenant_id=tenant_id,
             k=k,
             fetch_k=fetch_k,
             rerank=rerank,
+            allowed_doc_ids=allowed_doc_ids,
         )
+        return results
 
     fetch_k = _fetch_multiplier(k, hybrid=False, rerank=rerank)
     results = backend.similarity_search(
@@ -189,6 +220,7 @@ def search(query: str, domain_id: str, tenant_id: str = DEFAULT_TENANT, k: int =
         domain_id=domain_id,
         tenant_id=tenant_id,
     )
+    results = _filter_by_acl(results, tenant_id, allowed_doc_ids)
     if rerank != "none" and len(results) > k:
         return rerank_documents(query, results, k, mode=rerank)
     return results[:k]

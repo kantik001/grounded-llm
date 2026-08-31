@@ -1,7 +1,7 @@
 # `rag/vector_store.py` — векторное хранилище
 
 **Исходники:** `rag/vector_store.py`, `rag/vector_backend/` (Chroma / Qdrant / pgvector), `rag/indexing.py`, `rag/sparse_index.py`  
-**Данные:** `data/{tenant_id}/{domain_id}/*.{txt,pdf,docx}`  
+**Данные:** Postgres `kb_documents` + blob store; форматы `.txt`, `.pdf`, `.docx`  
 **Ops-гайд (env):** [../VECTOR_STORE.md](../VECTOR_STORE.md) · [EN](../../en/VECTOR_STORE.md)  
 **Вызывают:** `rag/retrieval.py`, admin reindex, `scripts/reindex_rag.py`
 

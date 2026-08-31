@@ -16,6 +16,7 @@
 | API examples | [API_EXAMPLES.md](en/API_EXAMPLES.md) |
 | Connectors | [CONNECTORS.md](en/CONNECTORS.md) |
 | Ingestion pipeline | [INGESTION.md](en/INGESTION.md) |
+| KB source of truth | [KB_SOURCE_OF_TRUTH.md](en/KB_SOURCE_OF_TRUTH.md) |
 | Optional SaaS / billing | [SAAS.md](en/SAAS.md) · [BILLING.md](en/BILLING.md) |
 | Ecosystem (standard vs agents) | [ECOSYSTEM.md](en/ECOSYSTEM.md) |
 | Guardrails gRPC verify (optional) | [GUARDRAILS.md](en/GUARDRAILS.md) |

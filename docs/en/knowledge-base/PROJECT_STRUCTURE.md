@@ -13,7 +13,7 @@ High-level map of the repository. Detailed articles: [README.md](./README.md).
 | `proto/` | Guardrails gRPC IDL (`:50052`); Retriever in `api/proto/` — see `proto/README.md`, root `buf.yaml` |
 | `rag/` | Retrieval **engine** (library); HTTP/gRPC in `api/` — see [`rag/README.md`](../../../rag/README.md) |
 | `config/` | Domain pack defaults + `locales/{ru,en}/` |
-| `data/{tenant}/{domain}/` | KB: `.txt`, `.pdf`, `.docx` |
+| `data/{tenant}/{domain}/` | Demo KB samples in git (SoT = Postgres + blobs) |
 | `webapp/` | Reference UI — [`webapp/README.md`](../../../webapp/README.md) |
 | `site/` | GitHub Pages landing — [`site/README.md`](../../../site/README.md) |
 | `migrations/` | PostgreSQL schema — see [`migrations/README.md`](../../../migrations/README.md) |

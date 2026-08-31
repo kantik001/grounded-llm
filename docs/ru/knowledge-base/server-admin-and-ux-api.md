@@ -16,7 +16,7 @@ HTTP Basic: `ADMIN_USER` / `ADMIN_PASSWORD`. Пустой пароль → **503
 | Метод | Обработчик | Действие |
 |-------|---------|----------|
 | GET | `handleAdminStatus` | `{ data_dir, domains }` |
-| GET | `handleAdminListArticles` | файлы в `data/{tenant}/{domain}/` |
+| GET | `handleAdminListArticles` | активные документы из Postgres registry |
 | POST | `handleAdminUpload` | сохранить документ |
 | DELETE | `handleAdminDeleteArticle` | удалить документ |
 | POST | `handleAdminReindex` | reindex через Python |

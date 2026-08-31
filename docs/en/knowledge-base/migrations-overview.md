@@ -169,6 +169,21 @@ Tables `ingest_jobs` and `ingest_tasks` for per-file parse → embed → index. 
 
 ---
 
+## `013_kb_documents.sql` — KB source of truth
+
+| Table | Purpose |
+|-------|---------|
+| `kb_documents` | Logical document per tenant/domain (`logical_key`, `current_version`, status) |
+| `kb_document_versions` | Immutable blob versions (`storage_key`, `content_sha256`) |
+| `kb_document_acl` | Per-document read/admin principals |
+| `index_runs` | Disposable index generations (embedding model, backend, chunk schema) |
+| `index_document_state` | Per-document indexing state within a run |
+| `index_run_active` | Active run pointer per tenant+domain |
+
+See [KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md).
+
+---
+
 ## `009_pgvector.sql` — pgvector extension
 
 `CREATE EXTENSION vector` when using `VECTOR_STORE=pgvector`.
@@ -209,6 +224,8 @@ See [SAAS.md](../SAAS.md), [BILLING.md](../BILLING.md).
 009_pgvector.sql
 010_saas_tenants.sql
 011_admin_users_membership.sql
+012_ingest_jobs.sql
+013_kb_documents.sql
 ```
 
 Go sorts by name. **New migration:** e.g. `007_something.sql` — do not edit old files after production deploy.

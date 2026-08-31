@@ -180,6 +180,12 @@ services:
       - DEFAULT_LOCALE=${DEFAULT_LOCALE:-en}
       - CONFIG_RELOAD_INTERVAL_SEC=${CONFIG_RELOAD_INTERVAL_SEC:-0}
       - DATA_DIR=/app/data
+      - KB_BLOB_BACKEND=${KB_BLOB_BACKEND:-local}
+      - KB_BLOB_DIR=/app/data/blobs
+      - KB_S3_ENDPOINT=${KB_S3_ENDPOINT:-}
+      - KB_S3_BUCKET=${KB_S3_BUCKET:-grounded-kb}
+      - KB_S3_ACCESS_KEY=${KB_S3_ACCESS_KEY:-}
+      - KB_S3_SECRET_KEY=${KB_S3_SECRET_KEY:-}
       - PYTHON_BASE_URL=http://python:5000
       - ADMIN_USER=${ADMIN_USER:-admin}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
@@ -237,9 +243,28 @@ services:
       retries: 3
       start_period: 10s
 
+  # Optional S3-compatible object storage for KB blobs (enterprise SoT).
+  # Usage: docker compose --profile minio up -d
+  # Set KB_BLOB_BACKEND=s3 and KB_S3_* on server/python/ingest-worker.
+  minio:
+    profiles: ["minio"]
+    image: minio/minio:latest
+    container_name: grounded_llm_minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${KB_S3_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${KB_S3_SECRET_KEY:-minioadmin}
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+
 volumes:
   chroma_data:
   ingest_staging:
   postgres_data:
   uploads_data:
   ollama_data:
+  minio_data:

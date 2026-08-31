@@ -1,10 +1,6 @@
 package app
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
-
 	"github.com/gin-gonic/gin"
 
 	"grounded_llm_server/internal/saas"
@@ -94,12 +90,7 @@ func (saasHost) TenantEmail(tenantID string) string {
 }
 
 func (saasHost) ProvisionDataDir(tenantID string) error {
-	if config == nil {
-		return fmt.Errorf("server not configured")
-	}
-	domainID := defaultDomainID()
-	dir := filepath.Join(config.DataDir, normalizeTenantID(tenantID), domainID)
-	return os.MkdirAll(dir, 0o755)
+	return nil
 }
 
 func (saasHost) AdminProvisioningEnabled() bool {

@@ -2,27 +2,31 @@
 
 from __future__ import annotations
 
-import glob
 import os
 from typing import List
 
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-from rag.document_loaders import load_file, supported_extensions
-from rag.kb_discovery import discover_kb_directories
+from rag.document_loaders import is_supported_filename, load_file
 
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 50
 
 
 def load_kb_documents() -> List[Document]:
-    """Load all KB files without chunking (admin / legacy helpers)."""
+    """Load all KB documents from Postgres registry (materialized to temp files)."""
+    from rag.kb.documents import list_all_active_documents, materialize_to_temp
+
     all_docs: List[Document] = []
-    for tenant_id, domain_id, domain_dir in discover_kb_directories():
-        for ext in supported_extensions():
-            for file_path in glob.glob(os.path.join(domain_dir, f"*{ext}")):
-                all_docs.extend(load_file(domain_id, file_path, tenant_id=tenant_id))
+    for target in list_all_active_documents():
+        if not is_supported_filename(target.logical_key):
+            continue
+        path = materialize_to_temp(target)
+        try:
+            all_docs.extend(load_file(target.domain_id, path, tenant_id=target.tenant_id))
+        finally:
+            os.remove(path)
     return all_docs
 
 

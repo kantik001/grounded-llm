@@ -2,7 +2,7 @@
 
 **Цель:** как документы попадают в RAG и доходят до ответа в чате.
 
-Подробно (async ingest): [INGESTION.md](../INGESTION.md) · legacy reindex: [config/REINDEX.md](../../config/REINDEX.md)
+Подробно (async ingest): [INGESTION.md](../INGESTION.md) · registry: [KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md) · legacy reindex: [config/REINDEX.md](../../config/REINDEX.md)
 
 ---
 
@@ -24,12 +24,12 @@ flowchart TB
     subgraph sources
         U[Admin upload]
         C[Connectors]
-        G[Git / packs]
+        P[Pack install]
     end
-    U --> D[data/tenant/domain/]
-    C --> D
-    G --> D
-    D --> I{Индекс}
+    U --> REG[kb_documents + blobs]
+    C --> REG
+    P --> REG
+    REG --> I{Индекс}
     I -->|ingest| P[parse → staging → embed → Chroma + BM25]
     I -->|reindex| R[sync refresh]
     P --> S[search / hybrid]
@@ -40,8 +40,8 @@ flowchart TB
 
 | Этап | Где |
 |------|-----|
-| Файл на диске | upload / connectors / git → `data/{tenant}/{domain}/` |
-| **Ingest** | `POST /admin/ingest` → `ingest_jobs` → Redis → `ingest-worker` |
+| **Source of truth** | Postgres `kb_documents` + blobs — [KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md) |
+| **Ingest** | `POST /admin/ingest` → registry discover → Redis → `ingest-worker` |
 | **Reindex** | `scripts/reindex_rag.py` или `POST /admin/reindex` |
 | Парсинг | `rag/document_loaders.py` |
 | Chunk | `rag/indexing.py` (500/50) |
@@ -75,7 +75,11 @@ curl -u admin:pass "http://localhost:8080/api/admin/ingest/status?job_id=1"
 
 ---
 
-## Шаг 1 — документы в `data/`
+## Шаг 1 — документы
+
+**Prod:** upload (registry + blob + `data/`) или connector + `python scripts/backfill_kb_registry.py` для старых файлов.
+
+**Dev:** файлы в `data/`, затем backfill или ingest:
 
 ```
 data/default/default/vacation_policy_en.txt
@@ -105,6 +109,7 @@ python scripts/run_rag_eval.py --suite default
 
 | Тема | Файл |
 |------|------|
+| Source of truth | [KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md) |
 | Ingestion | [INGESTION.md](../INGESTION.md) |
 | Admin API | [server-admin-and-ux-api.md](./server-admin-and-ux-api.md) |
 | Connectors | [CONNECTORS.md](../CONNECTORS.md) |

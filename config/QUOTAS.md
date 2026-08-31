@@ -38,7 +38,7 @@ Reload: `SIGHUP` or `CONFIG_RELOAD_INTERVAL_SEC`.
 |-------|------------|------|
 | `messages_per_day` | `POST /message` (user messages, UTC day) | 429 |
 | `storage_mb` | `POST /admin/upload` | 413 |
-| `max_domains` | `POST /admin/upload` to a new domain dir | 400 |
+| `max_domains` | `POST /admin/upload` to a new domain (no active docs yet) | 400 |
 
 ## Usage API
 
@@ -53,5 +53,5 @@ Requires `kb_editor` or `admin` role.
 ## Notes
 
 - Message counts use Postgres (`messages` + `chat_sessions.tenant_id`).
-- Storage counts `.txt`/`.pdf`/`.docx` under `data/{tenant_id}/`.
-- Domain count = distinct KB directories with at least one document.
+- Storage sums current-version blob sizes from `kb_documents` / `kb_document_versions`.
+- Domain count = distinct domains with active documents in Postgres.

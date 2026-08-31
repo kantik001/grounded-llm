@@ -174,6 +174,12 @@ Go сортирует по имени. **Новая миграция:** напр
 
 ---
 
+## `013_kb_documents.sql`
+
+Registry документов, ACL, index runs (enterprise SoT). См. [../KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md).
+
+---
+
 ## `009_pgvector.sql`
 
 `CREATE EXTENSION vector` для `VECTOR_STORE=pgvector`.
@@ -204,7 +210,7 @@ Go сортирует по имени. **Новая миграция:** напр
 ## Порядок файлов
 
 ```
-001 … 003, 005 … 011  (нет 004)
+001 … 003, 005 … 011, 012_ingest_jobs.sql, 013_kb_documents.sql  (нет 004)
 ```
 
 ---

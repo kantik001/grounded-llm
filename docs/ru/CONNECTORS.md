@@ -1,37 +1,19 @@
 # Коннекторы ingest
 
-Краткая русская версия. **Канон:** [CONNECTORS.md (EN)](../en/CONNECTORS.md).
+Коннекторы скачивают документы во **staging**, регистрируют их в **KB registry** (Postgres + blobs), затем индексируют через **ingest** или **reindex**.
 
-Синхронизация в `data/{tenant}/{domain}/`, затем индексация через **ingest** или **reindex**. См. [INGESTION.md](./INGESTION.md).
+- Registry: [KB_SOURCE_OF_TRUTH.md](./KB_SOURCE_OF_TRUTH.md)
+- Рекомендуется: `POST /admin/ingest` — [INGESTION.md](./INGESTION.md)
+- Fallback: `python scripts/reindex_rag.py`
 
----
-
-## CLI
-
-```bash
-python scripts/sync_connector.py <connector> --domain <domain_id> [options]
+```text
+External source  →  Connector.sync()  →  connector_staging/{tenant}/{domain}/
+                         ↓
+                    register_synced_tree() → kb_documents + blobs
+                                              ↓
+                         POST /admin/ingest  или  reindex_rag.py
 ```
 
-| Коннектор | Источник | Примечание |
-|-----------|----------|------------|
-| `local_folder` | Путь к папке | Универсальный |
-| `sharepoint` | Microsoft Graph | Live API |
-| `google_drive` | Google Drive API | `pip install -r connectors/requirements.txt` |
-| `confluence` | Confluence REST | Страницы + вложения |
-| `sharepoint_export` | Папка экспорта | Офлайн |
-| `google_drive_export` | Takeout | Офлайн |
-| `confluence_export` | Экспорт space | Офлайн |
+Миграция старых файлов из `data/`: `python scripts/backfill_kb_registry.py`.
 
-После sync: `POST /admin/ingest` (прод) или `python scripts/reindex_rag.py` (dev/CI)
-
----
-
-## Переменные
-
-См. `.env.example` и [CONNECTORS.md (EN)](../en/CONNECTORS.md) — SharePoint, Drive, Confluence.
-
----
-
-## Связанное
-
-- [PHASE_8.md (EN)](../en/PHASE_8.md) · [PHASE_9.md (EN)](../en/PHASE_9.md)
+Подробности: [../en/CONNECTORS.md](../en/CONNECTORS.md) (EN).

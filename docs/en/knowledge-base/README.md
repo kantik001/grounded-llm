@@ -19,7 +19,8 @@ Russian docs: [../../ru/knowledge-base/README.md](../../ru/knowledge-base/README
 | [config-overview.md](./config-overview.md) | `config/` and locales |
 | [data-pipeline.md](./data-pipeline.md) | KB documents → RAG |
 | [../INGESTION.md](../INGESTION.md) | Async ingest jobs (parse/embed/index) |
-| [migrations-overview.md](./migrations-overview.md) | SQL migrations `001`–`012` |
+| [../KB_SOURCE_OF_TRUTH.md](../KB_SOURCE_OF_TRUTH.md) | Document registry, blobs, index runs |
+| [migrations-overview.md](./migrations-overview.md) | SQL migrations `001`–`013` |
 
 ### Python RAG
 

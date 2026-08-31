@@ -6,13 +6,16 @@
 
 ## Что бэкапить
 
-| Слой | Path / resource | Содержимое |
-|------|-----------------|------------|
-| **Postgres** | `DATABASE_URL` | Users, sessions, messages, feedback, audit, reindex jobs, SaaS (`010`/`011`) |
-| **Chroma** | `chroma_db/` (PVC в K8s) | Vector index |
-| **Knowledge base** | `data/{tenant}/{domain}/` | Исходные документы |
-| **Uploads** | `UPLOAD_DIR` | Картинки пользователей |
-| **Config** | `config/` | domains.json, locales, RBAC, quotas |
+| Слой | Path / resource | Содержимое | SoT? |
+|------|-----------------|------------|------|
+| **Postgres** | `DATABASE_URL` | Users, sessions, **kb_documents**, ingest jobs, … | **Да** (metadata) |
+| **KB blobs** | `KB_BLOB_DIR` или S3 | Версии документов | **Да** (content) |
+| **Demo `data/`** | git-tracked samples only | Optional; use backfill for migration |
+| **Chroma / BM25** | `chroma_db/`, sparse | Индексы | **Нет** — rebuild через ingest |
+| **Uploads** | `UPLOAD_DIR` | Картинки чата | Да |
+| **Config** | `config/` | domains, locales | Да |
+
+См. [KB_SOURCE_OF_TRUTH.md](./KB_SOURCE_OF_TRUTH.md).
 
 При `VECTOR_STORE=qdrant` / `pgvector` — бэкапьте соответствующий store (снимки Qdrant / таблицы Postgres). Sparse BM25: `SPARSE_INDEX_DIR` / `sparse_index/`.
 
@@ -42,23 +45,21 @@ make backup-smoke
 
 Velero, CloudNativePG, RDS snapshots — на PVC Postgres или managed instance.
 
-## Chroma
+## Chroma / sparse (disposable)
+
+Индексы можно пересобрать из Postgres + blobs. Бэкап Chroma опционален.
 
 ```bash
-docker cp grounded_llm_python:/app/chroma_db ./chroma_backup/
-
-# Restore (сначала stop python)
-docker cp ./chroma_backup/ grounded_llm_python:/app/chroma_db
-docker compose restart python
+curl -u admin:pass -X POST "http://localhost:8080/api/admin/ingest?domain_id=default" \
+  -d '{"mode": "full", "sync": true}'
 ```
 
-Проверка: admin index stats или retrieval eval smoke.
+## Knowledge base blobs
 
-## Knowledge base (`data/`)
-
-Source of truth. Git или object storage; reindex только при смене документов.
+**Primary:** Postgres + blob store. Legacy `data/` — опционально.
 
 ```bash
+tar czf kb-blobs-backup.tar.gz data/blobs/
 tar czf data-backup.tar.gz data/
 ```
 
@@ -71,11 +72,12 @@ docker run --rm -v grounded_llm_uploads_data:/data -v "$PWD":/backup alpine \
 
 ## Порядок восстановления
 
-1. Postgres  
-2. `data/` и `config/`  
-3. Chroma **или** полный reindex (`POST /admin/reindex` / `FORCE_RAG_REINDEX=true`)  
-4. Uploads (опц.; история может ссылаться на отсутствующие картинки)  
-5. `scripts/smoke.sh` против API  
+1. Postgres (`kb_*`, ACL, index runs)  
+2. Blob store + `config/`  
+3. Опционально `data/`  
+4. Full ingest или restore Chroma  
+5. Uploads (опц.)  
+6. `scripts/smoke.sh`  
 
 ## RPO / RTO
 

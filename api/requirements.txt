@@ -5,6 +5,7 @@ flask-cors>=4.0.0
 gunicorn>=22.0.0
 redis>=5.0.0
 psycopg[binary]>=3.2.0
+minio>=7.2.0
 grpcio==1.69.0
 grpcio-health-checking==1.69.0
 protobuf>=4.25.0,<6

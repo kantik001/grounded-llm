@@ -68,6 +68,7 @@
 | Purge тенанта | [TENANT_PURGE.md](./TENANT_PURGE.md) |
 | Коннекторы | [CONNECTORS.md](./CONNECTORS.md) |
 | Ingestion | [INGESTION.md](./INGESTION.md) |
+| KB source of truth | [KB_SOURCE_OF_TRUTH.md](./KB_SOURCE_OF_TRUTH.md) |
 | Аналитика | [ANALYTICS_GUIDE.md](./ANALYTICS_GUIDE.md) |
 | SaaS / billing | [SAAS.md](./SAAS.md) · [BILLING.md](./BILLING.md) |
 | Launch / roadmap | [LAUNCH.md](./LAUNCH.md) · [ROADMAP.md](./ROADMAP.md) · [STANDARD_STRATEGY.md](./STANDARD_STRATEGY.md) |

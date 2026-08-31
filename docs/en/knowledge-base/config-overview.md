@@ -53,7 +53,7 @@ Env: `DEFAULT_LOCALE` (default **`en`**), `LOCALES_ROOT`.
 |--------|--------|
 | `domains.json` | Go SIGHUP / interval reload; restart Python if needed |
 | `locales/*` | Go reload; restart Python for few_shot cache |
-| KB files under `data/{tenant}/{domain}/` | Run reindex |
+| KB document changes (upload / ingest) | Run ingest or reindex |
 
 ---
 
@@ -61,5 +61,5 @@ Env: `DEFAULT_LOCALE` (default **`en`**), `LOCALES_ROOT`.
 
 1. Add entry to `domains.json` (with `names.ru` / `names.en`)
 2. Add blocks under both `locales/ru/` and `locales/en/`
-3. Place documents in `data/{tenant_id}/{domain_id}/`
-4. `python scripts/reindex_rag.py` or `scripts/init_domain.ps1`
+3. Add documents via admin upload or `python scripts/init_pack.py install <pack>`
+4. `POST /admin/ingest` or `python scripts/reindex_rag.py`
