@@ -20,7 +20,7 @@ server/
     locale/                   # locale bundles, branding, onboarding prompts
     domain/                   # domain catalog + guards
     tenant/                   # tenants, quotas, registry
-    admin/                    # admin HTTP + RBAC + reindex
+    admin/                    # admin HTTP + RBAC + ingest + reindex
     oidc/                     # OIDC SSO
     saas/                     # signup, plans, Stripe
     audit/                    # audit log helpers

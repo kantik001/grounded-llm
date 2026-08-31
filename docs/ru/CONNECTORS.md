@@ -2,7 +2,7 @@
 
 Краткая русская версия. **Канон:** [CONNECTORS.md (EN)](../en/CONNECTORS.md).
 
-Синхронизация документов из внешних систем в `data/{tenant}/{domain}/` перед reindex.
+Синхронизация в `data/{tenant}/{domain}/`, затем индексация через **ingest** или **reindex**. См. [INGESTION.md](./INGESTION.md).
 
 ---
 
@@ -22,7 +22,7 @@ python scripts/sync_connector.py <connector> --domain <domain_id> [options]
 | `google_drive_export` | Takeout | Офлайн |
 | `confluence_export` | Экспорт space | Офлайн |
 
-После sync: `python scripts/reindex_rag.py`
+После sync: `POST /admin/ingest` (прод) или `python scripts/reindex_rag.py` (dev/CI)
 
 ---
 

@@ -18,7 +18,8 @@ Russian docs: [../../ru/knowledge-base/README.md](../../ru/knowledge-base/README
 | [github-ci.yml.md](./github-ci.yml.md) | GitHub Actions CI |
 | [config-overview.md](./config-overview.md) | `config/` and locales |
 | [data-pipeline.md](./data-pipeline.md) | KB documents → RAG |
-| [migrations-overview.md](./migrations-overview.md) | SQL migrations `001`–`011` |
+| [../INGESTION.md](../INGESTION.md) | Async ingest jobs (parse/embed/index) |
+| [migrations-overview.md](./migrations-overview.md) | SQL migrations `001`–`012` |
 
 ### Python RAG
 

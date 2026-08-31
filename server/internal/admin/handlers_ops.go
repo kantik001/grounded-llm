@@ -156,13 +156,22 @@ func handlePurgeTenant(c *gin.Context) {
 		return
 	}
 	ctx := c.Request.Context()
-	active, err := s.HasActiveReindexJob(ctx, tenantID)
+	activeReindex, err := s.HasActiveReindexJob(ctx, tenantID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
 		return
 	}
-	if active {
+	if activeReindex {
 		c.JSON(http.StatusConflict, gin.H{"success": false, "error": "reindex job in progress for tenant"})
+		return
+	}
+	activeIngest, err := s.HasActiveIngestJob(ctx, tenantID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"success": false, "error": err.Error()})
+		return
+	}
+	if activeIngest {
+		c.JSON(http.StatusConflict, gin.H{"success": false, "error": "ingest job in progress for tenant"})
 		return
 	}
 	cCfg := cfg()

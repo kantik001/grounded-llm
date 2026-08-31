@@ -133,7 +133,7 @@ curl -sS -u admin:your-password \
 
 ---
 
-## Admin — reindex RAG (async)
+## Admin — reindex RAG (async, legacy full/incremental sync)
 
 ```bash
 # Queue job (returns immediately)
@@ -142,6 +142,27 @@ curl -sS -u admin:your-password -X POST http://localhost:8080/api/admin/reindex
 # Poll status
 curl -sS -u admin:your-password "http://localhost:8080/api/admin/reindex/status?job_id=1"
 ```
+
+---
+
+## Admin — ingest KB (async pipeline, recommended)
+
+```bash
+# Queue ingest job (all files in domain when files is empty)
+curl -sS -u admin:your-password -X POST "http://localhost:8080/api/admin/ingest?domain_id=default" \
+  -H "Content-Type: application/json" \
+  -d '{"files": ["policy.pdf"], "mode": "incremental", "sync": false}'
+
+# Poll status
+curl -sS -u admin:your-password "http://localhost:8080/api/admin/ingest/status?job_id=1"
+
+# Sync mode (no Redis worker — processes in one Python call)
+curl -sS -u admin:your-password -X POST "http://localhost:8080/api/admin/ingest?domain_id=default" \
+  -H "Content-Type: application/json" \
+  -d '{"sync": true}'
+```
+
+See [INGESTION.md](./INGESTION.md).
 
 ---
 

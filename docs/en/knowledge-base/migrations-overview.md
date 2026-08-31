@@ -163,6 +163,12 @@ Job table for background KB reindex (admin triggers → worker poll).
 
 ---
 
+## `012_ingest_jobs.sql` — async ingest pipeline
+
+Tables `ingest_jobs` and `ingest_tasks` for per-file parse → embed → index. See [INGESTION.md](../INGESTION.md).
+
+---
+
 ## `009_pgvector.sql` — pgvector extension
 
 `CREATE EXTENSION vector` when using `VECTOR_STORE=pgvector`.

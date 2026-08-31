@@ -16,7 +16,7 @@ Separate **Python service** (Compose service **`python`**):
 
 | Surface | Port | Role |
 |---------|------|------|
-| HTTP (Gunicorn) | **5000** | Retrieval + admin reindex |
+| HTTP (Gunicorn) | **5000** | Retrieval + admin reindex / ingest |
 | gRPC Retriever | **50051** | Agent-friendly `Retrieve` RPC |
 
 | Endpoint | Purpose |
@@ -28,6 +28,9 @@ Separate **Python service** (Compose service **`python`**):
 | `GET /metrics` | Retrieve counters/histogram (by protocol+outcome) + embedding cache |
 | `GET /admin/index-stats` | Chunks per file (`?domain_id=&tenant_id=`, `X-Admin-Secret`) |
 | `POST /admin/reindex` | Rebuild vector index (`X-Admin-Secret`; `409` if already running) |
+| `POST /admin/ingest/run` | Start ingest job by `job_id` (internal; Go triggers after `ingest_jobs` insert) |
+| `GET /admin/ingest/status` | Ingest job + tasks (`?job_id=`) |
+| `GET /admin/ingest/metrics` | In-process counters + DLQ depth |
 
 Go calls: `PYTHON_RAG_URL` → `http://python:5000/rag/context`.
 
@@ -86,9 +89,23 @@ In production, both `RAG_SERVICE_TOKEN` and `ADMIN_SECRET` must be set and ≥ 1
 
 Header `X-Admin-Secret` = env `ADMIN_SECRET`.
 
-Chain: `reset_vector_store()` → `load_vector_store(force_reindex=True)`.
+Incremental refresh via `refresh_vector_store()` (or full when `{"full": true}`).
 
 Concurrent calls return **409** (`reindex already in progress`).
+
+---
+
+## Ingest admin endpoints
+
+Called by Go after `POST /api/admin/ingest` (see [INGESTION.md](../INGESTION.md)).
+
+| Endpoint | Body / query | Role |
+|----------|----------------|------|
+| `POST /admin/ingest/run` | `{"job_id": 1, "sync": false}` | Start pipeline for existing Postgres job |
+| `GET /admin/ingest/status` | `?job_id=` | Job status + per-file tasks |
+| `GET /admin/ingest/metrics` | — | Prometheus-style lines, `dlq_depth` |
+
+`sync: true` processes parse → embed → finalize in-process (no Redis worker).
 
 Indexes files from `data/{tenant_id}/{domain_id}/`: `.txt`, `.pdf`, `.docx`.
 
@@ -106,7 +123,10 @@ Indexes files from `data/{tenant_id}/{domain_id}/`: `.txt`, `.pdf`, `.docx`.
 | `LOCALES_ROOT` | path to locale bundles |
 | `DEFAULT_LOCALE` | default few-shot locale (`en`) |
 | `DEFAULT_TENANT_ID` | default tenant |
-| `ADMIN_SECRET` | protect reindex |
+| `ADMIN_SECRET` | protect reindex / ingest admin routes |
+| `DATABASE_URL` | ingest job state (Postgres) |
+| `INGEST_ASYNC` | `1` = Redis queues; `0` = sync drain in API process |
+| `INGEST_STAGING_DIR` | parsed chunk JSONL staging |
 | `RAG_SERVICE_TOKEN` | internal auth (Go ↔ Python / gRPC) |
 | `FORCE_RAG_REINDEX` | full rebuild on startup |
 | `GUNICORN_WORKERS` / `GUNICORN_TIMEOUT` | HTTP workers |
@@ -138,7 +158,7 @@ Compatibility shims: `api.app` and `api.grpc_retriever` still import the new mod
 | Topic | File |
 |-------|------|
 | Providers / Redis / gRPC | [../LLM_PROVIDERS.md](../LLM_PROVIDERS.md) |
-| Indexing | [rag-vector_store.md](./rag-vector_store.md) |
+| Indexing | [rag-vector_store.md](./rag-vector_store.md) · [INGESTION.md](../INGESTION.md) |
 | Search | [rag-retrieval.md](./rag-retrieval.md) |
 | Domains | [rag-domains_config.md](./rag-domains_config.md) |
 | Docker | [docker-overview.md](./docker-overview.md) |

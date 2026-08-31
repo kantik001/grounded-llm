@@ -7,7 +7,7 @@ Phase B minimal RBAC: file-based roles for **admin users** (HTTP Basic Auth) and
 | Role | Admin API | Chat API (`X-API-Key`) |
 |------|-----------|-------------------------|
 | `chat_only` | — | session, message, history, feedback |
-| `kb_editor` | list/upload/delete KB, reindex | — |
+| `kb_editor` | list/upload/delete KB, ingest, reindex | — |
 | `admin` | all admin routes (feedback, audit log) | — |
 | `api_manager` | `GET /admin/api-keys` (labels + roles) | — |
 

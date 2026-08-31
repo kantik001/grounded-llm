@@ -99,6 +99,8 @@ services:
       - RAG_RETRIEVAL_MODE=${RAG_RETRIEVAL_MODE:-hybrid}
       - RAG_RERANKER=${RAG_RERANKER:-keyword}
       - RAG_CROSS_ENCODER_MODEL=${RAG_CROSS_ENCODER_MODEL:-}
+      - INGEST_ASYNC=${INGEST_ASYNC:-1}
+      - INGEST_STAGING_DIR=${INGEST_STAGING_DIR:-/app/ingest_staging}
     volumes:
       - chroma_data:/app/chroma_db
       - ./api:/app/api:ro
@@ -114,6 +116,38 @@ services:
       timeout: 10s
       retries: 5
       start_period: 180s
+
+  ingest-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    command: ["python", "-m", "workers.ingest_worker"]
+    restart: unless-stopped
+    environment:
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - DATABASE_URL=${DATABASE_URL:-postgres://grounded:grounded@postgres:5432/grounded?sslmode=disable}
+      - DATA_DIR=/app/data
+      - INGEST_ASYNC=1
+      - INGEST_USE_REDIS=1
+      - INGEST_WORKER_STAGE=all
+      - INGEST_STAGING_DIR=/app/ingest_staging
+      - VECTOR_STORE=${VECTOR_STORE:-chroma}
+      - CHROMA_PERSIST_DIR=/app/chroma_db
+      - DOMAINS_CONFIG_PATH=/config/domains.json
+    volumes:
+      - chroma_data:/app/chroma_db
+      - ingest_staging:/app/ingest_staging
+      - ./rag:/app/rag:ro
+      - ./workers:/app/workers:ro
+      - ./data:/app/data:ro
+      - ./config:/config:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      python:
+        condition: service_healthy
 
   server:
     build:
@@ -205,6 +239,7 @@ services:
 
 volumes:
   chroma_data:
+  ingest_staging:
   postgres_data:
   uploads_data:
   ollama_data:

@@ -48,4 +48,4 @@ Schema: [`schemas/domains.schema.json`](./schemas/domains.schema.json).
 ## Related docs
 
 - [SSO.md](./SSO.md) · [RBAC.md](./RBAC.md) · [QUOTAS.md](./QUOTAS.md)
-- [REINDEX.md](./REINDEX.md) · [ANALYTICS.md](./ANALYTICS.md)
+- [REINDEX.md](./REINDEX.md) · [INGESTION.md](../docs/en/INGESTION.md) · [ANALYTICS.md](./ANALYTICS.md)

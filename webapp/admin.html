@@ -66,7 +66,7 @@
 <body>
     <div class="wrap">
         <h1>📚 Knowledge base admin</h1>
-        <p class="hint">Upload .txt / .pdf / .docx to <code>data/{domain_id}/</code> and reindex Chroma. Sign in with corporate SSO or local admin credentials.</p>
+        <p class="hint">Upload .txt / .pdf / .docx to <code>data/{domain_id}/</code>, then run ingest (recommended) or full reindex. Sign in with corporate SSO or local admin credentials.</p>
 
         <div class="card" id="loginCard">
             <div id="ssoLoginBlock" hidden>
@@ -109,8 +109,10 @@
 
             <hr style="margin:16px 0;border:none;border-top:1px solid #eee">
 
-            <p class="hint" style="margin-bottom:10px">After uploading new documents, run RAG reindex. The job runs in the background — you can keep using the admin panel.</p>
-            <button type="button" id="reindexBtn">Reindex RAG</button>
+            <p class="hint" style="margin-bottom:10px">After upload, <strong>Ingest</strong> indexes new/changed files per domain (async pipeline). <strong>Reindex RAG</strong> is the legacy full/incremental sync fallback.</p>
+            <button type="button" id="ingestBtn">Ingest documents</button>
+            <button type="button" class="secondary" id="reindexBtn">Reindex RAG (legacy)</button>
+            <p class="hint" id="ingestJobHint" hidden></p>
             <p class="hint" id="reindexJobHint" hidden></p>
             <div class="status" id="actionStatus"></div>
             </div>

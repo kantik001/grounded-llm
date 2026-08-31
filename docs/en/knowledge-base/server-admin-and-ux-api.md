@@ -20,6 +20,7 @@ HTTP Basic: `ADMIN_USER` / `ADMIN_PASSWORD`. Empty password → **503**.
 | POST | `handleAdminUpload` | save document |
 | DELETE | `handleAdminDeleteArticle` | delete document (`?domain_id=&filename=&tenant_id=`) |
 | POST | `handleAdminReindex` | reindex via Python |
+| POST | `handleIngest` | ingest job → Python pipeline |
 | GET | `handleAdminFeedbackSummary` | aggregated thumbs up/down |
 | GET | `handleAdminAuditLog` | admin audit trail (`?limit=&offset=&action=`) |
 | GET | `handleAdminQuotas` | tenant quota limits + usage (`?tenant_id=`) |
@@ -78,11 +79,21 @@ Query: `limit` (default 50, max 200), `offset`, optional `action` filter.
 
 Response: `entries[]` with `occurred_at`, `action`, `actor`, `tenant_id`, `domain_id`, `resource`, `success`, `details`.
 
-Actions: `admin_login`, `admin_login_failed`, `kb_upload`, `kb_delete`, `kb_reindex`.
+Actions: `admin_login`, `admin_login_failed`, `kb_upload`, `kb_delete`, `kb_reindex`, `kb_ingest`.
 
 ---
 
-## Reindex chain
+## Ingest chain (recommended)
+
+Go `POST /admin/ingest` → creates `ingest_jobs` row → Python `POST /admin/ingest/run` → Redis workers (parse → embed → finalize).
+
+`GET /admin/ingest/status?job_id=` — poll job + per-file tasks.
+
+See [INGESTION.md](../INGESTION.md) and [data-pipeline.md](./data-pipeline.md).
+
+---
+
+## Reindex chain (legacy / dev)
 
 Go `POST /admin/reindex` → Python `POST /admin/reindex` + header `X-Admin-Secret`.
 

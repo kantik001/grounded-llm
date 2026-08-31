@@ -1,6 +1,8 @@
 # Async RAG reindex
 
-Reindex rebuilds Chroma from all files under `data/`. The admin API runs reindex **asynchronously** so the UI and HTTP client are not blocked for minutes.
+Reindex rebuilds the vector index from files under `data/` (incremental or full). The admin API runs reindex **asynchronously** so the UI is not blocked.
+
+> **New:** per-file **ingest pipeline** (`POST /admin/ingest`) — parse → embed → index with job status. See [docs/en/INGESTION.md](../docs/en/INGESTION.md). Use **reindex** for dev/CI full sync; use **ingest** for production uploads and connectors.
 
 ## API
 

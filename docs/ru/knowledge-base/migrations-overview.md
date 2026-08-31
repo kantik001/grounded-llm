@@ -168,6 +168,12 @@ Go сортирует по имени. **Новая миграция:** напр
 
 ---
 
+## `012_ingest_jobs.sql`
+
+Таблицы `ingest_jobs` / `ingest_tasks` — пайплайн parse → embed → index. См. [../INGESTION.md](../INGESTION.md).
+
+---
+
 ## `009_pgvector.sql`
 
 `CREATE EXTENSION vector` для `VECTOR_STORE=pgvector`.

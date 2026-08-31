@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Async KB ingest pipeline:** Postgres `ingest_jobs` / `ingest_tasks`, Redis queues, parse → staging → embed → Chroma + BM25 finalize; Go `POST /api/admin/ingest`, Python workers (`ingest-worker` in Compose), admin UI ingest button. Docs: [docs/en/INGESTION.md](docs/en/INGESTION.md). Legacy `POST /admin/reindex` and `reindex_rag.py` unchanged.
+
 ## [0.4.0] - 2026-08-06
 
 Enterprise hardening: tenant isolation, deeper verify/eval, multi-replica SaaS state, release/CI/Helm safety, and integrator SDKs.

@@ -218,6 +218,60 @@ def admin_index_stats():
     return jsonify({"success": True, "domain_id": domain_id, "tenant_id": tenant_id, "files": files}), 200
 
 
+@app.route("/admin/ingest/run", methods=["POST"])
+def admin_ingest_run():
+    if not _admin_authorized():
+        return jsonify({"success": False, "error": "forbidden"}), 403
+    body = request.get_json(silent=True) or {}
+    job_id = int(body.get("job_id") or 0)
+    if job_id <= 0:
+        return jsonify({"success": False, "error": "job_id required"}), 400
+    sync = bool(body.get("sync"))
+    try:
+        from rag.ingest.pipeline import start_job
+
+        payload = start_job(job_id, sync=sync)
+        return jsonify({"success": True, **payload}), 200
+    except Exception as e:
+        app.logger.exception("admin ingest run failed")
+        return jsonify({"success": False, "error": _client_error_message(e)}), 500
+
+
+@app.route("/admin/ingest/status", methods=["GET"])
+def admin_ingest_status():
+    if not _admin_authorized():
+        return jsonify({"success": False, "error": "forbidden"}), 403
+    raw = (request.args.get("job_id") or "").strip()
+    if not raw.isdigit():
+        return jsonify({"success": False, "error": "job_id required"}), 400
+    try:
+        from rag.ingest.store import job_status_payload
+
+        payload = job_status_payload(int(raw))
+        if payload is None:
+            return jsonify({"success": False, "error": "job not found"}), 404
+        return jsonify({"success": True, **payload}), 200
+    except Exception as e:
+        app.logger.exception("admin ingest status failed")
+        return jsonify({"success": False, "error": _client_error_message(e)}), 500
+
+
+@app.route("/admin/ingest/metrics", methods=["GET"])
+def admin_ingest_metrics():
+    if not _admin_authorized():
+        return jsonify({"success": False, "error": "forbidden"}), 403
+    from rag.ingest.metrics import prometheus_lines
+    from rag.ingest.queue import dlq_depth
+
+    return jsonify(
+        {
+            "success": True,
+            "dlq_depth": dlq_depth(),
+            "prometheus": prometheus_lines(),
+        }
+    ), 200
+
+
 @app.route("/admin/reindex", methods=["POST"])
 def admin_reindex():
     if not _admin_authorized():

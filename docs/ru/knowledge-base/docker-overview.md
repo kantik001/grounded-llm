@@ -30,7 +30,8 @@ cp .env.example .env   # LLM_API_KEY, ADMIN_PASSWORD, TELEGRAM_BOT_TOKEN
 docker compose up -d --build
 # optional remote verify (sibling repo grounded-guardrails):
 # docker compose -f docker-compose.yml -f docker-compose.guardrails.yml up -d --build
-python scripts/reindex_rag.py   # или POST /admin/reindex
+python scripts/reindex_rag.py   # dev/CI
+# POST /api/admin/ingest — прод (см. INGESTION.md)
 ```
 
 Полезные команды:
@@ -81,7 +82,7 @@ Makefile: `make up`, `make logs`, `make smoke`, `make test`.
 - Порты **5000** (HTTP) и **50051** (gRPC); `tini` + `api/entrypoint.sh` (Gunicorn + gRPC)
 - Env: `DOMAINS_CONFIG_PATH`, `LOCALES_ROOT`, `DEFAULT_LOCALE`, `ADMIN_SECRET`, `FORCE_RAG_REINDEX`, `PYTHON_SERVICE_PORT`
 - Healthcheck: `start_period: 180s` (первый RAG / embeddings может быть долгим)
-- Endpoints: `/health`, `/rag/context`, `/domains`, `/admin/reindex`
+- Endpoints: `/health`, `/rag/context`, `/domains`, `/admin/reindex`, `/admin/ingest/*`
 
 Первый запрос RAG может скачивать embedding-модель `intfloat/multilingual-e5-small`.
 
@@ -141,7 +142,7 @@ TELEGRAM_AUTH_DISABLED=true
 |----------|---------|
 | python unhealthy 2–3 мин | норма при первом старте; смотреть `docker compose logs python` |
 | server unhealthy | ждать postgres/python; `docker compose logs server` |
-| Новые документы не в RAG | upload + `POST /admin/reindex` или `scripts/reindex_rag.py` |
+| Новые документы не в RAG | upload + `POST /admin/ingest` (+ `ingest-worker`) · fallback: reindex |
 | Изменения `config/` | volume `./config`; Go: `docker compose kill -s HUP server` или `CONFIG_RELOAD_INTERVAL_SEC` |
 | 401 в чате | `TELEGRAM_AUTH_DISABLED=true` + recreate server |
 | Старый образ после правок Python | `docker compose build --no-cache python && docker compose up -d --force-recreate python server` |

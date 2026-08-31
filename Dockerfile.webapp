@@ -1,5 +1,8 @@
 FROM nginx:alpine
 
+# Keep Alpine packages current for CI Trivy gate (openssl/libcrypto CVEs).
+RUN apk upgrade --no-cache
+
 # nginx site config (API proxy + static)
 COPY webapp/nginx.conf /etc/nginx/conf.d/default.conf
 
