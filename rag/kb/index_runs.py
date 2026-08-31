@@ -142,7 +142,41 @@ def upsert_index_document_state(
 
 def collection_suffix(tenant_id: str, domain_id: str) -> str:
     """Namespace suffix for disposable vector collections."""
+    from rag.kb.index_collections import run_suffix
+
     run_id = active_index_run_id(tenant_id, domain_id)
     if not run_id:
         return ""
-    return run_id.replace("-", "")[:12]
+    return run_suffix(run_id)
+
+
+def resolve_write_run_id(tenant_id: str, domain_id: str, explicit_run_id: str | None = None) -> str:
+    """Run id for ingest writes: explicit building run or active (creating one if needed)."""
+    if explicit_run_id:
+        return explicit_run_id
+    return ensure_active_index_run(tenant_id, domain_id)
+
+
+def resolve_read_run_id(tenant_id: str, domain_id: str) -> str | None:
+    """Active index run for retrieval; None → legacy flat index."""
+    return active_index_run_id(tenant_id, domain_id)
+
+
+def list_retired_run_ids(tenant_id: str, domain_id: str, *, keep_last: int = 1) -> list[str]:
+    """Retired run ids eligible for GC (newest `keep_last` retired runs are kept)."""
+    keep = max(0, int(keep_last))
+    with _connect() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id FROM index_runs
+                WHERE status = 'retired'
+                  AND tenant_id IS NOT DISTINCT FROM NULLIF(%s, '')::text
+                  AND domain_id IS NOT DISTINCT FROM NULLIF(%s, '')::text
+                ORDER BY activated_at DESC NULLS LAST, created_at DESC
+                OFFSET %s
+                """,
+                (tenant_id, domain_id, keep),
+            )
+            rows = cur.fetchall()
+    return [str(row[0]) for row in rows]

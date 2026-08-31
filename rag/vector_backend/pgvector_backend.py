@@ -7,7 +7,8 @@ import uuid
 from typing import Any
 
 from rag.embedding_cache import CachedHuggingFaceEmbeddings
-from rag.indexing import split_kb_documents
+from rag.indexing import split_file_documents, split_kb_documents
+from rag.kb.index_collections import collection_name
 from rag.vector_backend.base import VectorBackend
 from rag.vector_backend.chroma_backend import EMBEDDING_MODEL
 
@@ -47,14 +48,26 @@ class PGVectorBackend(VectorBackend):
 
     def __init__(self) -> None:
         self._store = None
+        self._scope_stores: dict[str, Any] = {}
+        self._scope_collections: dict[str, str] = {}
         self._embeddings = CachedHuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
-        self._collection = (
+        self._collection_base = (
             os.environ.get("PGVECTOR_COLLECTION", "grounded_chunks").strip() or "grounded_chunks"
         )
         self._connection = pg_connection_url()
 
     def reset(self) -> None:
         self._store = None
+        self._scope_stores = {}
+        self._scope_collections = {}
+
+    def _scope_cache_key(self, tenant_id: str, domain_id: str, run_id: str | None) -> str:
+        return f"{tenant_id}/{domain_id}/{run_id or 'legacy'}"
+
+    def _resolved_collection(self, tenant_id: str, domain_id: str, run_id: str | None) -> str:
+        if run_id:
+            return collection_name(self._collection_base, tenant_id, domain_id, run_id)
+        return self._collection_base
 
     def _pgvector_cls(self):
         try:
@@ -65,31 +78,60 @@ class PGVectorBackend(VectorBackend):
             ) from exc
         return PGVector
 
-    def _open_store(self):
+    def open_scope(
+        self,
+        tenant_id: str,
+        domain_id: str,
+        *,
+        run_id: str | None = None,
+        for_write: bool = False,
+    ):
+        resolved = self.resolve_run_id(tenant_id, domain_id, run_id=run_id, for_write=for_write)
+        cache_key = self._scope_cache_key(tenant_id, domain_id, resolved)
+        if cache_key in self._scope_stores:
+            return self._scope_stores[cache_key]
+
+        collection = self._resolved_collection(tenant_id, domain_id, resolved)
         PGVector = self._pgvector_cls()
+        store = PGVector(
+            embeddings=self._embeddings,
+            collection_name=collection,
+            connection=self._connection,
+            use_jsonb=True,
+        )
+        self._scope_stores[cache_key] = store
+        self._scope_collections[cache_key] = collection
+        if resolved is None:
+            self._store = store
+        return store
+
+    def _open_store(self, collection: str | None = None):
+        PGVector = self._pgvector_cls()
+        name = collection or self._collection_base
         return PGVector(
             embeddings=self._embeddings,
-            collection_name=self._collection,
+            collection_name=name,
             connection=self._connection,
             use_jsonb=True,
         )
 
-    def _index_documents(self, documents: list[Any]) -> None:
+    def _index_documents(self, documents: list[Any], collection: str | None = None) -> None:
         PGVector = self._pgvector_cls()
+        name = collection or self._collection_base
         if not documents:
-            self._store = self._open_store()
+            self._store = self._open_store(name)
             return
         ids = [str(doc.metadata.get("chunk_id") or uuid.uuid4()) for doc in documents]
         print(f"pgvector indexing chunks: {len(documents)}")
         self._store = PGVector.from_documents(
             documents=documents,
             embedding=self._embeddings,
-            collection_name=self._collection,
+            collection_name=name,
             connection=self._connection,
             use_jsonb=True,
             ids=ids,
         )
-        print(f"pgvector collection ready: {self._collection}")
+        print(f"pgvector collection ready: {name}")
 
     def load(self, *, force_reindex: bool = False) -> None:
         if self._store is not None and not force_reindex:
@@ -112,6 +154,29 @@ class PGVectorBackend(VectorBackend):
 
         self._store = self._open_store()
 
+    def upsert_kb_file(
+        self,
+        tenant_id: str,
+        domain_id: str,
+        path: str,
+        *,
+        filename: str | None = None,
+        run_id: str | None = None,
+    ) -> int:
+        store = self.open_scope(tenant_id, domain_id, run_id=run_id, for_write=True)
+        if store is None:
+            return 0
+        name = filename or os.path.basename(path)
+        try:
+            store.delete(filter={"tenant_id": tenant_id, "domain_id": domain_id, "filename": name})
+        except Exception:
+            pass
+        chunks = split_file_documents(domain_id, path, tenant_id=tenant_id)
+        if chunks:
+            ids = [str(doc.metadata.get("chunk_id") or uuid.uuid4()) for doc in chunks]
+            store.add_documents(chunks, ids=ids)
+        return len(chunks)
+
     def _metadata_filter(self, domain_id: str, tenant_id: str) -> dict[str, str]:
         return {"domain_id": domain_id, "tenant_id": tenant_id}
 
@@ -123,17 +188,24 @@ class PGVectorBackend(VectorBackend):
         domain_id: str,
         tenant_id: str,
     ) -> list[Any]:
-        self.load()
-        if self._store is None:
+        run_id = self.resolve_run_id(tenant_id, domain_id)
+        if run_id:
+            store = self.open_scope(tenant_id, domain_id, run_id=run_id)
+        else:
+            self.load()
+            store = self._store
+        if store is None:
             return []
-        return self._store.similarity_search(
+        return store.similarity_search(
             query,
             k=k,
             filter=self._metadata_filter(domain_id, tenant_id),
         )
 
     def index_stats_for_domain(self, domain_id: str, tenant_id: str) -> list[dict]:
-        self.load()
+        run_id = self.resolve_run_id(tenant_id, domain_id)
+        cache_key = self._scope_cache_key(tenant_id, domain_id, run_id)
+        collection = self._scope_collections.get(cache_key, self._collection_base)
         try:
             import psycopg
         except ImportError:
@@ -152,7 +224,7 @@ class PGVectorBackend(VectorBackend):
         try:
             with psycopg.connect(psycopg_dsn(self._connection)) as conn:
                 with conn.cursor() as cur:
-                    cur.execute(sql, (self._collection, domain_id, tenant_id))
+                    cur.execute(sql, (collection, domain_id, tenant_id))
                     rows = cur.fetchall()
         except Exception:
             return []

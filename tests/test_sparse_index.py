@@ -41,17 +41,21 @@ def test_bm25_search_finds_keyword_match():
 
 def test_bm25_scoped_by_domain():
     reset_sparse_index()
-    idx = BM25SparseIndex()
-    idx.build(
-        [
-            _chunk("default", "hr", "a.txt", 0, "Vacation policy allows 28 days."),
-            _chunk("default", "it", "b.txt", 0, "VPN access request via portal."),
-        ],
+    idx_it = BM25SparseIndex(tenant_id="default", domain_id="it")
+    idx_it.build(
+        [_chunk("default", "it", "b.txt", 0, "VPN access request via portal.")],
         persist=False,
     )
-    hits = idx.search("VPN access", domain_id="it", tenant_id="default", k=1)
+    hits = idx_it.search("VPN access", domain_id="it", tenant_id="default", k=1)
     assert len(hits) == 1
     assert "VPN" in hits[0].page_content
+
+    idx_hr = BM25SparseIndex(tenant_id="default", domain_id="hr")
+    idx_hr.build(
+        [_chunk("default", "hr", "a.txt", 0, "Vacation policy allows 28 days.")],
+        persist=False,
+    )
+    assert idx_hr.search("VPN access", domain_id="hr", tenant_id="default", k=1) == []
 
 
 def test_bm25_persist_and_load():

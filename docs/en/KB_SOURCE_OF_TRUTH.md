@@ -62,22 +62,35 @@ curl -u admin:pass -X POST "http://localhost:8080/api/admin/ingest?domain_id=def
 
 ## Index runs (blue/green)
 
-Each tenant+domain has an **active index run** in `index_run_active`. Ingest updates `index_document_state` per document.
+Each tenant+domain has an **active index run** pointer in `index_run_active`. Vector collections (Chroma / Qdrant / pgvector) and BM25 pickles are **namespaced by run id**; ingest writes `index_document_state` per document.
 
-To rebuild after embedding model or backend change:
+### Correct workflow (zero-downtime rebuild)
 
 ```bash
-# 1. Create and activate a new run
+# 1. Create a building run (do NOT activate yet)
 curl -u admin:pass -X POST "http://localhost:8080/api/admin/kb/index-runs?domain_id=default" \
   -H "Content-Type: application/json" \
-  -d '{"activate": true, "backend": "chroma", "embedding_model": "intfloat/multilingual-e5-small"}'
+  -d '{"backend": "chroma", "embedding_model": "intfloat/multilingual-e5-small"}'
 
-# 2. Full ingest into the new run
+# 2. Full ingest INTO the building run; flip pointer when done
 curl -u admin:pass -X POST "http://localhost:8080/api/admin/ingest?domain_id=default" \
-  -H "Content-Type: application/json" -d '{"mode": "full", "sync": false}'
+  -H "Content-Type: application/json" \
+  -d '{"mode": "full", "index_run_id": "<run-uuid>", "activate_on_complete": true}'
+
+# 3. (Optional) GC old retired runs
+python scripts/gc_index_runs.py --tenant default --domain default --keep-last 1
 ```
 
-Upload and first ingest also call `EnsureActiveIndexRun` for the scope.
+| Field | Purpose |
+|-------|---------|
+| `index_run_id` | Target building run for ingest writes (separate collection) |
+| `activate_on_complete` | Atomically flip `index_run_active` + rebuild BM25 after ingest |
+
+Incremental ingest (no `index_run_id`) writes to the **active** run and rebuilds sparse index for that scope.
+
+Chunk IDs stay positional (`{tenant}/{domain}/{filename}/{seq}`); version metadata (`document_version`, `content_sha256`) is stored on chunk metadata, not in `chunk_id`.
+
+Upload and first ingest also call `EnsureActiveIndexRun` for the scope when no run exists yet.
 
 ## Connectors
 
@@ -97,6 +110,8 @@ For other connectors, `scripts/sync_connector.py` registers via `register_synced
 | `server/internal/kb/blobstore/` | Go blob backend |
 | `rag/kb/documents.py` | Python registry + discover |
 | `rag/kb/index_runs.py` | Index run helpers |
+| `rag/kb/index_collections.py` | Per-run collection / persist path naming |
+| `scripts/gc_index_runs.py` | GC retired Chroma + sparse run directories |
 | `rag/storage/blob_store.py` | Python blob backend |
 
 ## Russian

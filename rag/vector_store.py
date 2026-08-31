@@ -43,11 +43,20 @@ def refresh_vector_store() -> tuple[object, dict]:
     """Incrementally sync indexes with the KB tree (admin reindex).
 
     Only added/changed/removed files are re-embedded in the dense index;
-    the sparse BM25 index is rebuilt from chunks (cheap, in-memory).
+    the sparse BM25 index is rebuilt per active index run scope.
     """
     backend = get_vector_backend()
     summary = backend.refresh()
-    ensure_sparse_index(force_reindex=True)
+    from rag.kb.documents import list_all_active_documents
+
+    scopes: set[tuple[str, str]] = set()
+    for target in list_all_active_documents():
+        scopes.add((target.tenant_id, target.domain_id))
+    if not scopes:
+        ensure_sparse_index(force_reindex=True)
+    else:
+        for tenant_id, domain_id in scopes:
+            ensure_sparse_index(force_reindex=True, tenant_id=tenant_id, domain_id=domain_id)
     return backend, summary
 
 
@@ -141,7 +150,7 @@ def _hybrid_search(
     allowed_doc_ids: list[str] | None = None,
 ):
     backend = get_vector_backend()
-    sparse = ensure_sparse_index()
+    sparse = ensure_sparse_index(tenant_id=tenant_id, domain_id=domain_id)
     dense_hits = backend.similarity_search(
         query,
         k=fetch_k,

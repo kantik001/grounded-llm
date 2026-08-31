@@ -164,6 +164,24 @@ func (st *ChatStore) HasActiveIngestJob(ctx context.Context, tenantID string) (b
 	return n > 0, err
 }
 
+// MergeIngestJobStats patches ingest_jobs.stats JSON (creates object when null).
+func (st *ChatStore) MergeIngestJobStats(ctx context.Context, jobID int64, patch map[string]any) error {
+	if len(patch) == 0 {
+		return nil
+	}
+	raw, err := json.Marshal(patch)
+	if err != nil {
+		return err
+	}
+	_, err = st.Pool.Exec(ctx, `
+		UPDATE ingest_jobs
+		SET stats = COALESCE(stats, '{}'::jsonb) || $2::jsonb
+		WHERE id = $1`,
+		jobID, raw,
+	)
+	return err
+}
+
 // FinishIngestJob marks a job terminal with optional error.
 func (st *ChatStore) FinishIngestJob(ctx context.Context, id int64, status, errMsg string) error {
 	_, err := st.Pool.Exec(ctx, `

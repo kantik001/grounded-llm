@@ -75,7 +75,7 @@ func handleRebuildIndexRun(c *gin.Context) {
 	c.JSON(http.StatusAccepted, gin.H{
 		"success":     true,
 		"index_run":   run,
-		"message":     "Index run created; run full ingest to populate vectors, then activate if not already",
+		"message":     "Index run created (building). Run full ingest with index_run_id, then activate (or set activate_on_complete on ingest).",
 	})
 }
 

@@ -21,9 +21,9 @@ from rag.ingest.models import (
     IngestTaskStatus,
 )
 from rag.kb.documents import DocumentTarget, discover_document_targets, materialize_to_temp, scan_registry_documents
-from rag.kb.index_runs import ensure_active_index_run, upsert_index_document_state
-from rag.sparse_index import ensure_sparse_index
-from rag.vector_backend import get_vector_backend
+from rag.kb.index_runs import activate_index_run, resolve_write_run_id, upsert_index_document_state
+from rag.sparse_index import ensure_sparse_index, reset_sparse_index
+from rag.vector_backend import get_vector_backend, reset_vector_backend
 from rag.vector_backend.chroma_backend import ChromaBackend
 
 
@@ -101,13 +101,20 @@ def _resolve_parse_path(task: ingest_store.IngestTask) -> tuple[str, bool]:
 def _enrich_chunks(docs: list[Document], payload: dict[str, Any]) -> None:
     doc_id = payload.get("document_id") or ""
     version_id = payload.get("version_id") or ""
-    if not doc_id:
+    document_version = payload.get("document_version")
+    content_sha256 = payload.get("content_sha256") or ""
+    if not doc_id and document_version is None and not content_sha256:
         return
     for doc in docs:
         meta = doc.metadata or {}
-        meta["document_id"] = doc_id
+        if doc_id:
+            meta["document_id"] = doc_id
         if version_id:
             meta["document_version_id"] = version_id
+        if document_version is not None:
+            meta["document_version"] = int(document_version)
+        if content_sha256:
+            meta["content_sha256"] = content_sha256
         doc.metadata = meta
 
 
@@ -134,19 +141,31 @@ def _read_staging(file_key: str) -> list[Document]:
     return docs
 
 
-def _upsert_chroma_file(target: FileTarget) -> int:
+def _upsert_vector_file(target: FileTarget, *, run_id: str | None = None) -> int:
     backend = get_vector_backend()
-    if isinstance(backend, ChromaBackend):
-        return backend.upsert_kb_file(
+    upsert = getattr(backend, "upsert_kb_file", None)
+    if callable(upsert):
+        return upsert(
             target.tenant_id,
             target.domain_id,
             target.path,
             filename=target.filename,
+            run_id=run_id,
         )
     chunks = split_file_documents(target.domain_id, target.path, tenant_id=target.tenant_id)
-    backend.load()
-    store = getattr(backend, "_store", None)
+    if hasattr(backend, "open_scope"):
+        store = backend.open_scope(target.tenant_id, target.domain_id, run_id=run_id, for_write=True)
+    else:
+        backend.load()
+        store = getattr(backend, "_store", None)
     if store is not None and chunks:
+        if hasattr(backend, "delete_kb_file"):
+            backend.delete_kb_file(
+                target.tenant_id,
+                target.domain_id,
+                target.filename,
+                run_id=run_id,
+            )
         store.add_documents(chunks)
     return len(chunks)
 
@@ -172,6 +191,15 @@ def run_parse(task: ingest_store.IngestTask) -> dict[str, Any]:
                 pass
 
 
+def _job_index_run_id(job: ingest_store.IngestJob) -> str:
+    stats = job.stats or {}
+    return str(stats.get("index_run_id") or "").strip()
+
+
+def _job_activate_on_complete(job: ingest_store.IngestJob) -> bool:
+    return bool((job.stats or {}).get("activate_on_complete"))
+
+
 def run_embed(task: ingest_store.IngestTask) -> dict[str, Any]:
     payload = task.payload
     path = payload.get("path") or ""
@@ -187,44 +215,86 @@ def run_embed(task: ingest_store.IngestTask) -> dict[str, Any]:
     if not target.path:
         raise ValueError("embed task missing path")
 
+    index_run_id = str(payload.get("index_run_id") or "").strip() or None
+    write_run_id = resolve_write_run_id(
+        target.tenant_id,
+        target.domain_id,
+        index_run_id,
+    )
+
     staging_file = staging_path(task.file_key)
     with metrics.timer("embed_duration"):
         if os.path.isfile(staging_file):
             docs = _read_staging(task.file_key)
             backend = get_vector_backend()
-            backend.load()
-            store = getattr(backend, "_store", None)
+            if hasattr(backend, "open_scope"):
+                store = backend.open_scope(
+                    target.tenant_id,
+                    target.domain_id,
+                    run_id=write_run_id,
+                    for_write=True,
+                )
+            else:
+                backend.load()
+                store = getattr(backend, "_store", None)
             if store is not None and docs:
+                if hasattr(backend, "delete_kb_file"):
+                    backend.delete_kb_file(
+                        target.tenant_id,
+                        target.domain_id,
+                        target.filename,
+                        run_id=write_run_id,
+                    )
+                store.add_documents(docs)
                 if isinstance(backend, ChromaBackend):
-                    backend.delete_kb_file(target.tenant_id, target.domain_id, target.filename)
-                    store.add_documents(docs)
-                    backend.touch_manifest_entry(target.tenant_id, target.domain_id, target.path, target.filename)
-                else:
-                    store.add_documents(docs)
+                    backend.touch_manifest_entry(
+                        target.tenant_id,
+                        target.domain_id,
+                        target.path,
+                        target.filename,
+                        run_id=write_run_id,
+                    )
             embedded = len(docs)
         else:
-            embedded = _upsert_chroma_file(target)
+            embedded = _upsert_vector_file(target, run_id=write_run_id)
 
     doc_id = payload.get("document_id") or ""
     if doc_id:
-        run_id = ensure_active_index_run(target.tenant_id, target.domain_id)
         upsert_index_document_state(
-            run_id,
+            write_run_id,
             doc_id,
             int(payload.get("document_version") or payload.get("version") or 0),
             payload.get("content_sha256") or "",
             embedded,
         )
-    return {"embedded": embedded}
+    return {"embedded": embedded, "index_run_id": write_run_id}
 
 
 def run_finalize(job_id: int) -> dict[str, Any]:
     job = ingest_store.get_job(job_id)
     if job is None:
         raise ValueError(f"job {job_id} not found")
+    index_run_id = _job_index_run_id(job)
+    activate = _job_activate_on_complete(job)
+
     with metrics.timer("finalize_duration"):
-        ensure_active_index_run(job.tenant_id, job.domain_id)
-        ensure_sparse_index(force_reindex=True)
+        if activate and index_run_id:
+            activate_index_run(job.tenant_id, job.domain_id, index_run_id)
+            reset_vector_backend()
+            reset_sparse_index()
+            ensure_sparse_index(
+                force_reindex=True,
+                tenant_id=job.tenant_id,
+                domain_id=job.domain_id,
+                run_id=index_run_id,
+            )
+        elif not index_run_id:
+            ensure_sparse_index(
+                force_reindex=True,
+                tenant_id=job.tenant_id,
+                domain_id=job.domain_id,
+            )
+
         backend = get_vector_backend()
         if isinstance(backend, ChromaBackend):
             backend.sync_manifest(scan_registry_documents())
@@ -261,6 +331,8 @@ def _enqueue_parse_tasks(
             "content_sha256": target.content_sha256,
             "storage_key": target.storage_key,
         }
+        if job_index_run := _job_index_run_id(job):
+            payload["index_run_id"] = job_index_run
         file_key = _target_file_key(target)
         task_id = ingest_store.create_task(
             job.id,
@@ -322,10 +394,7 @@ def start_job(job_id: int, *, sync: bool = False) -> dict[str, Any]:
 
     if job.mode == "full":
         backend = get_vector_backend()
-        if isinstance(backend, ChromaBackend):
-            backend.load(force_reindex=True)
-        else:
-            backend.load(force_reindex=True)
+        backend.load(force_reindex=not bool(_job_index_run_id(job)))
 
     targets = discover_targets(job)
     if not targets:

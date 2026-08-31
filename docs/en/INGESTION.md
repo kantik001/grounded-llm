@@ -19,8 +19,8 @@ POST /admin/ingest/run (Python) → Redis queues
         ↓
 discover_targets()  →  Postgres registry
 parse worker        →  blob or local path → staging/*.chunks.jsonl
-embed worker        →  Chroma (+ index_document_state)
-finalize            →  BM25 rebuild + index run pointer
+embed worker        →  scoped vector collection (+ index_document_state)
+finalize            →  optional activate + BM25 rebuild for active run
 ```
 
 Retrieve path (`/rag/context`) is unchanged and does not block on ingestion. Set `KB_ACL_ENFORCE=1` to filter hits by `kb_document_acl`.
@@ -60,13 +60,24 @@ Content-Type: application/json
 {"files": ["policy.pdf"], "mode": "incremental", "sync": false}
 ```
 
+Blue/green full rebuild:
+
+```http
+POST /admin/ingest?domain_id=hr
+Content-Type: application/json
+
+{"mode": "full", "index_run_id": "<building-run-uuid>", "activate_on_complete": true}
+```
+
 ```http
 GET /admin/ingest/status?job_id=42
 GET /admin/ingest/status?domain_id=hr
 GET /admin/kb/documents?domain_id=hr
 POST /admin/kb/index-runs?domain_id=hr
-{"activate": true, "backend": "chroma", "embedding_model": "intfloat/multilingual-e5-small"}
+{"backend": "chroma", "embedding_model": "intfloat/multilingual-e5-small"}
 ```
+
+Create the index run first (status `building`), ingest with `index_run_id`, then activate via `activate_on_complete` or `POST /admin/kb/index-runs` with `"activate": true`.
 
 Empty `files` in ingest = all active documents in the domain (from Postgres registry).
 

@@ -40,3 +40,20 @@ class VectorBackend(ABC):
         """
         self.load(force_reindex=True)
         return {"mode": "full"}
+
+    def resolve_run_id(
+        self,
+        tenant_id: str,
+        domain_id: str,
+        *,
+        run_id: str | None = None,
+        for_write: bool = False,
+    ) -> str | None:
+        """Resolve index run for scope; None = legacy single-collection layout."""
+        from rag.kb.index_runs import ensure_active_index_run, resolve_read_run_id, resolve_write_run_id
+
+        if run_id:
+            return run_id
+        if for_write:
+            return resolve_write_run_id(tenant_id, domain_id)
+        return resolve_read_run_id(tenant_id, domain_id)

@@ -15,10 +15,12 @@ import (
 )
 
 type ingestRequest struct {
-	Files  []string `json:"files"`
-	Mode   string   `json:"mode"`
-	Source string   `json:"source"`
-	Sync   bool     `json:"sync"`
+	Files               []string `json:"files"`
+	Mode                string   `json:"mode"`
+	Source              string   `json:"source"`
+	Sync                bool     `json:"sync"`
+	IndexRunID          string   `json:"index_run_id"`
+	ActivateOnComplete  bool     `json:"activate_on_complete"`
 }
 
 func handleIngest(c *gin.Context) {
@@ -60,6 +62,20 @@ func handleIngest(c *gin.Context) {
 		return
 	}
 	if !alreadyRunning {
+		statsPatch := map[string]any{}
+		if id := strings.TrimSpace(body.IndexRunID); id != "" {
+			statsPatch["index_run_id"] = id
+		}
+		if body.ActivateOnComplete {
+			statsPatch["activate_on_complete"] = true
+		}
+		if len(statsPatch) > 0 {
+			if err := s.MergeIngestJobStats(c.Request.Context(), job.ID, statsPatch); err != nil {
+				log.Printf("MergeIngestJobStats: %v", err)
+			} else if refreshed, err := s.GetIngestJob(c.Request.Context(), job.ID); err == nil && refreshed != nil {
+				job = *refreshed
+			}
+		}
 		startIngestWorker(job, sync)
 		audit.Record(c, audit.Opts{
 			Action:   store.AuditActionKBIngest,
